@@ -22,6 +22,7 @@ A powerful, high-performance Python CLI tool to download **complete O'Reilly Lea
 
 1. **[`uv`](https://docs.astral.sh/uv/getting-started/installation/)**: The insanely fast Python package manager.
 2. **`ffmpeg`**: Required to stitch together the video streams.
+3. [Firefox Browser](https://www.firefox.com/)
 
 **Install `uv` (Official Standalone Installer):**
 ```bash
