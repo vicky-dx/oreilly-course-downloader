@@ -88,7 +88,7 @@ def test_path_manager_video_paths_with_audiobook():
         less_title="Videos",
         vid_idx=2,
         vid_title="Factory",
-        is_audiobook=True
+        is_audio_only=True
     )
     expected_vid = os.path.join(course_dir, "01 - Creational", "02 - Factory.m4a")
     expected_txt = os.path.join(course_dir, "01 - Creational", "02 - Factory_transcript.txt")

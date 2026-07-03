@@ -147,11 +147,11 @@ def _process_single_video(
     resolver: MediaUrlResolver,
     downloader: DownloaderService,
     config: DownloaderConfig,
-    is_audiobook: bool = False,
+    is_audio_only: bool = False,
 ) -> Optional[tuple]:
     """Handles extraction and immediate download of a single video. Returns Tuple if active action taken."""
     vid_file, txt_file = PathManager.get_video_paths(
-        course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audiobook
+        course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audio_only
     )
 
     if config.transcripts_only and os.path.exists(txt_file):
@@ -213,7 +213,7 @@ def _download_videos_concurrently(
     downloader: DownloaderService,
     config: DownloaderConfig,
     course_dir: str,
-    is_audiobook: bool = False,
+    is_audio_only: bool = False,
 ):
     """Iterates through the course structure and dispatches video processing with a bounded queue to avoid M3U8 expiration."""
 
@@ -270,7 +270,7 @@ def _download_videos_concurrently(
                         resolver=resolver,
                         downloader=downloader,
                         config=config,
-                        is_audiobook=is_audiobook,
+                        is_audio_only=is_audio_only,
                     )
 
                     if res:
@@ -352,13 +352,13 @@ def process_course(config: DownloaderConfig):
 
         # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
         course_title = "OReilly Extracted Course"
-        is_audiobook = False
+        is_audio_only = False
         if driver:
             try:
                 raw_title = driver.title
                 if raw_title:
                     if re.search(r'\s*\[(audiobook|audio\s+book)\]\s*$', raw_title, flags=re.IGNORECASE):
-                        is_audiobook = True
+                        is_audio_only = True
                     course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
                     course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
                     course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
@@ -366,13 +366,13 @@ def process_course(config: DownloaderConfig):
             except Exception:
                 pass
 
-        if not is_audiobook and config.url and ("/audiobook" in config.url.lower() or "/audio-book" in config.url.lower()):
-            is_audiobook = True
+        if not is_audio_only and config.url and ("/audiobook" in config.url.lower() or "/audio-book" in config.url.lower()):
+            is_audio_only = True
 
         course = build_course(structure, title=course_title)
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
-        if is_audiobook:
-            print(Fore.CYAN + "🎧 Audiobook detected! Saving files with .m4a extension...")
+        if is_audio_only:
+            print(Fore.CYAN + "🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
 
         course_dir = PathManager.get_course_dir(downloader.output_dir, course.title)
         os.makedirs(course_dir, exist_ok=True)
@@ -383,7 +383,7 @@ def process_course(config: DownloaderConfig):
             json.dump(course.structure, f, indent=2)
 
         _download_videos_concurrently(
-            course, driver, scraper, resolver, downloader, config, course_dir, is_audiobook=is_audiobook
+            course, driver, scraper, resolver, downloader, config, course_dir, is_audio_only=is_audio_only
         )
 
     finally:
