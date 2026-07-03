@@ -347,7 +347,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     #reader-container {
-      max-width: 100%;
+      max-width: 800px;
       width: 100%;
       margin: 0 auto;
       padding: 40px 20px 100px 20px;
@@ -358,12 +358,9 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     #book-content {
-      font-size: var(--font-size);
+      font-size: inherit;
       line-height: 1.6;
       flex: 1;
-      width: 100%;
-      margin: 0 auto;
-      max-width: 70ch;
     }
 
     #bottom-bar {
@@ -978,6 +975,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
   </style>
   <!-- Load EPUB CSS directly so our styling rules match -->
+  <link rel="stylesheet" href="override_v1.css">
   <link rel="stylesheet" href="epub.css">
 </head>
 <body>
@@ -1259,7 +1257,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     // Font size changer
     function setFontSize(size) {
       const sizes = { small: '1.0em', medium: '1.25em', large: '1.5em' };
-      document.getElementById('book-content').style.fontSize = sizes[size];
+      document.getElementById('reader-container').style.fontSize = sizes[size];
       
       document.querySelectorAll('.font-size-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.querySelector(`.font-size-card[data-size="${size}"]`);
@@ -1271,7 +1269,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     // Reader width changer
     function setReaderWidth(width) {
       const widths = { small: '50ch', medium: '70ch', large: '90ch' };
-      document.getElementById('book-content').style.maxWidth = widths[width];
+      document.getElementById('reader-container').style.maxWidth = widths[width];
       
       document.querySelectorAll('.width-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.querySelector(`.width-card[data-width="${width}"]`);
