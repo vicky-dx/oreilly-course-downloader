@@ -14,4 +14,8 @@ class DownloaderConfig:
     output_dir: str = "downloads"
     max_workers: int = 3
     audiobook: bool = False
+    epub: bool = False
+    web_viewer: bool = False
+
+
 
