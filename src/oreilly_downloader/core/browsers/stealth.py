@@ -1,6 +1,9 @@
 import os
+from colorama import Fore, init
 import undetected_chromedriver as uc  # type: ignore
 from .base import IBrowser
+
+init(autoreset=True)
 
 
 class StealthChromeBrowser(IBrowser):
@@ -17,9 +20,6 @@ class StealthChromeBrowser(IBrowser):
 
         # NOTE: Do NOT spoof the User-Agent or manually change blink features!
         # undetected_chromedriver patches the chromedriver binary directly.
-        # Any manual JS/Argument overrides actually trigger Akamai/Cloudflare's advanced
-        # anomaly detection because they look forced or mismatch the actual Chrome v146 engine.
-
         if self.headless:
             opts.add_argument("--headless=new")
         return opts
@@ -28,31 +28,48 @@ class StealthChromeBrowser(IBrowser):
         print(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
         prof = os.path.join(os.getcwd(), "browser_profile_stealth")
 
+        def handle_lock_error(exception):
+            err_msg = str(exception)
+            if "cannot connect to chrome" in err_msg.lower() or "chrome not reachable" in err_msg.lower():
+                print(Fore.RED + "\n⚠️ Browser Profile Lock Detected!")
+                print(Fore.YELLOW + "It looks like background Chrome/Chromedriver processes from a previous run are still active and locking the profile directory:")
+                print(Fore.YELLOW + f"   Folder: {prof}")
+                print(Fore.CYAN + "\n👉 Solution:")
+                print(Fore.CYAN + "   1. Open Task Manager and terminate any active 'chrome.exe' or 'chromedriver.exe' processes.")
+                print(Fore.CYAN + "   2. Alternatively, run the script with '--browser chrome' or '--browser firefox'.")
+                return RuntimeError("Chrome profile locked by background processes. Please clean up Task Manager and rerun.")
+            return exception
+
         try:
             self.driver = uc.Chrome(options=self._get_options(), user_data_dir=prof)
         except Exception as e:
             err_msg = str(e)
-            if "supports Chrome version" in err_msg:
+            
+            # Handle version mismatch first
+            if "supports chrome version" in err_msg.lower():
                 import re
 
-                match = re.search(r"Current browser version is (\d+)", err_msg)
+                match = re.search(r"current browser version is (\d+)", err_msg, re.IGNORECASE)
                 if match:
                     ver = int(match.group(1))
                     print(
                         f"⚠️ Chrome version mismatch. Retrying with driver version {ver}..."
                     )
-                    self.driver = uc.Chrome(
-                        options=self._get_options(),
-                        user_data_dir=prof,
-                        version_main=ver,
-                    )
+                    try:
+                        self.driver = uc.Chrome(
+                            options=self._get_options(),
+                            user_data_dir=prof,
+                            version_main=ver,
+                        )
+                    except Exception as retry_e:
+                        retry_lock_err = handle_lock_error(retry_e)
+                        raise retry_lock_err
                 else:
-                    raise
+                    raise e
             else:
-                raise
-
-        # Removing manual CDP Javascript injections. Akamai detects JS native code overrides!
-        # undetected-chromedriver works best when left native.
+                # Check if it's a lock connection error
+                lock_err = handle_lock_error(e)
+                raise lock_err
 
         return self.driver
 

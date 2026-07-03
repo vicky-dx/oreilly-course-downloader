@@ -3,16 +3,19 @@
 A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses** with their videos and transcripts, automatically organizing them by chapters. 
 
 > **Important Architecture Update:** This project has been entirely rewritten into a modern Python package managed by **[`uv`](https://docs.astral.sh/uv/)**. It's now faster, perfectly cleanly containerized, and much easier to install on any OS.
-
 ## ✨ Features
 
+- **⚡ Fast API-Based Resolving**: Uses direct Kaltura and O'Reilly APIs to resolve video streams and transcripts instantly. Does not navigate browser tabs or load players unless the API calls fail (falling back to Selenium sniffer).
 - **📚 Complete Course Downloads**: Extract entire courses with all modules and lessons hierarchically intact.
 - **🎥 Video Downloads**: High-quality video downloads via HLS/m3u8 raw streams using `ffmpeg`.
-- **📝 Native Transcripts**: Extracts actual text-based video transcripts perfectly formatted with timestamps.
-- **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~10x faster, zero storage weight).
-- **🗂️ Smart Organization**: Automatically structures output folders by `Module -> Lesson -> Videos`.
+- **📝 Native Transcripts**: Extracts actual text-based video transcripts parsed directly from the O'Reilly API, saving them as timestamps.
+- **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~100x faster, zero storage weight).
+- **🗂️ Smart Organization**: Structures output folders logically. If there are no custom sub-lessons, videos are saved directly inside their parent Chapter directories.
 - **🔐 Captcha-Resistant "Manual Login"**: Keep getting blocked? Pop open a Stealth browser, log in yourself manually once, and let the scraper use your saved session forever.
 - **💾 Persistent Profiles**: Saves your authenticated sessions seamlessly in the background.
+- **📈 Bar Recycler**: Uses a thread-safe active position manager to recycle tqdm slots, preventing terminal outputs from drifting.
+- **☠️ Dead Letter Queue (DLQ)**: Automatically logs failed resolutions or downloads to `failed_downloads.json` inside the course folder.
+- **📝 Diagnostic Logging**: Supports a `--debug` option that saves clean, console-styled tracebacks and execution flow to `downloader.log`.
 
 ---
 
@@ -21,8 +24,7 @@ A powerful, high-performance Python CLI tool to download **complete O'Reilly Lea
 ### 1. Requirements
 
 1. **[`uv`](https://docs.astral.sh/uv/getting-started/installation/)**: The insanely fast Python package manager.
-2. **`ffmpeg`**: Required to stitch together the video streams.
-3. [Firefox Browser](https://www.firefox.com/)
+2. **`ffmpeg`**: Required to stitch together the video streams. (The tool will perform a pre-flight scan on startup to make sure it's available).
 
 **Install `uv` (Official Standalone Installer):**
 ```bash
@@ -51,28 +53,35 @@ sudo apt install ffmpeg
 
 Because the project is managed by `uv`, you don't need to manually create virtual environments or install `requirements.txt`. Simply clone the project and run the CLI directly:
 
-#### Option A: One-Shot Download (If you don't have captchas)
+#### Option A: One-Shot Download
 ```bash
 uv run oreilly-dl "https://learning.oreilly.com/course/your-course-url/12345/" \
   --email "your_email@domain.com" \
   --password "your_password"
 ```
 
-#### Option B: Transcripts Only (Lightning Fast)
-Don't want gigabytes of video? Just grab the text files:
+#### Option B: Transcripts Only (Instant)
 ```bash
 uv run oreilly-dl "https://learning.oreilly.com/course/your-course-url/12345/" \
-  --email "your_email@domain.com" \
-  --password "your_password" \
   --transcripts-only
 ```
 
 #### Option C: Manual Login (Bypass Captchas 🛡️)
 If O'Reilly blocks the automated bot login, just use `--manual-login`. It will open a visible UI, wait for you to log yourself in, save your session, and close.
 ```bash
-uv run oreilly-dl --manual-login --browser stealth
+uv run oreilly-dl --manual-login
 ```
 *(Once done, you can run the download commands **without** passing `--email` or `--password`—it will just use your saved session!)*
+
+---
+
+## 🧪 Running Unit Tests
+
+The codebase includes a fully mocked testing suite suitable for CI/CD environments (runs without hitting live endpoints or spinning up real browsers). Run them using:
+
+```bash
+uv run pytest
+```
 
 ---
 
@@ -83,6 +92,7 @@ Run `uv run oreilly-dl --help` at any time to see all options:
 ```text
 usage: oreilly-dl [-h] [--email EMAIL] [--password PASSWORD] [--transcripts-only]
                   [--manual-login] [--no-headless] [--browser {firefox,chrome,stealth}]
+                  [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
                   [url]
 
 positional arguments:
@@ -93,24 +103,28 @@ options:
   --manual-login        Launch an interactive browser to log in and save profile, then exit.
   --no-headless         Run browser in a visible window (great for debugging).
   --browser {firefox,chrome,stealth}
-                        Set the browser engine (default: firefox). `stealth` is recommended for heavy anti-bot evasion.
+                        Set the browser engine (default: stealth). `stealth` is recommended for anti-bot evasion.
+  --output-dir OUTPUT_DIR
+                        Directory to save downloaded files (default: downloads).
+  --workers WORKERS     Max parallel video downloads (default: 3).
+  --debug               Enable diagnostic logging to 'downloader.log'.
 ```
 
 ---
 
 ## 📁 Output Structure
 
-The downloader automatically builds a pristine folder hierarchy matching O'Reilly's exact curriculum:
+The downloader automatically builds a folder hierarchy matching O'Reilly's exact curriculum, bypassing empty sub-lessons:
 
 ```text
 oreilly-downloader/
 ├── downloads/
 │   └── AWS Certified Solutions Architect/
 │       ├── course_structure.json
+│       ├── failed_downloads.json
 │       ├── 01 - Cloud Concepts/
-│       │   └── 01 - What is Cloud Computing/
-│       │       ├── 01 - Video Intro.mp4
-│       │       └── 01 - Video Intro_transcript.txt
+│       │   ├── 01 - Video Intro.mp4
+│       │   └── 01 - Video Intro_transcript.txt
 │       └── ...
 ```
 
@@ -129,6 +143,13 @@ This is resolved natively due to our `uv` setup, but if you bypassed it, make su
 
 **Video downloads are failing?**
 Verify `ffmpeg` is genuinely installed and available in your global system `$PATH`. `ffmpeg -version` should return its version details in your terminal.
+
+**Stuck on an unexpected error or want to report an issue?**
+Run the downloader with the `--debug` flag to generate a diagnostics file:
+```bash
+uv run oreilly-dl "https://learning.oreilly.com/course/..." --debug
+```
+This intercepts standard console output and writes a clean, timestamped event log along with the full tracebacks of any uncaught exceptions to `downloader.log` in your current working directory. Include this file when opening issues.
 
 ---
 

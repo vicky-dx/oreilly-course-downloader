@@ -3,6 +3,7 @@ import os
 import json
 import time
 import concurrent.futures
+import re
 from typing import Optional
 
 from colorama import init, Fore
@@ -10,31 +11,62 @@ from tqdm import tqdm
 import builtins
 import sys
 
-# Route all print statements through tqdm to prevent progress-bar visual corruption
-_original_print = builtins.print
+import sys
+import traceback
 
+_original_print = builtins.print
+_log_file = None
+_ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+def _strip_ansi(text: str) -> str:
+    return _ansi_escape.sub('', text)
 
 def _tqdm_print(*args, sep=" ", end="\n", file=None, flush=False):
     text = sep.join(str(a) for a in args)
     tqdm.write(text, file=file or sys.stdout, end=end)
-
+    
+    global _log_file
+    if _log_file:
+        try:
+            clean_text = _strip_ansi(text)
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            _log_file.write(f"[{timestamp}] {clean_text}{end}")
+            _log_file.flush()
+        except:
+            pass
 
 builtins.print = _tqdm_print
+
+def _handle_unhandled_exception(exctype, value, tb):
+    tb_lines = traceback.format_exception(exctype, value, tb)
+    tb_text = "".join(tb_lines)
+    print(Fore.RED + f"\n💥 Critical error occurred:\n{tb_text}")
+    
+    global _log_file
+    if _log_file:
+        try:
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            _log_file.write(f"\n[{timestamp}] !!! CRITICAL UNHANDLED EXCEPTION !!!\n{tb_text}\n")
+            _log_file.flush()
+        except:
+            pass
+    sys.exit(1)
 
 init(autoreset=True)
 
 from .core.browsers import BrowserFactory, IBrowser
 from .core.auth import AuthService
-from .core.extractor import ExtractorService
+from .core.extractor import CourseStructureScraper, MediaUrlResolver
 from .core.downloader import DownloaderService
 from .core.models import Course, Module, Lesson, Video
-from .core.utils import PathManager
+from .core.utils import PathManager, SanityUtils
 from .core.vtt import VttProcessor
+from .core.config import DownloaderConfig
 
 
-def build_course(structure: dict) -> Course:
+def build_course(structure: dict, title: str = "OReilly Extracted Course") -> Course:
     """Builds a Course object from the scraped structure dict."""
-    course = Course(title="OReilly Extracted Course", modules=[], structure=structure)
+    course = Course(title=title, modules=[], structure=structure)
     for mod_name, lessons_dict in structure.items():
         module = Module(title=mod_name, lessons=[])
         for lesson_name, videos_list in lessons_dict.items():
@@ -111,20 +143,29 @@ def _process_single_video(
     mod_idx: int,
     course_dir: str,
     driver,
-    extractor: ExtractorService,
+    scraper: CourseStructureScraper,
+    resolver: MediaUrlResolver,
     downloader: DownloaderService,
-    transcripts_only: bool,
-) -> Optional[concurrent.futures.Future]:
-    """Handles extraction and immediate download of a single video. Returns Future if successfully triggered download."""
+    config: DownloaderConfig,
+) -> Optional[tuple]:
+    """Handles extraction and immediate download of a single video. Returns Tuple if active action taken."""
     vid_file, txt_file = PathManager.get_video_paths(
         course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title
     )
 
-    if transcripts_only and os.path.exists(txt_file):
-        print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript extracted)")
+    if config.transcripts_only and os.path.exists(txt_file):
+        print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript already extracted)")
         return None
-    elif not transcripts_only and os.path.exists(vid_file):
-        print(Fore.YELLOW + f"⏩ Skipping {video.title} (video downloaded)")
+    elif not config.transcripts_only and os.path.exists(vid_file):
+        # Video is downloaded. Check if the transcript is missing.
+        if not os.path.exists(txt_file):
+            print(Fore.YELLOW + f"⏩ Video exists but transcript is missing for {video.title}. Extracting transcript...")
+            video.transcript = scraper.extract_transcript(video.url, resolver)
+            if video.transcript:
+                downloader.save_transcript(video.transcript, txt_file)
+                print(Fore.GREEN + f"✅ Transcript extracted.")
+        else:
+            print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
         return None
 
     print(f"\n{Fore.CYAN}🎥 Extracting data for: {video.title}")
@@ -133,24 +174,21 @@ def _process_single_video(
         + f"📁 Saving to folder: {os.path.basename(os.path.dirname(vid_file))}"
     )
 
-    if transcripts_only:
-        print(f"{Fore.MAGENTA}  🚀 Loading transcript page: {video.url}")
-        driver.get(video.url)
-        time.sleep(3)
-
-        video.transcript = extractor.extract_transcript()
+    if config.transcripts_only:
+        video.transcript = scraper.extract_transcript(video.url, resolver)
         if video.transcript:
             downloader.save_transcript(video.transcript, txt_file)
             print(Fore.GREEN + f"✅ Transcript extracted.")
+            return None
         else:
             print(Fore.RED + f"❌ No transcript available.")
-        return None
+            return ("error", video, "No transcript available")
     else:
-        # Extracting the m3u8 url
-        m3u8 = extractor.extract_m3u8_url(video.url)
+        # Extracting the m3u8 url using our decoupled resolver (tries API first, then falls back to sniffer)
+        m3u8 = resolver.resolve_m3u8_url(video.url)
         if m3u8:
             video.m3u8_url = m3u8
-            video.transcript = extractor.extract_transcript()
+            video.transcript = scraper.extract_transcript(video.url, resolver)
 
             if video.transcript:
                 downloader.save_transcript(video.transcript, txt_file)
@@ -159,24 +197,49 @@ def _process_single_video(
                 Fore.GREEN
                 + f"✅ M3U8 Fetched. Queuing {video.title} for background download..."
             )
-            return executor.submit(downloader.download_video, m3u8, vid_file)
+            future = executor.submit(downloader.download_video, m3u8, vid_file)
+            return (future, video, vid_file)
         else:
             print(Fore.RED + f"❌ No m3u8 found.")
-            return None
+            return ("error", video, "Could not resolve M3U8 stream URL")
 
 
 def _download_videos_concurrently(
     course: Course,
     driver,
-    extractor: ExtractorService,
+    scraper: CourseStructureScraper,
+    resolver: MediaUrlResolver,
     downloader: DownloaderService,
-    transcripts_only: bool,
+    config: DownloaderConfig,
     course_dir: str,
 ):
     """Iterates through the course structure and dispatches video processing with a bounded queue to avoid M3U8 expiration."""
 
-    max_workers = 3
-    active_futures = set()
+    max_workers = config.max_workers
+    running_futures = set()
+    future_to_video = {}
+    failed_items = []
+
+    def process_done_futures(done_set):
+        for f in done_set:
+            if f in future_to_video:
+                video, vid_file = future_to_video.pop(f)
+                try:
+                    success = f.result()
+                    if not success:
+                        failed_items.append({
+                            "title": video.title,
+                            "url": video.url,
+                            "path": vid_file,
+                            "error": "ffmpeg download failed"
+                        })
+                except Exception as e:
+                    failed_items.append({
+                        "title": video.title,
+                        "url": video.url,
+                        "path": vid_file,
+                        "error": f"Exception: {str(e)}"
+                    })
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for mod_idx, module in enumerate(course.modules, 1):
@@ -184,14 +247,14 @@ def _download_videos_concurrently(
                 for vid_idx, video in enumerate(lesson.videos, 1):
 
                     # Bounding the queue: Wait if we already have max_workers active downloads
-                    # This prevents scraping 50 M3U8s in advance which lets their CDN tokens expire
-                    while len(active_futures) >= max_workers:
-                        done, active_futures = concurrent.futures.wait(
-                            active_futures,
+                    while len(running_futures) >= max_workers:
+                        done, running_futures = concurrent.futures.wait(
+                            running_futures,
                             return_when=concurrent.futures.FIRST_COMPLETED,
                         )
+                        process_done_futures(done)
 
-                    future = _process_single_video(
+                    res = _process_single_video(
                         executor=executor,
                         video=video,
                         vid_idx=vid_idx,
@@ -201,34 +264,46 @@ def _download_videos_concurrently(
                         mod_idx=mod_idx,
                         course_dir=course_dir,
                         driver=driver,
-                        extractor=extractor,
+                        scraper=scraper,
+                        resolver=resolver,
                         downloader=downloader,
-                        transcripts_only=transcripts_only,
+                        config=config,
                     )
 
-                    if future:
-                        active_futures.add(future)
+                    if res:
+                        if res[0] == "error":
+                            _, video, err_msg = res
+                            failed_items.append({
+                                "title": video.title,
+                                "url": video.url,
+                                "error": err_msg
+                            })
+                        else:
+                            future, video, vid_file = res
+                            running_futures.add(future)
+                            future_to_video[future] = (video, vid_file)
 
-        if active_futures and not transcripts_only:
-            print(
-                f"\n{Fore.CYAN}⏳ Waiting for remaining {len(active_futures)} downloads..."
-            )
-            concurrent.futures.wait(active_futures)
+        if running_futures:
+            done, _ = concurrent.futures.wait(running_futures)
+            process_done_futures(done)
 
-    print(f"\n{Fore.GREEN}✅ All course videos processed successfully!")
+    # Dead Letter Queue (DLQ) Reporting and Exporting
+    if failed_items:
+        dlq_path = os.path.join(course_dir, "failed_downloads.json")
+        try:
+            with open(dlq_path, "w", encoding="utf-8") as f:
+                json.dump(failed_items, f, indent=2)
+            print(f"\n{Fore.YELLOW}⚠️ {len(failed_items)} items failed to process/download.")
+            print(f"{Fore.YELLOW}👉 Dead Letter Queue (DLQ) log exported to: {dlq_path}")
+        except Exception as e:
+            print(f"\n{Fore.RED}❌ {len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
+    else:
+        print(f"\n{Fore.GREEN}✅ All course videos processed successfully!")
 
 
-def process_course(
-    course_url: str,
-    headless: bool = True,
-    browser_type: str = "firefox",
-    email: Optional[str] = None,
-    password: Optional[str] = None,
-    manual_login: bool = False,
-    transcripts_only: bool = False,
-):
+def process_course(config: DownloaderConfig):
     print(Fore.CYAN + "🚀 Initializing browser...")
-    bm: IBrowser = BrowserFactory.create(browser_type=browser_type, headless=headless)
+    bm: IBrowser = BrowserFactory.create(browser_type=config.browser_type, headless=config.headless)
     driver = bm.start()
 
     if not driver:
@@ -238,19 +313,53 @@ def process_course(
     try:
         auth = AuthService(bm)
 
-        if not _handle_authentication(driver, auth, email, password, manual_login):
+        if not _handle_authentication(driver, auth, config.email, config.password, config.manual_login):
             return
 
-        extractor = ExtractorService(bm)
-        downloader = DownloaderService()
+        # Retrieve Kaltura session token (ks) if we are in normal download mode
+        ks = None
+        if not config.manual_login:
+            print(Fore.CYAN + "🔑 Extracting active Kaltura Session (ks) token...")
+            ks = auth.get_ks()
+            if ks:
+                print(Fore.GREEN + f"✅ Session acquired: {ks[:20]}...")
+            else:
+                print(Fore.YELLOW + "⚠️ Failed to acquire Kaltura session (ks). Will rely on sniffer fallback.")
+
+        # Pre-flight check for FFmpeg dependency if downloads are required
+        ffmpeg_path = "ffmpeg"
+        if not config.transcripts_only:
+            detected_path = SanityUtils.get_ffmpeg_path()
+            if not detected_path:
+                print(Fore.RED + "\n❌ Critical dependency missing: FFmpeg could not be found.")
+                print(Fore.YELLOW + "Please install FFmpeg and add it to your system PATH, or place ffmpeg.exe in the project directory.")
+                print(Fore.CYAN + "👉 Download URL: https://www.ffmpeg.org/download.html")
+                return
+            ffmpeg_path = detected_path
+
+        scraper = CourseStructureScraper(bm)
+        resolver = MediaUrlResolver(bm, ks=ks)
+        downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
 
         print(Fore.CYAN + "📚 Extracting course structure...")
-        structure = extractor.extract_course_structure(course_url)
+        structure = scraper.extract_course_structure(config.url)
         if not structure:
             print(Fore.RED + "❌ Failed to extract course structure.")
             return
 
-        course = build_course(structure)
+        # Dynamically extract course title from driver title (removing common suffix like [Video] or [Book])
+        course_title = "OReilly Extracted Course"
+        if driver:
+            try:
+                raw_title = driver.title
+                if raw_title:
+                    course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
+                    course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
+                    course_title = course_title.strip()
+            except Exception:
+                pass
+
+        course = build_course(structure, title=course_title)
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
 
         course_dir = PathManager.get_course_dir(downloader.output_dir, course.title)
@@ -262,7 +371,7 @@ def process_course(
             json.dump(course.structure, f, indent=2)
 
         _download_videos_concurrently(
-            course, driver, extractor, downloader, transcripts_only, course_dir
+            course, driver, scraper, resolver, downloader, config, course_dir
         )
 
     finally:
@@ -288,10 +397,28 @@ def main():
     parser.add_argument("--manual-login", action="store_true")
     parser.add_argument("--no-headless", action="store_true")
     parser.add_argument(
-        "--browser", choices=["firefox", "chrome", "stealth"], default="firefox"
+        "--browser", choices=["firefox", "chrome", "stealth"], default="stealth"
+    )
+    parser.add_argument(
+        "--output-dir", default="downloads", help="Directory to save downloaded files"
+    )
+    parser.add_argument(
+        "--workers", type=int, default=3, help="Max parallel downloads"
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Enable file logging to downloader.log"
     )
 
     args = parser.parse_args()
+
+    if args.debug:
+        global _log_file
+        try:
+            _log_file = open("downloader.log", "a", encoding="utf-8")
+            sys.excepthook = _handle_unhandled_exception
+            print(Fore.CYAN + "📝 Logging active. Detailed logs and errors will be saved to 'downloader.log'.")
+        except Exception as e:
+            print(Fore.YELLOW + f"⚠️ Warning: Could not initialize log file: {e}")
 
     if args.on24_vtt:
         print(
@@ -302,7 +429,7 @@ def main():
             captions = VttProcessor.parse_vtt(vtt_content)
             if captions:
                 transcript = VttProcessor.format_transcript(captions, args.event_name)
-                dl_svc = DownloaderService()
+                dl_svc = DownloaderService(output_dir=args.output_dir)
                 out_path = os.path.join(
                     dl_svc.output_dir, args.event_name, "full_transcript.txt"
                 )
@@ -319,15 +446,20 @@ def main():
         parser.error(
             "The course URL is required unless using --manual-login or --on24-vtt"
         )
-    process_course(
-        args.url,
-        headless=active_headless,
-        browser_type=args.browser,
+
+    config = DownloaderConfig(
+        url=args.url,
         email=args.email,
         password=args.password,
-        manual_login=args.manual_login,
+        browser_type=args.browser,
+        headless=active_headless,
         transcripts_only=args.transcripts_only,
+        manual_login=args.manual_login,
+        output_dir=args.output_dir,
+        max_workers=args.workers,
     )
+
+    process_course(config)
 
 
 if __name__ == "__main__":

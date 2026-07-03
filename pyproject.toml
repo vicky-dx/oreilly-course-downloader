@@ -21,5 +21,10 @@ dependencies = [
 requires = ["uv_build>=0.10.6,<0.11.0"]
 build-backend = "uv_build"
 
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
 [project.scripts]
 oreilly-dl = "oreilly_downloader.cli:main"

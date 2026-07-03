@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Optional
 from colorama import init, Fore, Style
 init(autoreset=True)
 from selenium.webdriver.common.by import By
@@ -94,3 +95,20 @@ class AuthService:
         except Exception as e:
             print(Fore.RED + f"❌ Login failed: {e}")
             return False
+
+    def get_ks(self) -> Optional[str]:
+        """Fetches the active Kaltura Session (ks) token from the browser cookie or API."""
+        try:
+            self.driver.set_script_timeout(15)
+            script = """
+            var callback = arguments[arguments.length - 1];
+            fetch('/api/v1/player/kaltura_session/')
+                .then(r => r.json())
+                .then(d => callback(d.ks || d.kaltura_session || d.session))
+                .catch(e => callback(null));
+            """
+            ks = self.driver.execute_async_script(script)
+            return ks
+        except Exception as e:
+            print(Fore.RED + f"❌ Failed to extract Kaltura session (ks): {e}")
+            return None

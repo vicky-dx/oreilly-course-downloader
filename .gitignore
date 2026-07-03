@@ -5,35 +5,60 @@ __pycache__/
 *.so
 .Python
 
-# Chrome Profile
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Chrome / Webdriver Profiles
 chrome_profile/
 browser_profile/
 browser_profile_stealth/
 firefox_profile/
-
+.chrome-user-data/
 
 # Downloaded Content
 downloads/
 *.mp4
 *.m3u8
+*_transcript.txt
 
-# Course Structure Files (optional - remove if you want to track them)
+# Course Structure & Logs
 *.json
 !package.json
-
-# Progress Tracking
+failed_downloads.json
 download_progress.json
 
-# IDE
+# Environment / Credentials / Secrets
+.env
+.env.local
+.env.*
+secrets.py
+secrets/
+
+# IDE / Editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
 # Logs
 *.log
+downloader.log
