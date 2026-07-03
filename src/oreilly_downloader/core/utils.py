@@ -61,7 +61,7 @@ class PathManager:
         return os.path.join(base_dir, SanityUtils.sanitize_filename(course_title))
 
     @staticmethod
-    def get_video_paths(course_dir: str, mod_idx: int, mod_title: str, less_idx: int, less_title: str, vid_idx: int, vid_title: str):
+    def get_video_paths(course_dir: str, mod_idx: int, mod_title: str, less_idx: int, less_title: str, vid_idx: int, vid_title: str, is_audio_only: bool = False):
         if less_title == "Videos":
             vid_base_dir = os.path.join(
                 course_dir,
@@ -75,4 +75,5 @@ class PathManager:
                 f"{less_idx:02d} - {SanityUtils.sanitize_filename(less_title)}",
                 f"{vid_idx:02d} - {SanityUtils.sanitize_filename(vid_title)}",
             )
-        return f"{vid_base_dir}.mp4", f"{vid_base_dir}_transcript.txt"
+        ext = ".m4a" if is_audio_only else ".mp4"
+        return f"{vid_base_dir}{ext}", f"{vid_base_dir}_transcript.txt"

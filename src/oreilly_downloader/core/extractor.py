@@ -46,11 +46,11 @@ class MediaUrlResolver:
     def _extract_video_id(self, video_url: str) -> Optional[str]:
         """Extracts the unique O'Reilly videoclip ID from the URL (e.g. 9781663754035-a00004)."""
         # Matches ISBN followed by a hyphen and chapter code (e.g. 9781663754035-a00004 or 9781663754035-chapter1)
-        match = re.search(r'\b(978\d{10})-[a-zA-Z0-9_]+', video_url)
+        match = re.search(r'\b(978\d{10})-[a-zA-Z0-9_-]+', video_url)
         if match:
             return match.group(0)
         # Fallback to any 10-13 digit number followed by a hyphen and chapter code
-        match = re.search(r'\b\d{10,13}-[a-zA-Z0-9_]+', video_url)
+        match = re.search(r'\b\d{10,13}-[a-zA-Z0-9_-]+', video_url)
         if match:
             return match.group(0)
         return None
@@ -149,15 +149,22 @@ class MediaUrlResolver:
             context = playback_data[0]
             sources = context.get("sources", [])
 
+            def _append_ks(hls_url: str) -> str:
+                if not self.ks or "/ks/" in hls_url:
+                    return hls_url
+                if "/a.m3u8" in hls_url:
+                    return hls_url.replace("/a.m3u8", f"/ks/{self.ks}/a.m3u8")
+                return hls_url
+
             # Find HLS format (applehttp) source
             hls_source = next((s for s in sources if s.get("format") == "applehttp"), None)
             if hls_source and hls_source.get("url"):
-                return hls_source.get("url")
+                return _append_ks(hls_source.get("url"))
 
             # Fallback to any URL format source
             url_source = next((s for s in sources if s.get("format") == "url"), None)
             if url_source and url_source.get("url"):
-                return url_source.get("url")
+                return _append_ks(url_source.get("url"))
 
             print(f"{Fore.YELLOW}  ⚠️ No HLS or URL streams found in Kaltura PlaybackContext")
             return None
@@ -368,7 +375,7 @@ class CourseStructureScraper:
         except Exception:
             return None
 
-    def extract_course_structure(self, course_url: str):
+    def extract_course_structure(self, course_url: str, is_audiobook: bool = False):
         self.driver.get(course_url)
         try:
             # Wait for either accordion summary buttons or standard video links to load
@@ -386,6 +393,7 @@ class CourseStructureScraper:
         # 1. Try modern accordion-based scraper (handles lazy-loading in MUI layout)
         accordion_script = r"""
         const callback = arguments[arguments.length - 1];
+        const isAudiobook = arguments[0] === true;
         (async () => {
             try {
                 const headers = Array.from(document.querySelectorAll('button.MuiAccordionSummary-root'));
@@ -430,8 +438,22 @@ class CourseStructureScraper:
                         const links = Array.from(panel.querySelectorAll('a'))
                             .filter(a => {
                                 const href = a.getAttribute('href') || '';
-                                if (href.includes('/videos/') && !href.includes('/continue/') && !href.includes('/start/')) return true;
+                                if (href.includes('/continue/') || href.includes('/start/')) return false;
+                                
+                                const text = (a.textContent || '').trim().toLowerCase();
+                                if (text === 'continue' || text === 'start') return false;
+                                
+                                if (href.includes('/videos/')) return true;
                                 if (href.includes('/library/view/') && href.includes('video')) return true;
+                                
+                                if (isAudiobook) {
+                                    const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+                                    if (bookIdMatch) {
+                                        const bookId = bookIdMatch[0];
+                                        const match = href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
+                                        if (match) return true;
+                                    }
+                                }
                                 return false;
                             });
 
@@ -459,7 +481,7 @@ class CourseStructureScraper:
         try:
             print(Fore.CYAN + "🔍 Scanning course structure (handling lazy-loaded accordions)...")
             self.driver.set_script_timeout(60) # Set script timeout high enough for accordion expansion
-            structure = self.driver.execute_async_script(accordion_script)
+            structure = self.driver.execute_async_script(accordion_script, is_audiobook)
             if structure and "error" not in structure:
                 print(Fore.GREEN + f"✅ Successfully scraped {len(structure)} chapters using modern scraper.")
                 return structure
@@ -471,6 +493,7 @@ class CourseStructureScraper:
         # 2. Fallback to legacy scraper (expects static list)
         print(Fore.CYAN + "🔍 Scanning course structure using legacy fallback...")
         legacy_script = r"""
+        const isAudiobook = arguments[0] === true;
         function cleanName(text) {
             let t = text.trim();
             t = t.replace(/Complete$/i, '');
@@ -478,15 +501,29 @@ class CourseStructureScraper:
             return t.trim();
         }
         
-        const courseRegex = /(\/videos\/|\/library\/view\/.*\/video|\/course\/.*\/(start|continue)\/)/i;
-        
+        const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+        const bookId = bookIdMatch ? bookIdMatch[0] : null;
+
         const allVideoLinks = Array.from(document.querySelectorAll('a'))
             .filter(link => {
                 if(!link.href) return false;
-                if(link.href.includes('/library/view/') && !link.href.includes('video')) return false;
                 if(link.href.includes('#')) return false;
+                if(link.href.includes('/continue/') || link.href.includes('/start/')) return false;
                 
-                return courseRegex.test(link.href);
+                const text = (link.textContent || '').trim().toLowerCase();
+                if (text === 'continue' || text === 'start') return false;
+                
+                // Match standard videos
+                if (link.href.includes('/videos/')) return true;
+                if (link.href.includes('/library/view/') && link.href.includes('video')) return true;
+                
+                // Match bookId-specific patterns
+                if (isAudiobook && bookId) {
+                    const match = link.href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
+                    if (match) return true;
+                }
+                
+                return false;
             });
             
         const courseStructure = {};
@@ -525,7 +562,7 @@ class CourseStructureScraper:
         });
         return courseStructure;
         """
-        return self.driver.execute_script(legacy_script)
+        return self.driver.execute_script(legacy_script, is_audiobook)
 
 
 # For backwards compatibility with other systems importing ExtractorService directly

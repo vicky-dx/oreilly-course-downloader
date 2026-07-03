@@ -147,34 +147,45 @@ def _process_single_video(
     resolver: MediaUrlResolver,
     downloader: DownloaderService,
     config: DownloaderConfig,
+    is_audio_only: bool = False,
 ) -> Optional[tuple]:
     """Handles extraction and immediate download of a single video. Returns Tuple if active action taken."""
     vid_file, txt_file = PathManager.get_video_paths(
-        course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title
+        course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audio_only
     )
 
-    if config.transcripts_only and os.path.exists(txt_file):
-        print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript already extracted)")
-        return None
-    elif not config.transcripts_only and os.path.exists(vid_file):
-        # Video is downloaded. Check if the transcript is missing.
-        if not os.path.exists(txt_file):
-            print(Fore.YELLOW + f"⏩ Video exists but transcript is missing for {video.title}. Extracting transcript...")
-            video.transcript = scraper.extract_transcript(video.url, resolver)
-            if video.transcript:
-                downloader.save_transcript(video.transcript, txt_file)
-                print(Fore.GREEN + f"✅ Transcript extracted.")
-        else:
-            print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
-        return None
+    if is_audio_only:
+        if os.path.exists(vid_file):
+            print(Fore.YELLOW + f"⏩ Skipping {video.title} (audio already exists)")
+            return None
+    else:
+        if config.transcripts_only and os.path.exists(txt_file):
+            print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript already extracted)")
+            return None
+        elif not config.transcripts_only and os.path.exists(vid_file):
+            # Video is downloaded. Check if the transcript is missing.
+            if not os.path.exists(txt_file):
+                print(Fore.YELLOW + f"⏩ Video exists but transcript is missing for {video.title}. Extracting transcript...")
+                video.transcript = scraper.extract_transcript(video.url, resolver)
+                if video.transcript:
+                    downloader.save_transcript(video.transcript, txt_file)
+                    print(Fore.GREEN + f"✅ Transcript extracted.")
+            else:
+                print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
+            return None
 
-    print(f"\n{Fore.CYAN}🎥 Extracting data for: {video.title}")
+    media_icon = "🎧" if is_audio_only else "🎥"
+    media_type = "Audio" if is_audio_only else "Video"
+    print(f"\n{Fore.CYAN}{media_icon} Extracting data for {media_type}: {video.title}")
     print(
         Fore.YELLOW
         + f"📁 Saving to folder: {os.path.basename(os.path.dirname(vid_file))}"
     )
 
     if config.transcripts_only:
+        if is_audio_only:
+            print(Fore.RED + f"❌ Transcripts-only mode is not applicable for audiobooks.")
+            return ("error", video, "Transcripts not supported for audiobooks")
         video.transcript = scraper.extract_transcript(video.url, resolver)
         if video.transcript:
             downloader.save_transcript(video.transcript, txt_file)
@@ -188,10 +199,10 @@ def _process_single_video(
         m3u8 = resolver.resolve_m3u8_url(video.url)
         if m3u8:
             video.m3u8_url = m3u8
-            video.transcript = scraper.extract_transcript(video.url, resolver)
-
-            if video.transcript:
-                downloader.save_transcript(video.transcript, txt_file)
+            if not is_audio_only:
+                video.transcript = scraper.extract_transcript(video.url, resolver)
+                if video.transcript:
+                    downloader.save_transcript(video.transcript, txt_file)
 
             print(
                 Fore.GREEN
@@ -212,6 +223,7 @@ def _download_videos_concurrently(
     downloader: DownloaderService,
     config: DownloaderConfig,
     course_dir: str,
+    is_audio_only: bool = False,
 ):
     """Iterates through the course structure and dispatches video processing with a bounded queue to avoid M3U8 expiration."""
 
@@ -268,6 +280,7 @@ def _download_videos_concurrently(
                         resolver=resolver,
                         downloader=downloader,
                         config=config,
+                        is_audio_only=is_audio_only,
                     )
 
                     if res:
@@ -298,7 +311,8 @@ def _download_videos_concurrently(
         except Exception as e:
             print(f"\n{Fore.RED}❌ {len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
     else:
-        print(f"\n{Fore.GREEN}✅ All course videos processed successfully!")
+        media_name = "audiobook chapters" if is_audio_only else "course videos"
+        print(f"\n{Fore.GREEN}✅ All {media_name} processed successfully!")
 
 
 def process_course(config: DownloaderConfig):
@@ -342,12 +356,12 @@ def process_course(config: DownloaderConfig):
         downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
 
         print(Fore.CYAN + "📚 Extracting course structure...")
-        structure = scraper.extract_course_structure(config.url)
+        structure = scraper.extract_course_structure(config.url, config.audiobook)
         if not structure:
             print(Fore.RED + "❌ Failed to extract course structure.")
             return
 
-        # Dynamically extract course title from driver title (removing common suffix like [Video] or [Book])
+        # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
         course_title = "OReilly Extracted Course"
         if driver:
             try:
@@ -355,12 +369,17 @@ def process_course(config: DownloaderConfig):
                 if raw_title:
                     course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
                     course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
+                    course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
                     course_title = course_title.strip()
             except Exception:
                 pass
 
+        is_audio_only = config.audiobook
+
         course = build_course(structure, title=course_title)
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
+        if is_audio_only:
+            print(Fore.CYAN + "🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
 
         course_dir = PathManager.get_course_dir(downloader.output_dir, course.title)
         os.makedirs(course_dir, exist_ok=True)
@@ -371,7 +390,7 @@ def process_course(config: DownloaderConfig):
             json.dump(course.structure, f, indent=2)
 
         _download_videos_concurrently(
-            course, driver, scraper, resolver, downloader, config, course_dir
+            course, driver, scraper, resolver, downloader, config, course_dir, is_audio_only=is_audio_only
         )
 
     finally:
@@ -380,8 +399,8 @@ def process_course(config: DownloaderConfig):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="O'Reilly Course Downloader")
-    parser.add_argument("url", nargs="?", help="URL of the course")
+    parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
+    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
     parser.add_argument(
         "--on24-vtt",
         help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
@@ -393,7 +412,16 @@ def main():
     )
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
-    parser.add_argument("--transcripts-only", action="store_true")
+    parser.add_argument(
+        "--transcripts-only",
+        action="store_true",
+        help="Only download text transcripts. Skip media m3u8 downloading.",
+    )
+    parser.add_argument(
+        "--audiobook",
+        action="store_true",
+        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
+    )
     parser.add_argument("--manual-login", action="store_true")
     parser.add_argument("--no-headless", action="store_true")
     parser.add_argument(
@@ -403,7 +431,7 @@ def main():
         "--output-dir", default="downloads", help="Directory to save downloaded files"
     )
     parser.add_argument(
-        "--workers", type=int, default=3, help="Max parallel downloads"
+        "--workers", type=int, default=3, help="Max parallel media downloads"
     )
     parser.add_argument(
         "--debug", action="store_true", help="Enable file logging to downloader.log"
@@ -457,6 +485,7 @@ def main():
         manual_login=args.manual_login,
         output_dir=args.output_dir,
         max_workers=args.workers,
+        audiobook=args.audiobook,
     )
 
     process_course(config)

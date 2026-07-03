@@ -13,3 +13,5 @@ class DownloaderConfig:
     manual_login: bool = False
     output_dir: str = "downloads"
     max_workers: int = 3
+    audiobook: bool = False
+

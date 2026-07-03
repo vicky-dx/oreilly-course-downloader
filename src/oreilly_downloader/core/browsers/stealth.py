@@ -24,9 +24,36 @@ class StealthChromeBrowser(IBrowser):
             opts.add_argument("--headless=new")
         return opts
 
+    def _kill_zombie_chrome_processes(self, profile_dir: str):
+        import subprocess
+        if os.name == "nt":
+            try:
+                cmd = 'powershell -Command "Get-CimInstance Win32_Process -Filter \\"name = \'chrome.exe\'\\" | Where-Object { $_.CommandLine -like \'*browser_profile_stealth*\' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"'
+                subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+        else:
+            try:
+                output = subprocess.check_output(["lsof", "-t", profile_dir], text=True)
+                pids = [p.strip() for p in output.split("\n") if p.strip()]
+                for pid in pids:
+                    subprocess.run(["kill", "-9", pid], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+
     def start(self):
-        print(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
         prof = os.path.join(os.getcwd(), "browser_profile_stealth")
+        lock_file = os.path.join(prof, "lockfile")
+        if os.path.exists(lock_file):
+            print(Fore.YELLOW + "🧹 Stale browser profile lock detected. Automatically cleaning up background processes...")
+            self._kill_zombie_chrome_processes(prof)
+            try:
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+            except Exception:
+                pass
+
+        print(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
 
         def handle_lock_error(exception):
             err_msg = str(exception)

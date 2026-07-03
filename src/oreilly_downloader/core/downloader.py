@@ -51,6 +51,7 @@ class DownloaderService:
         bar_pos = self._acquire_progress_position()
 
         try:
+            fmt_flag = "ipod" if output_path.lower().endswith(".m4a") else "mp4"
             ffmpeg_cmd = [
                 self.ffmpeg_path,
                 "-y",
@@ -67,7 +68,7 @@ class DownloaderService:
                 "-c",
                 "copy",
                 "-f",
-                "mp4",
+                fmt_flag,
                 temp_output_path,
             ]
 

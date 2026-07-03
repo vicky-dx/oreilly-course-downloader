@@ -77,3 +77,21 @@ def test_path_manager_video_paths_with_other_lesson():
     expected_txt = os.path.join(course_dir, "01 - Introduction", "02 - Setup Guide", "01 - Installation_transcript.txt")
     assert vid_file == expected_vid
     assert txt_file == expected_txt
+
+def test_path_manager_video_paths_with_audiobook():
+    course_dir = os.path.join("downloads", "DesignPatterns")
+    vid_file, txt_file = PathManager.get_video_paths(
+        course_dir=course_dir,
+        mod_idx=1,
+        mod_title="Creational",
+        less_idx=1,
+        less_title="Videos",
+        vid_idx=2,
+        vid_title="Factory",
+        is_audio_only=True
+    )
+    expected_vid = os.path.join(course_dir, "01 - Creational", "02 - Factory.m4a")
+    expected_txt = os.path.join(course_dir, "01 - Creational", "02 - Factory_transcript.txt")
+    assert vid_file == expected_vid
+    assert txt_file == expected_txt
+

@@ -1,6 +1,6 @@
-# O'Reilly Video Course Downloader 🎓
+# O'Reilly Downloader (Video & Audiobook) 🎓
 
-A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses** with their videos and transcripts, automatically organizing them by chapters. 
+A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses and audiobooks** with their videos, audio chapters, and transcripts, automatically organizing them by modules. 
 
 > **Important Architecture Update:** This project has been entirely rewritten into a modern Python package managed by **[`uv`](https://docs.astral.sh/uv/)**. It's now faster, perfectly cleanly containerized, and much easier to install on any OS.
 ## ✨ Features
@@ -8,6 +8,7 @@ A powerful, high-performance Python CLI tool to download **complete O'Reilly Lea
 - **⚡ Fast API-Based Resolving**: Uses direct Kaltura and O'Reilly APIs to resolve video streams and transcripts instantly. Does not navigate browser tabs or load players unless the API calls fail (falling back to Selenium sniffer).
 - **📚 Complete Course Downloads**: Extract entire courses with all modules and lessons hierarchically intact.
 - **🎥 Video Downloads**: High-quality video downloads via HLS/m3u8 raw streams using `ffmpeg`.
+- **🎧 Audiobook Downloads**: Native audiobook and audio course downloads saved in high-quality `.m4a` format.
 - **📝 Native Transcripts**: Extracts actual text-based video transcripts parsed directly from the O'Reilly API, saving them as timestamps.
 - **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~100x faster, zero storage weight).
 - **🗂️ Smart Organization**: Structures output folders logically. If there are no custom sub-lessons, videos are saved directly inside their parent Chapter directories.
@@ -73,6 +74,13 @@ uv run oreilly-dl --manual-login
 ```
 *(Once done, you can run the download commands **without** passing `--email` or `--password`—it will just use your saved session!)*
 
+#### Option D: Download Audiobooks 🎧
+To download an audiobook, append the `--audiobook` flag. The tool automatically fetches all chapters, skips transcript extraction checks, and saves them as `.m4a` audio files.
+```bash
+uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-systems/9781663754035/" \
+  --audiobook
+```
+
 ---
 
 ## 🧪 Running Unit Tests
@@ -90,24 +98,32 @@ uv run pytest
 Run `uv run oreilly-dl --help` at any time to see all options:
 
 ```text
-usage: oreilly-dl [-h] [--email EMAIL] [--password PASSWORD] [--transcripts-only]
-                  [--manual-login] [--no-headless] [--browser {firefox,chrome,stealth}]
-                  [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
+usage: oreilly-dl [-h] [--on24-vtt ON24_VTT] [--event-name EVENT_NAME] [--email EMAIL] [--password PASSWORD]
+                  [--transcripts-only] [--audiobook] [--manual-login] [--no-headless]
+                  [--browser {firefox,chrome,stealth}] [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
                   [url]
 
+O'Reilly Course (Video/Audio) Downloader
+
 positional arguments:
-  url                   URL of the course to download (optional if using --manual-login)
+  url                   URL of the course or audiobook
 
 options:
-  --transcripts-only    Only download text transcripts. Skip video `m3u8` downloading.
-  --manual-login        Launch an interactive browser to log in and save profile, then exit.
-  --no-headless         Run browser in a visible window (great for debugging).
+  -h, --help            show this help message and exit
+  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.
+  --event-name EVENT_NAME
+                        Name of the event to save the transcript under.
+  --email EMAIL         Login email
+  --password PASSWORD   Login password
+  --transcripts-only    Only download text transcripts. Skip media m3u8 downloading.
+  --audiobook           Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).
+  --manual-login
+  --no-headless
   --browser {firefox,chrome,stealth}
-                        Set the browser engine (default: stealth). `stealth` is recommended for anti-bot evasion.
   --output-dir OUTPUT_DIR
-                        Directory to save downloaded files (default: downloads).
-  --workers WORKERS     Max parallel video downloads (default: 3).
-  --debug               Enable diagnostic logging to 'downloader.log'.
+                        Directory to save downloaded files
+  --workers WORKERS     Max parallel media downloads
+  --debug               Enable file logging to downloader.log
 ```
 
 ---

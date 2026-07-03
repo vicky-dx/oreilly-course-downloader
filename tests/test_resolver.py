@@ -23,6 +23,13 @@ def test_extract_video_id():
     url2 = "https://learning.oreilly.com/videos/title/1234567890-chap1"
     assert resolver._extract_video_id(url2) == "1234567890-chap1"
     
+    # Test audiobook patterns with standard and hyphenated chapter IDs
+    url_audio1 = "https://learning.oreilly.com/library/view/designing-distributed-systems/9781663754035/9781663754035-a00001/"
+    assert resolver._extract_video_id(url_audio1) == "9781663754035-a00001"
+    
+    url_audio2 = "https://learning.oreilly.com/library/view/kafka-building-reliable/9781806388578/9781806388578-chapter-1.html"
+    assert resolver._extract_video_id(url_audio2) == "9781806388578-chapter-1"
+    
     # Test invalid URLs
     assert resolver._extract_video_id("https://learning.oreilly.com/course/title") is None
 
