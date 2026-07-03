@@ -2002,6 +2002,23 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         return;
       }
 
+      // Local bookmark hash links (e.g. #co_CO1-1)
+      if (href.startsWith('#')) {
+        e.preventDefault();
+        const targetId = href.substring(1);
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.style.transition = 'background-color 0.3s';
+          const oldBg = targetEl.style.backgroundColor;
+          targetEl.style.backgroundColor = 'rgba(255, 235, 59, 0.3)';
+          setTimeout(() => {
+            targetEl.style.backgroundColor = oldBg;
+          }, 1000);
+        }
+        return;
+      }
+
       // Internal relative document link (e.g. ch02.html#sec)
       e.preventDefault();
 
