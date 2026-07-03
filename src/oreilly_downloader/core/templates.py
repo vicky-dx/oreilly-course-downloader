@@ -993,6 +993,12 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="bottom-bar">
           <button id="prev-btn" class="nav-arrow">◀ Previous</button>
           <div id="progress-indicator">
+            <button id="history-back-btn" title="Go back to previous page" style="margin-right: 8px; display: none;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+              </svg>
+              Back
+            </button>
             <button id="toggle-sidebar">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
                 <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
@@ -1175,6 +1181,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     let selectedColor = "yellow";
     let activeHighlightId = null; // Active highlight being edited in modal
     let tempSelectionRange = null; // Hold range between text selection and note modal input
+    let historyStack = [];
     
     // Toggle sidebar visibility
     const sidebar = document.getElementById('sidebar');
@@ -1211,6 +1218,21 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     });
     popup.addEventListener('click', (e) => {
       e.stopPropagation();
+    });
+
+    // History back button trigger
+    document.getElementById('history-back-btn').addEventListener('click', () => {
+      if (historyStack.length > 0) {
+        const prev = historyStack.pop();
+        const baseSrc = prev.split('#')[0];
+        const li = document.querySelector(`li[data-src="${prev}"]`) || 
+                   document.querySelector(`li[data-src^="${baseSrc}"]`);
+        loadChapter(prev, li);
+        
+        if (historyStack.length === 0) {
+          document.getElementById('history-back-btn').style.display = 'none';
+        }
+      }
     });
 
     // Selection tooltip dropdown picker toggle
@@ -1860,7 +1882,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         
         span.addEventListener('click', (e) => {
           e.stopPropagation();
-          loadChapter(src, li);
+          navigateTo(src);
         });
         
         ul.appendChild(li);
@@ -1943,6 +1965,19 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       } else {
         nextBtn.style.visibility = 'hidden';
       }
+    // Navigate with history tracking (pushes previous src to history stack)
+    function navigateTo(src) {
+      if (currentChapter && currentChapter !== src) {
+        historyStack.push(currentChapter);
+        if (historyStack.length > 50) historyStack.shift();
+        
+        const backBtn = document.getElementById('history-back-btn');
+        if (backBtn) backBtn.style.display = 'inline-flex';
+      }
+      const baseSrc = src.split('#')[0];
+      const li = document.querySelector(`li[data-src="${src}"]`) || 
+                 document.querySelector(`li[data-src^="${baseSrc}"]`);
+      loadChapter(src, li);
     }
 
     // Load XHTML chapter dynamically
@@ -2015,6 +2050,10 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
           wrapper.innerHTML = `<div style='text-align:center; color:red; padding-top: 150px;'><h3>Failed to load chapter: ${baseSrc}</h3></div>`;
           console.error(err);
         });
+
+      // Update URL search parameters silently
+      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?ch=${src}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
     }
 
     // Intercept clicks on links inside book content to keep navigation local and SPA-based
@@ -2053,11 +2092,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
 
       // Find matching TOC list item to sync sidebar
       const targetSrc = href;
-      const baseSrc = href.split('#')[0];
-      const li = document.querySelector(`li[data-src="${targetSrc}"]`) || 
-                 document.querySelector(`li[data-src^="${baseSrc}"]`);
-
-      loadChapter(targetSrc, li);
+      navigateTo(targetSrc);
     });
   </script>
 </body>
