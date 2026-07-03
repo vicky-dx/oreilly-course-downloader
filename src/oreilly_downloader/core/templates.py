@@ -692,6 +692,12 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       opacity: 0.8;
     }
 
+    /* Program callout overlap alignment fix */
+    #book-content #sbo-rt-content dl.calloutlist dd {
+      margin-left: 2.5rem !important;
+      padding-left: 0.5rem !important;
+    }
+
     /* Selection Context Menu Tooltip */
     #selection-tooltip {
       position: absolute;
