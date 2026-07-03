@@ -154,28 +154,37 @@ def _process_single_video(
         course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audio_only
     )
 
-    if config.transcripts_only and os.path.exists(txt_file):
-        print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript already extracted)")
-        return None
-    elif not config.transcripts_only and os.path.exists(vid_file):
-        # Video is downloaded. Check if the transcript is missing.
-        if not os.path.exists(txt_file):
-            print(Fore.YELLOW + f"⏩ Video exists but transcript is missing for {video.title}. Extracting transcript...")
-            video.transcript = scraper.extract_transcript(video.url, resolver)
-            if video.transcript:
-                downloader.save_transcript(video.transcript, txt_file)
-                print(Fore.GREEN + f"✅ Transcript extracted.")
-        else:
-            print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
-        return None
+    if is_audio_only:
+        if os.path.exists(vid_file):
+            print(Fore.YELLOW + f"⏩ Skipping {video.title} (audio already exists)")
+            return None
+    else:
+        if config.transcripts_only and os.path.exists(txt_file):
+            print(Fore.YELLOW + f"⏩ Skipping {video.title} (transcript already extracted)")
+            return None
+        elif not config.transcripts_only and os.path.exists(vid_file):
+            # Video is downloaded. Check if the transcript is missing.
+            if not os.path.exists(txt_file):
+                print(Fore.YELLOW + f"⏩ Video exists but transcript is missing for {video.title}. Extracting transcript...")
+                video.transcript = scraper.extract_transcript(video.url, resolver)
+                if video.transcript:
+                    downloader.save_transcript(video.transcript, txt_file)
+                    print(Fore.GREEN + f"✅ Transcript extracted.")
+            else:
+                print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
+            return None
 
-    print(f"\n{Fore.CYAN}🎥 Extracting data for: {video.title}")
+    media_type = "Audio" if is_audio_only else "Video"
+    print(f"\n{Fore.CYAN}🎥 Extracting data for {media_type}: {video.title}")
     print(
         Fore.YELLOW
         + f"📁 Saving to folder: {os.path.basename(os.path.dirname(vid_file))}"
     )
 
     if config.transcripts_only:
+        if is_audio_only:
+            print(Fore.RED + f"❌ Transcripts-only mode is not applicable for audiobooks.")
+            return ("error", video, "Transcripts not supported for audiobooks")
         video.transcript = scraper.extract_transcript(video.url, resolver)
         if video.transcript:
             downloader.save_transcript(video.transcript, txt_file)
@@ -189,10 +198,10 @@ def _process_single_video(
         m3u8 = resolver.resolve_m3u8_url(video.url)
         if m3u8:
             video.m3u8_url = m3u8
-            video.transcript = scraper.extract_transcript(video.url, resolver)
-
-            if video.transcript:
-                downloader.save_transcript(video.transcript, txt_file)
+            if not is_audio_only:
+                video.transcript = scraper.extract_transcript(video.url, resolver)
+                if video.transcript:
+                    downloader.save_transcript(video.transcript, txt_file)
 
             print(
                 Fore.GREEN
