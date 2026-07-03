@@ -13,3 +13,4 @@ def test_downloader_config_defaults():
     assert config.headless is True
     assert config.max_workers == 3
     assert config.output_dir == "downloads"
+    assert config.audiobook is False

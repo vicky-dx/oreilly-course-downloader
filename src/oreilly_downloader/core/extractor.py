@@ -368,7 +368,7 @@ class CourseStructureScraper:
         except Exception:
             return None
 
-    def extract_course_structure(self, course_url: str):
+    def extract_course_structure(self, course_url: str, is_audiobook: bool = False):
         self.driver.get(course_url)
         try:
             # Wait for either accordion summary buttons or standard video links to load
@@ -386,6 +386,7 @@ class CourseStructureScraper:
         # 1. Try modern accordion-based scraper (handles lazy-loading in MUI layout)
         accordion_script = r"""
         const callback = arguments[arguments.length - 1];
+        const isAudiobook = arguments[0] === true;
         (async () => {
             try {
                 const headers = Array.from(document.querySelectorAll('button.MuiAccordionSummary-root'));
@@ -438,11 +439,13 @@ class CourseStructureScraper:
                                 if (href.includes('/videos/')) return true;
                                 if (href.includes('/library/view/') && href.includes('video')) return true;
                                 
-                                const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
-                                if (bookIdMatch) {
-                                    const bookId = bookIdMatch[0];
-                                    const match = href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
-                                    if (match) return true;
+                                if (isAudiobook) {
+                                    const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+                                    if (bookIdMatch) {
+                                        const bookId = bookIdMatch[0];
+                                        const match = href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
+                                        if (match) return true;
+                                    }
                                 }
                                 return false;
                             });
@@ -471,7 +474,7 @@ class CourseStructureScraper:
         try:
             print(Fore.CYAN + "🔍 Scanning course structure (handling lazy-loaded accordions)...")
             self.driver.set_script_timeout(60) # Set script timeout high enough for accordion expansion
-            structure = self.driver.execute_async_script(accordion_script)
+            structure = self.driver.execute_async_script(accordion_script, is_audiobook)
             if structure and "error" not in structure:
                 print(Fore.GREEN + f"✅ Successfully scraped {len(structure)} chapters using modern scraper.")
                 return structure
@@ -483,6 +486,7 @@ class CourseStructureScraper:
         # 2. Fallback to legacy scraper (expects static list)
         print(Fore.CYAN + "🔍 Scanning course structure using legacy fallback...")
         legacy_script = r"""
+        const isAudiobook = arguments[0] === true;
         function cleanName(text) {
             let t = text.trim();
             t = t.replace(/Complete$/i, '');
@@ -507,7 +511,7 @@ class CourseStructureScraper:
                 if (link.href.includes('/library/view/') && link.href.includes('video')) return true;
                 
                 // Match bookId-specific patterns
-                if (bookId) {
+                if (isAudiobook && bookId) {
                     const match = link.href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
                     if (match) return true;
                 }
@@ -551,7 +555,7 @@ class CourseStructureScraper:
         });
         return courseStructure;
         """
-        return self.driver.execute_script(legacy_script)
+        return self.driver.execute_script(legacy_script, is_audiobook)
 
 
 # For backwards compatibility with other systems importing ExtractorService directly

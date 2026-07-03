@@ -345,20 +345,17 @@ def process_course(config: DownloaderConfig):
         downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
 
         print(Fore.CYAN + "📚 Extracting course structure...")
-        structure = scraper.extract_course_structure(config.url)
+        structure = scraper.extract_course_structure(config.url, config.audiobook)
         if not structure:
             print(Fore.RED + "❌ Failed to extract course structure.")
             return
 
         # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
         course_title = "OReilly Extracted Course"
-        is_audio_only = False
         if driver:
             try:
                 raw_title = driver.title
                 if raw_title:
-                    if re.search(r'\s*\[(audiobook|audio\s+book)\]\s*$', raw_title, flags=re.IGNORECASE):
-                        is_audio_only = True
                     course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
                     course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
                     course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
@@ -366,8 +363,7 @@ def process_course(config: DownloaderConfig):
             except Exception:
                 pass
 
-        if not is_audio_only and config.url and ("/audiobook" in config.url.lower() or "/audio-book" in config.url.lower()):
-            is_audio_only = True
+        is_audio_only = config.audiobook
 
         course = build_course(structure, title=course_title)
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
@@ -409,6 +405,11 @@ def main():
         "--transcripts-only",
         action="store_true",
         help="Only download text transcripts. Skip media m3u8 downloading.",
+    )
+    parser.add_argument(
+        "--audiobook",
+        action="store_true",
+        help="Treat the course as an audiobook (download audio-only .m4a and use audiobook layout).",
     )
     parser.add_argument("--manual-login", action="store_true")
     parser.add_argument("--no-headless", action="store_true")
@@ -473,6 +474,7 @@ def main():
         manual_login=args.manual_login,
         output_dir=args.output_dir,
         max_workers=args.workers,
+        audiobook=args.audiobook,
     )
 
     process_course(config)
