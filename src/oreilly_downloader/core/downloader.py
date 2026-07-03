@@ -66,8 +66,6 @@ class DownloaderService:
                 m3u8_url,
                 "-c",
                 "copy",
-                "-bsf:a",
-                "aac_adtstoasc",
                 "-f",
                 "mp4",
                 temp_output_path,
