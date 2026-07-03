@@ -149,15 +149,22 @@ class MediaUrlResolver:
             context = playback_data[0]
             sources = context.get("sources", [])
 
+            def _append_ks(hls_url: str) -> str:
+                if not self.ks or "/ks/" in hls_url:
+                    return hls_url
+                if "/a.m3u8" in hls_url:
+                    return hls_url.replace("/a.m3u8", f"/ks/{self.ks}/a.m3u8")
+                return hls_url
+
             # Find HLS format (applehttp) source
             hls_source = next((s for s in sources if s.get("format") == "applehttp"), None)
             if hls_source and hls_source.get("url"):
-                return hls_source.get("url")
+                return _append_ks(hls_source.get("url"))
 
             # Fallback to any URL format source
             url_source = next((s for s in sources if s.get("format") == "url"), None)
             if url_source and url_source.get("url"):
-                return url_source.get("url")
+                return _append_ks(url_source.get("url"))
 
             print(f"{Fore.YELLOW}  ⚠️ No HLS or URL streams found in Kaltura PlaybackContext")
             return None
