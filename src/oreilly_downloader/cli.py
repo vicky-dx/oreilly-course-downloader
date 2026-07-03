@@ -392,8 +392,8 @@ def process_course(config: DownloaderConfig):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="O'Reilly Course Downloader")
-    parser.add_argument("url", nargs="?", help="URL of the course")
+    parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
+    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
     parser.add_argument(
         "--on24-vtt",
         help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
@@ -405,7 +405,11 @@ def main():
     )
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
-    parser.add_argument("--transcripts-only", action="store_true")
+    parser.add_argument(
+        "--transcripts-only",
+        action="store_true",
+        help="Only download text transcripts. Skip media m3u8 downloading.",
+    )
     parser.add_argument("--manual-login", action="store_true")
     parser.add_argument("--no-headless", action="store_true")
     parser.add_argument(
@@ -415,7 +419,7 @@ def main():
         "--output-dir", default="downloads", help="Directory to save downloaded files"
     )
     parser.add_argument(
-        "--workers", type=int, default=3, help="Max parallel downloads"
+        "--workers", type=int, default=3, help="Max parallel media downloads"
     )
     parser.add_argument(
         "--debug", action="store_true", help="Enable file logging to downloader.log"
