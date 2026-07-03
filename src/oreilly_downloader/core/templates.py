@@ -1246,8 +1246,8 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
 
     // Font size changer
     function setFontSize(size) {
-      const sizes = { small: '15px', medium: '18px', large: '22px' };
-      document.getElementById('book-content').style.setProperty('--font-size', sizes[size]);
+      const sizes = { small: '13px', medium: '16px', large: '20px' };
+      document.body.style.fontSize = sizes[size];
       
       document.querySelectorAll('.font-size-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.querySelector(`.font-size-card[data-size="${size}"]`);
@@ -1258,8 +1258,12 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
 
     // Reader width changer
     function setReaderWidth(width) {
-      const widths = { small: '600px', medium: '800px', large: '1000px' };
-      document.getElementById('reader-container').style.maxWidth = widths[width];
+      const widths = { small: '50ch', medium: '70ch', large: '90ch' };
+      const container = document.getElementById('reader-container');
+      container.style.maxWidth = widths[width];
+      
+      const el = document.getElementById('book-content');
+      el.style.fontSize = '1.5em';
       
       document.querySelectorAll('.width-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.querySelector(`.width-card[data-width="${width}"]`);
