@@ -174,8 +174,9 @@ def _process_single_video(
                 print(Fore.YELLOW + f"⏩ Skipping {video.title} (video and transcript already exist)")
             return None
 
+    media_icon = "🎧" if is_audio_only else "🎥"
     media_type = "Audio" if is_audio_only else "Video"
-    print(f"\n{Fore.CYAN}🎥 Extracting data for {media_type}: {video.title}")
+    print(f"\n{Fore.CYAN}{media_icon} Extracting data for {media_type}: {video.title}")
     print(
         Fore.YELLOW
         + f"📁 Saving to folder: {os.path.basename(os.path.dirname(vid_file))}"
@@ -310,7 +311,8 @@ def _download_videos_concurrently(
         except Exception as e:
             print(f"\n{Fore.RED}❌ {len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
     else:
-        print(f"\n{Fore.GREEN}✅ All course videos processed successfully!")
+        media_name = "audiobook chapters" if is_audio_only else "course videos"
+        print(f"\n{Fore.GREEN}✅ All {media_name} processed successfully!")
 
 
 def process_course(config: DownloaderConfig):
