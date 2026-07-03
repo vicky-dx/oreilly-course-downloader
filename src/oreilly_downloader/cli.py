@@ -409,7 +409,7 @@ def main():
     parser.add_argument(
         "--audiobook",
         action="store_true",
-        help="Treat the course as an audiobook (download audio-only .m4a and use audiobook layout).",
+        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
     )
     parser.add_argument("--manual-login", action="store_true")
     parser.add_argument("--no-headless", action="store_true")
