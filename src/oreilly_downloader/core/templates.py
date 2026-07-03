@@ -234,6 +234,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css">
+  <link rel="stylesheet" href="orm-icons.css">
   
   <style>
     :root {
@@ -262,6 +263,19 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     * { box-sizing: border-box; }
+    
+    /* Base styling rules for ORM font icons */
+    [class^="orm-icon-"], [class*=" orm-icon-"] {
+      font-family: 'ORM Icons' !important;
+      font-style: normal;
+      font-weight: normal;
+      font-variant: normal;
+      text-transform: none;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    
     body, html {
       margin: 0; padding: 0;
       width: 100%; height: 100%;
@@ -978,14 +992,12 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="bottom-bar">
           <button id="prev-btn" class="nav-arrow">◀ Previous</button>
           <div id="progress-indicator">
-            <button id="toggle-sidebar">☰ Chapters</button>
+            <button id="toggle-sidebar"><span class="orm-icon-menu"></span> Chapters</button>
             <span id="current-chapter-title">Book Reader</span>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
             <button id="settings-gear-btn" title="Reader Settings">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
-              </svg>
+              <span class="orm-icon-settings" style="font-size: 16px;"></span>
             </button>
             <button id="next-btn" class="nav-arrow">Next ▶</button>
           </div>
@@ -1122,9 +1134,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="tooltip-item" id="btn-copy">Copy</div>
     <div class="tooltip-divider"></div>
     <div class="tooltip-item" id="btn-link" title="Copy section link">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-      </svg>
+      <span class="orm-icon-link" style="font-size: 14px;"></span>
     </div>
   </div>
 
@@ -2044,3 +2054,6 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
+
+
+ORM_ICONS_CSS_TEMPLATE = '''@font-face { font-family: "ORM Icons"; font-style: normal; font-weight: 400; font-display: block; src: url(https://learning.oreilly.com/files/public/design-system/orm-icons.c8bbe02cfb4e.woff2) format("woff2"), url(https://learning.oreilly.com/files/public/design-system/orm-icons.8e12acfc4088.woff) format("woff"); } .orm-icon-2-day-training:before { content: "\f101"; } .orm-icon-add-plus:before { content: "\f102"; } .orm-icon-admin:before { content: "\f103"; } .orm-icon-align-left:before { content: "\f104"; } .orm-icon-align-right:before { content: "\f105"; } .orm-icon-answers:before { content: "\f106"; } .orm-icon-article:before { content: "\f107"; } .orm-icon-assessment-2:before { content: "\f108"; } .orm-icon-assessment:before { content: "\f109"; } .orm-icon-assignment:before { content: "\f10a"; } .orm-icon-attachment-2:before { content: "\f10b"; } .orm-icon-attachment:before { content: "\f10c"; } .orm-icon-audio-book:before { content: "\f10d"; } .orm-icon-audio-file:before { content: "\f10e"; } .orm-icon-avatar:before { content: "\f10f"; } .orm-icon-back:before { content: "\f110"; } .orm-icon-bar-chart:before { content: "\f111"; } .orm-icon-beta:before { content: "\f112"; } .orm-icon-bold:before { content: "\f113"; } .orm-icon-book:before { content: "\f114"; } .orm-icon-bullet-list:before { content: "\f115"; } .orm-icon-calendar-download-a:before { content: "\f116"; } .orm-icon-calendar-download-b:before { content: "\f117"; } .orm-icon-calendar-subscribe-a:before { content: "\f118"; } .orm-icon-calendar-subscribe-b:before { content: "\f119"; } .orm-icon-case-study:before { content: "\f11a"; } .orm-icon-center-align:before { content: "\f11b"; } .orm-icon-certifications:before { content: "\f11c"; } .orm-icon-change-owner:before { content: "\f11d"; } .orm-icon-check-indeterminate:before { content: "\f11e"; } .orm-icon-check-list:before { content: "\f11f"; } .orm-icon-checkmark-box:before { content: "\f120"; } .orm-icon-checkmark-circle:before { content: "\f121"; } .orm-icon-checkmark:before { content: "\f122"; } .orm-icon-chevron-down:before { content: "\f123"; } .orm-icon-chevron-left:before { content: "\f124"; } .orm-icon-chevron-right:before { content: "\f125"; } .orm-icon-chevron-up:before { content: "\f126"; } .orm-icon-close-x:before { content: "\f127"; } .orm-icon-code:before { content: "\f128"; } .orm-icon-collection:before { content: "\f129"; } .orm-icon-complete:before { content: "\f12a"; } .orm-icon-copy:before { content: "\f12b"; } .orm-icon-cut:before { content: "\f12c"; } .orm-icon-dashboard:before { content: "\f12d"; } .orm-icon-devices-other:before { content: "\f12e"; } .orm-icon-document:before { content: "\f12f"; } .orm-icon-draft:before { content: "\f130"; } .orm-icon-edit-group:before { content: "\f131"; } .orm-icon-edit:before { content: "\f132"; } .orm-icon-email:before { content: "\f133"; } .orm-icon-event-reminder:before { content: "\f134"; } .orm-icon-event:before { content: "\f135"; } .orm-icon-expert-playlist:before { content: "\f136"; } .orm-icon-external-link:before { content: "\f137"; } .orm-icon-facebook:before { content: "\f138"; } .orm-icon-filter-toggle:before { content: "\f139"; } .orm-icon-highlight:before { content: "\f13a"; } .orm-icon-history:before { content: "\f13b"; } .orm-icon-home:before { content: "\f13c"; } .orm-icon-image:before { content: "\f13d"; } .orm-icon-indent:before { content: "\f13e"; } .orm-icon-info-fill:before { content: "\f13f"; } .orm-icon-info-outline:before { content: "\f140"; } .orm-icon-insert:before { content: "\f141"; } .orm-icon-italic:before { content: "\f142"; } .orm-icon-jupyter-notebooks:before { content: "\f143"; } .orm-icon-keynote-a:before { content: "\f144"; } .orm-icon-keynote-b:before { content: "\f145"; } .orm-icon-keynote-c:before { content: "\f146"; } .orm-icon-learning-path:before { content: "\f147"; } .orm-icon-link:before { content: "\f148"; } .orm-icon-linkedin:before { content: "\f149"; } .orm-icon-listen:before { content: "\f14a"; } .orm-icon-live:before { content: "\f14b"; } .orm-icon-location:before { content: "\f14c"; } .orm-icon-lock:before { content: "\f14d"; } .orm-icon-log-in:before { content: "\f14e"; } .orm-icon-log-out:before { content: "\f14f"; } .orm-icon-maximize-2:before { content: "\f150"; } .orm-icon-maximize:before { content: "\f151"; } .orm-icon-menu:before { content: "\f152"; } .orm-icon-minimize-2:before { content: "\f153"; } .orm-icon-minimize:before { content: "\f154"; } .orm-icon-mobile-phone:before { content: "\f155"; } .orm-icon-more:before { content: "\f156"; } .orm-icon-move:before { content: "\f157"; } .orm-icon-note:before { content: "\f158"; } .orm-icon-notification:before { content: "\f159"; } .orm-icon-numbered-list:before { content: "\f15a"; } .orm-icon-o-dot:before { content: "\f15b"; } .orm-icon-organization-playlist:before { content: "\f15c"; } .orm-icon-oriole:before { content: "\f15d"; } .orm-icon-outdent:before { content: "\f15e"; } .orm-icon-pagination-overflow:before { content: "\f15f"; } .orm-icon-paste:before { content: "\f160"; } .orm-icon-pause:before { content: "\f161"; } .orm-icon-person:before { content: "\f162"; } .orm-icon-pie-chart:before { content: "\f163"; } .orm-icon-play-2:before { content: "\f164"; } .orm-icon-play:before { content: "\f165"; } .orm-icon-playlist-add:before { content: "\f166"; } .orm-icon-preview:before { content: "\f167"; } .orm-icon-previous-2:before { content: "\f168"; } .orm-icon-previous:before { content: "\f169"; } .orm-icon-printing:before { content: "\f16a"; } .orm-icon-progress:before { content: "\f16b"; } .orm-icon-project-2:before { content: "\f16c"; } .orm-icon-project:before { content: "\f16d"; } .orm-icon-public-playlist:before { content: "\f16e"; } .orm-icon-publish:before { content: "\f16f"; } .orm-icon-queue-old:before { content: "\f170"; } .orm-icon-queue:before { content: "\f171"; } .orm-icon-recommendation:before { content: "\f172"; } .orm-icon-recording-2:before { content: "\f173"; } .orm-icon-recording:before { content: "\f174"; } .orm-icon-refresh:before { content: "\f175"; } .orm-icon-remove:before { content: "\f176"; } .orm-icon-resource-centers:before { content: "\f177"; } .orm-icon-sandboxes:before { content: "\f178"; } .orm-icon-save:before { content: "\f179"; } .orm-icon-search:before { content: "\f17a"; } .orm-icon-session-a:before { content: "\f17b"; } .orm-icon-session-b:before { content: "\f17c"; } .orm-icon-settings:before { content: "\f17d"; } .orm-icon-share-file:before { content: "\f17e"; } .orm-icon-share-post:before { content: "\f17f"; } .orm-icon-share:before { content: "\f180"; } .orm-icon-spell-check:before { content: "\f181"; } .orm-icon-star-rating-fill:before { content: "\f182"; } .orm-icon-star-rating-outline:before { content: "\f183"; } .orm-icon-stop:before { content: "\f184"; } .orm-icon-success:before { content: "\f185"; } .orm-icon-tablet:before { content: "\f186"; } .orm-icon-text-color-2:before { content: "\f187"; } .orm-icon-text-color:before { content: "\f188"; } .orm-icon-time-2:before { content: "\f189"; } .orm-icon-time:before { content: "\f18a"; } .orm-icon-TOC-close:before { content: "\f18b"; } .orm-icon-TOC-open:before { content: "\f18c"; } .orm-icon-topics:before { content: "\f18d"; } .orm-icon-tutorial-a:before { content: "\f18e"; } .orm-icon-tutorial-b:before { content: "\f18f"; } .orm-icon-tutorial-c:before { content: "\f190"; } .orm-icon-tutorials:before { content: "\f191"; } .orm-icon-tv-console:before { content: "\f192"; } .orm-icon-twitter:before { content: "\f193"; } .orm-icon-unlock:before { content: "\f194"; } .orm-icon-video:before { content: "\f195"; } .orm-icon-volume:before { content: "\f196"; } .orm-icon-warning-bang:before { content: "\f197"; } .orm-icon-warning-fill:before { content: "\f198"; } .orm-icon-warning-outline:before { content: "\f199"; } .orm-icon-youtube:before { content: "\f19a"; } .orm-icon-zoom-in:before { content: "\f19b"; } .orm-icon-zoom-out:before { content: "\f19c"; } '''

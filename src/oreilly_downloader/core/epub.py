@@ -15,7 +15,8 @@ from .templates import (
     BAT_LAUNCHER_TEMPLATE,
     SH_LAUNCHER_TEMPLATE,
     WEB_VIEWER_HTML_TEMPLATE,
-    SERVE_PY_TEMPLATE
+    SERVE_PY_TEMPLATE,
+    ORM_ICONS_CSS_TEMPLATE
 )
 
 init(autoreset=True)
@@ -270,6 +271,11 @@ class BookDownloaderService:
                     index_html_path = os.path.join(book_assets_dir, "index.html")
                     with open(index_html_path, "w", encoding="utf-8") as f:
                         f.write(WEB_VIEWER_HTML_TEMPLATE)
+
+                    # Write local orm-icons.css stylesheet
+                    orm_icons_path = os.path.join(book_assets_dir, "orm-icons.css")
+                    with open(orm_icons_path, "w", encoding="utf-8") as f:
+                        f.write(ORM_ICONS_CSS_TEMPLATE)
 
                     # Write start_viewer.bat launcher (Windows)
                     bat_path = os.path.join(book_root_dir, "start_viewer.bat")
