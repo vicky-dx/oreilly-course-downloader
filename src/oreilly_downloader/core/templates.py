@@ -588,10 +588,10 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       font-size: 11px;
       font-weight: 700;
       color: var(--text-color);
-      opacity: 0.6;
+      opacity: 0.5;
       text-align: center;
       margin-bottom: 12px;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
     .options-row {
       display: flex;
@@ -615,15 +615,18 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: var(--sidebar-bg);
+      background-color: var(--bg-color);
       color: var(--text-color);
-      transition: border-color 0.1s, box-shadow 0.1s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
     .option-card:hover {
-      background-color: var(--active-link-bg);
+      background-color: var(--sidebar-bg);
+      border-color: #a1a4a6;
     }
     .option-card.active {
-      border: 2px solid #d3002d !important; /* O'Reilly red highlight */
+      border: 1.5px solid #d3002d !important;
+      box-shadow: 0 0 0 1px #d3002d;
+      background-color: var(--bg-color) !important;
     }
 
     .card-preview {
