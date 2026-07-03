@@ -110,6 +110,15 @@ class OReillyRequestHandler(http.server.SimpleHTTPRequestHandler):
             path_data = {"path": os.path.abspath(".")}
             self.wfile.write(json.dumps(path_data).encode('utf-8'))
             return
+        elif self.path == "/book/notes.json":
+            target_path = os.path.join("book", "notes.json")
+            if not os.path.exists(target_path):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(b"[]")
+                return
         super().do_GET()
 
     def do_POST(self):
