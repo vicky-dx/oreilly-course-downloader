@@ -46,11 +46,11 @@ class MediaUrlResolver:
     def _extract_video_id(self, video_url: str) -> Optional[str]:
         """Extracts the unique O'Reilly videoclip ID from the URL (e.g. 9781663754035-a00004)."""
         # Matches ISBN followed by a hyphen and chapter code (e.g. 9781663754035-a00004 or 9781663754035-chapter1)
-        match = re.search(r'\b(978\d{10})-[a-zA-Z0-9_]+', video_url)
+        match = re.search(r'\b(978\d{10})-[a-zA-Z0-9_-]+', video_url)
         if match:
             return match.group(0)
         # Fallback to any 10-13 digit number followed by a hyphen and chapter code
-        match = re.search(r'\b\d{10,13}-[a-zA-Z0-9_]+', video_url)
+        match = re.search(r'\b\d{10,13}-[a-zA-Z0-9_-]+', video_url)
         if match:
             return match.group(0)
         return None
@@ -430,8 +430,20 @@ class CourseStructureScraper:
                         const links = Array.from(panel.querySelectorAll('a'))
                             .filter(a => {
                                 const href = a.getAttribute('href') || '';
-                                if (href.includes('/videos/') && !href.includes('/continue/') && !href.includes('/start/')) return true;
+                                if (href.includes('/continue/') || href.includes('/start/')) return false;
+                                
+                                const text = (a.textContent || '').trim().toLowerCase();
+                                if (text === 'continue' || text === 'start') return false;
+                                
+                                if (href.includes('/videos/')) return true;
                                 if (href.includes('/library/view/') && href.includes('video')) return true;
+                                
+                                const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+                                if (bookIdMatch) {
+                                    const bookId = bookIdMatch[0];
+                                    const match = href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
+                                    if (match) return true;
+                                }
                                 return false;
                             });
 
@@ -478,15 +490,29 @@ class CourseStructureScraper:
             return t.trim();
         }
         
-        const courseRegex = /(\/videos\/|\/library\/view\/.*\/video|\/course\/.*\/(start|continue)\/)/i;
-        
+        const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+        const bookId = bookIdMatch ? bookIdMatch[0] : null;
+
         const allVideoLinks = Array.from(document.querySelectorAll('a'))
             .filter(link => {
                 if(!link.href) return false;
-                if(link.href.includes('/library/view/') && !link.href.includes('video')) return false;
                 if(link.href.includes('#')) return false;
+                if(link.href.includes('/continue/') || link.href.includes('/start/')) return false;
                 
-                return courseRegex.test(link.href);
+                const text = (link.textContent || '').trim().toLowerCase();
+                if (text === 'continue' || text === 'start') return false;
+                
+                // Match standard videos
+                if (link.href.includes('/videos/')) return true;
+                if (link.href.includes('/library/view/') && link.href.includes('video')) return true;
+                
+                // Match bookId-specific patterns
+                if (bookId) {
+                    const match = link.href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`));
+                    if (match) return true;
+                }
+                
+                return false;
             });
             
         const courseStructure = {};
