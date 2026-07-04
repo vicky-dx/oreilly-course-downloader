@@ -2174,6 +2174,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       } else {
         nextBtn.style.visibility = 'hidden';
       }
+    }
     // Navigate with history tracking (pushes previous src & scroll position to history stack)
     function navigateTo(src) {
       if (currentChapter && currentChapter !== src) {

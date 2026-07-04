@@ -277,6 +277,26 @@ class BookDownloaderService:
                     with open(orm_icons_path, "w", encoding="utf-8") as f:
                         f.write(ORM_ICONS_CSS_TEMPLATE)
 
+                    # Ensure local override_v1.css stylesheet exists to prevent console 404 error
+                    override_css_path = os.path.join(book_assets_dir, "override_v1.css")
+                    if not os.path.exists(override_css_path):
+                        copied = False
+                        for p in [
+                            os.path.join(os.getcwd(), "..", "override_v1.css"),
+                            os.path.join(os.getcwd(), "override_v1.css"),
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "override_v1.css")
+                        ]:
+                            if os.path.exists(p):
+                                try:
+                                    shutil.copy(p, override_css_path)
+                                    copied = True
+                                    break
+                                except Exception:
+                                    pass
+                        if not copied:
+                            with open(override_css_path, "w", encoding="utf-8") as f:
+                                f.write("/* Custom CSS overrides for book web viewer */\n")
+
                     # Write start_viewer.bat launcher (Windows)
                     bat_path = os.path.join(book_root_dir, "start_viewer.bat")
                     with open(bat_path, "w", encoding="utf-8") as f:
