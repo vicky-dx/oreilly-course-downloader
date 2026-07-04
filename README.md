@@ -84,17 +84,16 @@ uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-sys
 ```
 
 #### Option E: Download eBooks (EPUB) 📖
-To download a text book as a standard, standalone EPUB file, use the `--epub` flag:
+Book URLs containing `/library/view/` are **automatically detected** as eBooks. The tool will parse and package them as standard EPUB files:
 ```bash
-uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/" \
-  --epub
+uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/"
 ```
+*(You can also use the `--epub` flag to explicitly force eBook mode for any URL).*
 
 #### Option F: Download eBooks with Local Interactive Web Reader 🏛️
-To extract a book, generate local web assets, and automatically register it inside the Central Library Dashboard, pass both the `--epub` and `--web-viewer` flags:
+To extract a book, generate local HTML/CSS reader assets, and automatically register it inside the Central Library Dashboard, simply add the `--web-viewer` flag:
 ```bash
 uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/" \
-  --epub \
   --web-viewer
 ```
 
