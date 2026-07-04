@@ -100,6 +100,18 @@ import webbrowser
 import threading
 import urllib.request
 
+# Reconfigure stdout/stderr to utf-8 to prevent encoding crashes on Windows CMD
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+if sys.stderr.encoding != 'utf-8':
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 class OReillyRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/book_path":
@@ -157,7 +169,9 @@ def check_existing_server(port, current_path):
         with opener.open(req, timeout=0.5) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode('utf-8'))
-                return data.get("path") == current_path
+                path = data.get("path")
+                if path:
+                    return os.path.normcase(os.path.abspath(path)) == os.path.normcase(os.path.abspath(current_path))
     except Exception:
         pass
     return False
@@ -215,6 +229,7 @@ if __name__ == "__main__":
 
 BAT_LAUNCHER_TEMPLATE = """@echo off
 echo 🚀 Starting local offline book reader...
+set PYTHONIOENCODING=utf-8
 python serve.py
 """
 
