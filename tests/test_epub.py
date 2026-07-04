@@ -198,9 +198,6 @@ def test_download_book_with_web_viewer(tmp_path):
     # Check that web viewer files are created in the book subfolder
     book_assets_dir = os.path.join(book_root_dir, "book")
     assert os.path.exists(book_root_dir)
-    assert os.path.exists(os.path.join(book_root_dir, "start_viewer.bat"))
-    assert os.path.exists(os.path.join(book_root_dir, "start_viewer.sh"))
-    assert os.path.exists(os.path.join(book_root_dir, "serve.py"))
     assert os.path.exists(book_assets_dir)
     assert os.path.exists(os.path.join(book_assets_dir, "index.html"))
     assert os.path.exists(os.path.join(book_assets_dir, "content.opf"))

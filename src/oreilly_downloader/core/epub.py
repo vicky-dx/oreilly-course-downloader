@@ -303,26 +303,7 @@ class BookDownloaderService:
                             with open(override_css_path, "w", encoding="utf-8") as f:
                                 f.write("/* Custom CSS overrides for book web viewer */\n")
 
-                    # Write start_viewer.bat launcher (Windows)
-                    bat_path = os.path.join(book_root_dir, "start_viewer.bat")
-                    with open(bat_path, "w", encoding="utf-8") as f:
-                        f.write(BAT_LAUNCHER_TEMPLATE)
-
-                    # Write start_viewer.sh launcher (Mac/Linux)
-                    sh_path = os.path.join(book_root_dir, "start_viewer.sh")
-                    with open(sh_path, "w", encoding="utf-8") as f:
-                        f.write(SH_LAUNCHER_TEMPLATE)
-
-                    # Write serve.py (Python Server Endpoint Handler)
-                    serve_path = os.path.join(book_root_dir, "serve.py")
-                    with open(serve_path, "w", encoding="utf-8") as f:
-                        f.write(SERVE_PY_TEMPLATE)
-                    # Make script executable on Unix systems
-                    try:
-                        os.chmod(sh_path, 0o755)
-                        os.chmod(serve_path, 0o755)
-                    except Exception:
-                        pass
+                    # Only write book reader assets, no individual viewer servers/launchers required.
 
                     # Write Unified Library Dashboard files in the parent directory (downloads/books/)
                     library_dir = os.path.dirname(os.path.dirname(book_root_dir))
