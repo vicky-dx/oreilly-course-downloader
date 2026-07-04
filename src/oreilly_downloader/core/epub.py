@@ -15,8 +15,14 @@ from .templates import (
     BAT_LAUNCHER_TEMPLATE,
     SH_LAUNCHER_TEMPLATE,
     WEB_VIEWER_HTML_TEMPLATE,
-    SERVE_PY_TEMPLATE,
-    ORM_ICONS_CSS_TEMPLATE
+    SERVE_PY_TEMPLATE
+)
+from .library_templates import (
+    ORM_ICONS_CSS_TEMPLATE,
+    LIBRARY_INDEX_HTML_TEMPLATE,
+    LIBRARY_SERVE_PY_TEMPLATE,
+    LIBRARY_BAT_LAUNCHER_TEMPLATE,
+    LIBRARY_SH_LAUNCHER_TEMPLATE
 )
 
 init(autoreset=True)
@@ -217,7 +223,7 @@ class BookDownloaderService:
 
         # 4. Package into EPUB file
         # Create books/{sanitized_title}/ parent directory structure
-        book_root_dir = os.path.join(self.output_dir, "books", sanitized_title)
+        book_root_dir = os.path.join(self.output_dir, "books", "data", sanitized_title)
         os.makedirs(book_root_dir, exist_ok=True)
 
         epub_filename = f"{sanitized_title}.epub"
@@ -318,8 +324,35 @@ class BookDownloaderService:
                     except Exception:
                         pass
 
+                    # Write Unified Library Dashboard files in the parent directory (downloads/books/)
+                    library_dir = os.path.dirname(os.path.dirname(book_root_dir))
+                    os.makedirs(library_dir, exist_ok=True)
+                    
+                    lib_index_path = os.path.join(library_dir, "index.html")
+                    with open(lib_index_path, "w", encoding="utf-8") as f:
+                        f.write(LIBRARY_INDEX_HTML_TEMPLATE)
+                        
+                    lib_serve_path = os.path.join(library_dir, "serve_library.py")
+                    with open(lib_serve_path, "w", encoding="utf-8") as f:
+                        f.write(LIBRARY_SERVE_PY_TEMPLATE)
+                        
+                    lib_bat_path = os.path.join(library_dir, "start_library.bat")
+                    with open(lib_bat_path, "w", encoding="utf-8") as f:
+                        f.write(LIBRARY_BAT_LAUNCHER_TEMPLATE)
+                        
+                    lib_sh_path = os.path.join(library_dir, "start_library.sh")
+                    with open(lib_sh_path, "w", encoding="utf-8") as f:
+                        f.write(LIBRARY_SH_LAUNCHER_TEMPLATE)
+                        
+                    try:
+                        os.chmod(lib_sh_path, 0o755)
+                        os.chmod(lib_serve_path, 0o755)
+                    except Exception:
+                        pass
+
                     print(Fore.GREEN + f"🎉 Successfully created interactive web viewer assets under: {book_assets_dir}")
-                    print(Fore.GREEN + f"👉 Run '{book_root_dir}/start_viewer.bat' (Windows) or './start_viewer.sh' (Mac/Linux) to launch.")
+                    print(Fore.GREEN + f"📚 Unified Library Dashboard created/updated at: {library_dir}")
+                    print(Fore.GREEN + f"👉 Run '{os.path.join(library_dir, 'start_library.bat')}' (Windows) or './start_library.sh' (Mac/Linux) to view all your books!")
                 except Exception as wve:
                     print(Fore.YELLOW + f"⚠️ Warning: Could not update interactive web viewer folder: {wve}")
                     print(Fore.YELLOW + "👉 Please close any open start_viewer.bat console window and try again.")
