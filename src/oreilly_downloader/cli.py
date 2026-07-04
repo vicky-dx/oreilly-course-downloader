@@ -426,27 +426,23 @@ def process_course(config: DownloaderConfig):
 
 def main():
     parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
-    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
-    parser.add_argument(
-        "--on24-vtt",
-        help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
-    )
-    parser.add_argument(
-        "--event-name",
-        default="ON24_Live_Event",
-        help="Name of the event to save the transcript under.",
-    )
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
     parser.add_argument(
-        "--transcripts-only",
+        "--manual-login",
         action="store_true",
-        help="Only download text transcripts. Skip media m3u8 downloading.",
+        help="Authenticate manually in a visible browser profile",
     )
     parser.add_argument(
-        "--audiobook",
+        "--no-headless",
         action="store_true",
-        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
+        help="Run scraper browser in non-headless mode",
+    )
+    parser.add_argument(
+        "--browser",
+        choices=["firefox", "chrome", "stealth"],
+        default="stealth",
+        help="Browser type to use for scraping (default: stealth)",
     )
     parser.add_argument(
         "--epub",
@@ -458,20 +454,42 @@ def main():
         action="store_true",
         help="Generate an interactive, responsive local web reader application for offline viewing.",
     )
-    parser.add_argument("--manual-login", action="store_true")
-    parser.add_argument("--no-headless", action="store_true")
     parser.add_argument(
-        "--browser", choices=["firefox", "chrome", "stealth"], default="stealth"
+        "--audiobook",
+        action="store_true",
+        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
     )
     parser.add_argument(
-        "--output-dir", default="downloads", help="Directory to save downloaded files"
+        "--transcripts-only",
+        action="store_true",
+        help="Only download text transcripts. Skip media m3u8 downloading.",
     )
     parser.add_argument(
-        "--workers", type=int, default=3, help="Max parallel media downloads"
+        "--output-dir",
+        default="downloads",
+        help="Directory to save downloaded files (default: downloads)",
     )
     parser.add_argument(
-        "--debug", action="store_true", help="Enable file logging to downloader.log"
+        "--workers",
+        type=int,
+        default=3,
+        help="Max parallel media downloads (default: 3)",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable file logging to downloader.log",
+    )
+    parser.add_argument(
+        "--on24-vtt",
+        help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
+    )
+    parser.add_argument(
+        "--event-name",
+        default="ON24_Live_Event",
+        help="Name of the event to save the transcript under (default: ON24_Live_Event).",
+    )
+    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
 
     args = parser.parse_args()
 

@@ -105,6 +105,17 @@ Every time you run a download command to save a course or audiobook (as shown in
 
 To browse, search, edit tags, and read all your downloaded books offline, launch the **Central Offline Library Dashboard**. It provides a premium, Apple Books-inspired interface to manage your collections directly.
 
+### 📸 Screenshot Gallery
+
+**Unified Library Dashboard:**
+![Library Dashboard Overview](assets/library-view-1.png)
+
+**Metadata Inspector Drawer:**
+![Library Dashboard Inspector Drawer](assets/library-view-2.png)
+
+**Interactive Local eBook Reader:**
+![Interactive Local eBook Reader](assets/ebook-viewer.png)
+
 ### Features
 - **🗂️ Dynamic Left Sidebar**: Instantly filter collections by Reading Status, Bookmarks, or dynamically calculated subject counts (e.g. `Python (12)`).
 - **📝 Category/Tag Override**: Edit category metadata tags on any book directly from the interface. These persist in your local profile database so you can group books your own way.
@@ -136,9 +147,11 @@ uv run pytest
 Run `uv run oreilly-dl --help` at any time to see all options:
 
 ```text
-usage: oreilly-dl [-h] [--on24-vtt ON24_VTT] [--event-name EVENT_NAME] [--email EMAIL] [--password PASSWORD]
-                  [--transcripts-only] [--audiobook] [--epub] [--web-viewer] [--manual-login] [--no-headless]
-                  [--browser {firefox,chrome,stealth}] [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
+usage: oreilly-dl [-h] [--email EMAIL] [--password PASSWORD] [--manual-login]
+                  [--no-headless] [--browser {firefox,chrome,stealth}]
+                  [--epub] [--web-viewer] [--audiobook] [--transcripts-only]
+                  [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
+                  [--on24-vtt ON24_VTT] [--event-name EVENT_NAME]
                   [url]
 
 O'Reilly Course (Video/Audio) Downloader
@@ -148,22 +161,25 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.
-  --event-name EVENT_NAME
-                        Name of the event to save the transcript under.
   --email EMAIL         Login email
   --password PASSWORD   Login password
-  --transcripts-only    Only download text transcripts. Skip media m3u8 downloading.
-  --audiobook           Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).
-  --epub                Download O'Reilly books as EPUB files.
-  --web-viewer          Generate an interactive, responsive local web reader application for offline viewing.
-  --manual-login
-  --no-headless
+  --manual-login        Authenticate manually in a visible browser profile
+  --no-headless         Run scraper browser in non-headless mode
   --browser {firefox,chrome,stealth}
+                        Browser type to use for scraping (default: stealth)
+  --epub                Download O'Reilly books as EPUB files
+  --web-viewer          Generate interactive local HTML/CSS reader assets
+  --audiobook           Download audiobooks as .m4a audio files
+  --transcripts-only    Download text transcripts only (skip media files)
   --output-dir OUTPUT_DIR
-                        Directory to save downloaded files
-  --workers WORKERS     Max parallel media downloads
+                        Directory to save downloaded files (default: downloads)
+  --workers WORKERS     Max parallel media downloads (default: 3)
   --debug               Enable file logging to downloader.log
+  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a
+                        live-event transcript
+  --event-name EVENT_NAME
+                        Name of the event to save the transcript under (default:
+                        ON24_Live_Event)
 ```
 
 ---
