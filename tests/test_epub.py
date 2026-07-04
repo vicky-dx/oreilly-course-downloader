@@ -103,7 +103,7 @@ def test_download_book_success(tmp_path):
     assert success is True
     
     # Check that EPUB is generated in the books subdirectory
-    expected_epub = os.path.join(output_dir, "books", "Test-Driven Development with Python, 2nd Edition", "Test-Driven Development with Python, 2nd Edition.epub")
+    expected_epub = os.path.join(output_dir, "books", "data", "Test-Driven Development with Python, 2nd Edition", "Test-Driven Development with Python, 2nd Edition.epub")
     assert os.path.exists(expected_epub)
 
     # Check zip contents
@@ -191,7 +191,7 @@ def test_download_book_with_web_viewer(tmp_path):
     assert success is True
     
     # Check that EPUB is generated
-    book_root_dir = os.path.join(output_dir, "books", "Interactive Book Test")
+    book_root_dir = os.path.join(output_dir, "books", "data", "Interactive Book Test")
     expected_epub = os.path.join(book_root_dir, "Interactive Book Test.epub")
     assert os.path.exists(expected_epub)
 

@@ -121,11 +121,9 @@ uv run pytest
 Run `uv run oreilly-dl --help` at any time to see all options:
 
 ```text
-usage: oreilly-dl [-h] [--on24-vtt ON24_VTT] [--event-name EVENT_NAME]
-                  [--email EMAIL] [--password PASSWORD] [--transcripts-only]
-                  [--audiobook] [--epub] [--web-viewer] [--manual-login]
-                  [--no-headless] [--browser {firefox,chrome,stealth}]
-                  [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
+usage: oreilly-dl [-h] [--on24-vtt ON24_VTT] [--event-name EVENT_NAME] [--email EMAIL] [--password PASSWORD]
+                  [--transcripts-only] [--audiobook] [--epub] [--web-viewer] [--manual-login] [--no-headless]
+                  [--browser {firefox,chrome,stealth}] [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
                   [url]
 
 O'Reilly Course (Video/Audio) Downloader
@@ -135,19 +133,15 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a
-                        live-event transcript.
+  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.
   --event-name EVENT_NAME
                         Name of the event to save the transcript under.
   --email EMAIL         Login email
   --password PASSWORD   Login password
-  --transcripts-only    Only download text transcripts. Skip media m3u8
-                        downloading.
-  --audiobook           Download O'Reilly audiobooks (saves files as .m4a and
-                        handles audiobook page layout).
+  --transcripts-only    Only download text transcripts. Skip media m3u8 downloading.
+  --audiobook           Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).
   --epub                Download O'Reilly books as EPUB files.
-  --web-viewer          Generate an interactive, responsive local web reader
-                        application for offline viewing.
+  --web-viewer          Generate an interactive, responsive local web reader application for offline viewing.
   --manual-login
   --no-headless
   --browser {firefox,chrome,stealth}
@@ -161,18 +155,30 @@ options:
 
 ## 📁 Output Structure
 
-The downloader automatically builds a folder hierarchy matching O'Reilly's exact curriculum, bypassing empty sub-lessons:
+The downloader automatically categorizes and organizes your files into subdirectories under the `downloads/` directory:
 
 ```text
 oreilly-downloader/
 ├── downloads/
-│   └── AWS Certified Solutions Architect/
-│       ├── course_structure.json
-│       ├── failed_downloads.json
-│       ├── 01 - Cloud Concepts/
-│       │   ├── 01 - Video Intro.mp4
-│       │   └── 01 - Video Intro_transcript.txt
-│       └── ...
+│   ├── books/
+│   │   ├── index.html               # Central Library Dashboard
+│   │   ├── serve_library.py         # Library server
+│   │   └── data/
+│   │       └── Learning Spark/      # Extracted book assets
+│   │           ├── book/
+│   │           └── Learning Spark.epub
+│   │
+│   ├── courses/                     # Video & Audio Course downloads
+│   │   └── AWS Solutions Architect/
+│   │       ├── course_structure.json
+│   │       ├── failed_downloads.json
+│   │       ├── 01 - Cloud Concepts/
+│   │       │   ├── 01 - Video Intro.mp4
+│   │       │   └── 01 - Video Intro_transcript.txt
+│   │       └── ...
+│   │
+│   └── audiobooks/                  # Audiobook downloads (.m4a files)
+│       └── Designing Distributed Systems/
 ```
 
 ---

@@ -403,8 +403,11 @@ def process_course(config: DownloaderConfig):
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
         if is_audio_only:
             print(Fore.CYAN + "🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
+            base_dir = os.path.join(downloader.output_dir, "audiobooks")
+        else:
+            base_dir = os.path.join(downloader.output_dir, "courses")
 
-        course_dir = PathManager.get_course_dir(downloader.output_dir, course.title)
+        course_dir = PathManager.get_course_dir(base_dir, course.title)
         os.makedirs(course_dir, exist_ok=True)
 
         with open(
