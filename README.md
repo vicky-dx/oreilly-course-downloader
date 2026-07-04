@@ -86,9 +86,9 @@ uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-sys
 
 ## 🏛️ Central Offline Library Dashboard
 
-Every time you download a course or audiobook, the tool automatically links it into a central, unified dashboard inside `downloads/books/`. 
+Every time you run a download command to save a course or audiobook (as shown in the Quick Start options above), the tool automatically resolves, downloads, and links the files inside the `downloads/books/data/` folder.
 
-This features a premium, Apple Books/Steam-inspired interface that allows you to manage your downloaded media collections directly.
+To browse, search, edit tags, and read all your downloaded books offline, launch the **Central Offline Library Dashboard**. It provides a premium, Apple Books-inspired interface to manage your collections directly.
 
 ### Features
 - **🗂️ Dynamic Left Sidebar**: Instantly filter collections by Reading Status, Bookmarks, or dynamically calculated subject counts (e.g. `Python (12)`).
