@@ -9,6 +9,7 @@ A powerful, high-performance Python CLI tool to download **complete O'Reilly Lea
 - **📚 Complete Course Downloads**: Extract entire courses with all modules and lessons hierarchically intact.
 - **🎥 Video Downloads**: High-quality video downloads via HLS/m3u8 raw streams using `ffmpeg`.
 - **🎧 Audiobook Downloads**: Native audiobook and audio course downloads saved in high-quality `.m4a` format.
+- **🏛️ Central Offline Library Dashboard**: Automatically compiles a beautiful local dashboard (`index.html`) containing all downloaded courses/audiobooks with search indexing, reading progress tracking, custom tags overriding, and keyboard navigation.
 - **📝 Native Transcripts**: Extracts actual text-based video transcripts parsed directly from the O'Reilly API, saving them as timestamps.
 - **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~100x faster, zero storage weight).
 - **🗂️ Smart Organization**: Structures output folders logically. If there are no custom sub-lessons, videos are saved directly inside their parent Chapter directories.
@@ -80,6 +81,28 @@ To download an audiobook, append the `--audiobook` flag. The tool automatically 
 uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-systems/9781663754035/" \
   --audiobook
 ```
+
+---
+
+## 🏛️ Central Offline Library Dashboard
+
+Every time you download a course or audiobook, the tool automatically links it into a central, unified dashboard inside `downloads/books/`. 
+
+This features a premium, Apple Books/Steam-inspired interface that allows you to manage your downloaded media collections directly.
+
+### Features
+- **🗂️ Dynamic Left Sidebar**: Instantly filter collections by Reading Status, Bookmarks, or dynamically calculated subject counts (e.g. `Python (12)`).
+- **📝 Category/Tag Override**: Edit category metadata tags on any book directly from the interface. These persist in your local profile database so you can group books your own way.
+- **🔍 150ms Debounced Fuzzy Search**: Search title, author, publisher, and descriptions instantly.
+- **⌨️ Keyboard-Driven UI**: Navigates using Arrow keys, toggles drawer metadata details with `Space`, opens the reading reader in a tab with `Enter`, and shows keyboard guide with `?`.
+- **🌓 Adaptive Theme Modes**: Smooth transitions between premium Dark and Light theme presets.
+
+### Launching
+Simply run the launcher script inside the `downloads/books/` folder:
+- **Windows**: Double-click `start_library.bat`
+- **macOS/Linux**: Run `./start_library.sh` (or `python serve_library.py`)
+
+This starts a lightweight web server on `http://127.0.0.1:8000` and opens the dashboard directly in your browser.
 
 ---
 
