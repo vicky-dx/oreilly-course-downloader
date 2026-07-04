@@ -160,13 +160,16 @@ class OReillyRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'{"status":"error","message":"Invalid endpoint"}')
 
+class OReillyHTTPServer(http.server.HTTPServer):
+    allow_reuse_address = sys.platform != 'win32'
+
 def check_existing_server(port, current_path):
     try:
         url = f"http://127.0.0.1:{port}/api/book_path"
         req = urllib.request.Request(url)
         # Disable proxy handlers for direct local connection to avoid hangs
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open(req, timeout=0.5) as response:
+        with opener.open(req, timeout=2.0) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode('utf-8'))
                 path = data.get("path")
@@ -187,7 +190,8 @@ if __name__ == "__main__":
 
     for p in range(8000, 8021):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if sys.platform != 'win32':
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.bind(('127.0.0.1', p))
             s.close()
@@ -210,7 +214,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     server_address = ('127.0.0.1', port)
-    httpd = http.server.HTTPServer(server_address, OReillyRequestHandler)
+    httpd = OReillyHTTPServer(server_address, OReillyRequestHandler)
     
     url = f"http://127.0.0.1:{port}/book/index.html"
     print(f"🚀 Starting O'Reilly Offline Reader Server on {url}")
