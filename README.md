@@ -1,288 +1,262 @@
-# O'Reilly Downloader (Video, Audiobook & eBook) 🎓
+# O'Reilly Offline Downloader & Library
 
-A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses, books, and audiobooks** with their videos, text chapters, EPUB packaging, audio chapters, and transcripts, automatically organizing them into structured directories.
+A powerful, high-performance Python CLI for downloading **O'Reilly
+Learning** courses, books, and audiobooks for offline personal use. It
+supports video courses, EPUB generation, audiobook downloads,
+interactive web readers, transcripts, and a premium offline library
+dashboard.
 
-> **Important Architecture Update:** This project has been entirely rewritten into a modern Python package managed by **[`uv`](https://docs.astral.sh/uv/)**. It's now faster, perfectly cleanly containerized, and much easier to install on any OS.
-## ✨ Features
+> **Architecture:** The project is built as a modern Python package
+> managed with **uv**, providing fast dependency management, clean
+> installation, and cross-platform support.
 
-- **⚡ Fast API-Based Resolving**: Uses direct Kaltura and O'Reilly APIs to resolve video streams and transcripts instantly. Does not navigate browser tabs or load players unless the API calls fail (falling back to Selenium sniffer).
-- **📚 Complete Course Downloads**: Extract entire courses with all modules and lessons hierarchically intact.
-- **🎥 Video Downloads**: High-quality video downloads via HLS/m3u8 raw streams using `ffmpeg`.
-- **🎧 Audiobook Downloads**: Native audiobook and audio course downloads saved in high-quality `.m4a` format.
-- **📖 eBook (EPUB) Downloads**: Extract full O'Reilly text books as standard `.epub` files along with interactive HTML reader pages for offline viewing.
-- **🏛️ Central Offline Library Dashboard**: Automatically compiles a beautiful local dashboard (`index.html`) containing all downloaded courses, books, and audiobooks with search indexing, reading progress tracking, custom tags overriding, and keyboard navigation.
-- **📝 Native Transcripts**: Extracts actual text-based video transcripts parsed directly from the O'Reilly API, saving them as timestamps.
-- **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~100x faster, zero storage weight).
-- **🗂️ Smart Organization**: Structures output folders logically. If there are no custom sub-lessons, videos are saved directly inside their parent Chapter directories.
-- **🔐 Captcha-Resistant "Manual Login"**: Keep getting blocked? Pop open a Stealth browser, log in yourself manually once, and let the scraper use your saved session forever.
-- **💾 Persistent Profiles**: Saves your authenticated sessions seamlessly in the background.
-- **📈 Bar Recycler**: Uses a thread-safe active position manager to recycle tqdm slots, preventing terminal outputs from drifting.
-- **☠️ Dead Letter Queue (DLQ)**: Automatically logs failed resolutions or downloads to `failed_downloads.json` inside the course folder.
-- **📝 Diagnostic Logging**: Supports a `--debug` option that saves clean, console-styled tracebacks and execution flow to `downloader.log`.
+------------------------------------------------------------------------
 
----
+# ✨ Features
 
-## 🚀 Quick Start
+## Downloading
 
-### 1. Requirements
+-   Download complete O'Reilly video courses
+-   Download audiobooks as high-quality `.m4a`
+-   Download books as standard `.epub`
+-   Generate interactive offline HTML web readers
+-   Extract timestamped video transcripts
+-   Transcripts-only mode for fast text extraction
 
-1. **[`uv`](https://docs.astral.sh/uv/getting-started/installation/)**: The insanely fast Python package manager.
-2. **`ffmpeg`**: Required to stitch together the video streams. (The tool will perform a pre-flight scan on startup to make sure it's available).
+## Offline Library
 
-**Install `uv` (Official Standalone Installer):**
-```bash
-# macOS and Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+-   Premium Apple Books-inspired dashboard
+-   Automatic library indexing
+-   Fast search
+-   Reading progress
+-   Persistent custom tags
+-   Keyboard navigation
+-   Dark & Light themes
+-   Automatic cover image detection
 
+## Downloader Engine
+
+-   API-first resolver
+-   Selenium fallback
+-   Manual login mode
+-   Persistent browser profiles
+-   Parallel downloads
+-   Dead Letter Queue logging
+-   Detailed debug logging
+
+------------------------------------------------------------------------
+
+# 🚀 Quick Start
+
+## Requirements
+
+-   Python 3.11+
+-   uv
+-   ffmpeg
+
+### Install uv
+
+``` bash
 # Windows
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Linux/macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-**Install `ffmpeg`:**
-```bash
+### Install ffmpeg
+
+``` bash
 # Windows
-choco install ffmpeg   
+choco install ffmpeg
 
 # macOS
-brew install ffmpeg  
+brew install ffmpeg
 
-# Linux
-sudo apt install ffmpeg 
+# Ubuntu/Debian
+sudo apt install ffmpeg
 ```
 
----
+------------------------------------------------------------------------
 
-### 2. Usage
+# Usage
 
-Because the project is managed by `uv`, you don't need to manually create virtual environments or install `requirements.txt`. Simply clone the project and run the CLI directly:
+## Download a Course
 
-#### Option A: One-Shot Download
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/course/your-course-url/12345/" \
-  --email "your_email@domain.com" \
-  --password "your_password"
+``` bash
+uv run oreilly-dl "COURSE_URL"
 ```
 
-#### Option B: Transcripts Only (Instant)
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/course/your-course-url/12345/" \
-  --transcripts-only
+## Download an EPUB
+
+``` bash
+uv run oreilly-dl "BOOK_URL"
 ```
 
-#### Option C: Manual Login (Bypass Captchas 🛡️)
-If O'Reilly blocks the automated bot login, just use `--manual-login`. It will open a visible UI, wait for you to log yourself in, save your session, and close.
-```bash
+## Download with Interactive Web Reader
+
+``` bash
+uv run oreilly-dl "BOOK_URL" --web-viewer
+```
+
+Books downloaded using `--web-viewer` are automatically registered
+inside the Offline Library Dashboard.
+
+## Download an Audiobook
+
+``` bash
+uv run oreilly-dl "AUDIOBOOK_URL" --audiobook
+```
+
+## Transcripts Only
+
+``` bash
+uv run oreilly-dl "COURSE_URL" --transcripts-only
+```
+
+## Manual Login
+
+``` bash
 uv run oreilly-dl --manual-login
 ```
-*(Once done, you can run the download commands **without** passing `--email` or `--password`—it will just use your saved session!)*
 
-#### Option D: Download Audiobooks 🎧
-To download an audiobook, append the `--audiobook` flag. The tool automatically fetches all chapters, skips transcript extraction checks, and saves them as `.m4a` audio files.
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-systems/9781663754035/" \
-  --audiobook
-```
+------------------------------------------------------------------------
 
-#### Option E: Download eBooks (EPUB) 📖
-Book URLs containing `/library/view/` are **automatically detected** as eBooks. The tool will parse and package them as standard EPUB files:
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/"
-```
-*(You can also use the `--epub` flag to explicitly force eBook mode for any URL).*
+# 🏛️ Offline Library Dashboard
 
-#### Option F: Download eBooks with Local Interactive Web Reader 🏛️
-To extract a book, generate local HTML/CSS reader assets, and automatically register it inside the Central Library Dashboard, simply add the `--web-viewer` flag:
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/" \
-  --web-viewer
-```
-
----
-
-## 🏛️ Central Offline Library Dashboard
-
-Every time you run a download command to save a course or audiobook (as shown in the Quick Start options above), the tool automatically resolves, downloads, and links the files inside the `downloads/books/data/` folder.
-
-To browse, search, edit tags, and read all your downloaded books offline, launch the **Central Offline Library Dashboard**. It provides a premium, Apple Books-inspired interface to manage your collections directly.
+The Offline Library Dashboard provides a centralized interface for
+browsing, organizing, and reading downloaded books.
 
 ### 📸 Screenshot Gallery
 
-**Unified Library Dashboard:**
+**Unified Library Dashboard**
+
 ![Library Dashboard Overview](assets/library-view-1.png)
 
-**Metadata Inspector Drawer:**
+**Metadata Inspector Drawer**
+
 ![Library Dashboard Inspector Drawer](assets/library-view-2.png)
 
-**Interactive Local eBook Reader:**
+**Interactive Local eBook Reader**
+
 ![Interactive Local eBook Reader](assets/ebook-viewer.png)
 
-### Features
-- **🗂️ Dynamic Left Sidebar**: Instantly filter collections by Reading Status, Bookmarks, or dynamically calculated subject counts (e.g. `Python (12)`).
-- **📝 Category/Tag Override**: Edit category metadata tags on any book directly from the interface. These persist in your local profile database so you can group books your own way.
-- **🔍 Fuzzy Search**: Search title, author, publisher, and descriptions instantly.
-- **⌨️ Keyboard-Driven UI**: Navigates using Arrow keys, toggles drawer metadata details with `Space`, opens the reading reader in a tab with `Enter`, and shows keyboard guide with `?`.
-- **🌓 Adaptive Theme Modes**: Smooth transitions between premium Dark and Light theme presets.
+## Features
 
-### Launching
-Simply run the launcher script inside the `downloads/books/` folder:
-- **Windows**: Double-click `start_library.bat`
-- **macOS/Linux**: Run `./start_library.sh` (or `python serve_library.py`)
+-   Apple Books-inspired design
+-   Fast search
+-   Metadata inspector
+-   Custom tag editing
+-   Keyboard shortcuts
+-   Responsive layout
+-   Automatic cover detection
 
-This starts a lightweight web server on `http://127.0.0.1:8000` and opens the dashboard directly in your browser.
+## Keyboard Shortcuts
 
----
+  Key           Action
+  ------------- -------------------------
+  ↑ / ↓         Navigate books
+  Space         Toggle details drawer
+  Enter         Open reader
+  / or Ctrl+K   Focus search
+  ?             Show keyboard shortcuts
 
-## 🧪 Running Unit Tests
+## 🚀 Launching the Offline Library
 
-The codebase includes a fully mocked testing suite suitable for CI/CD environments (runs without hitting live endpoints or spinning up real browsers). Run them using:
+After downloading one or more books with the `--web-viewer` option, the
+Offline Library Dashboard is generated under:
 
-```bash
+``` text
+downloads/
+└── books/
+    ├── data/
+    ├── index.html
+    ├── library_state.json
+    ├── serve_library.py
+    ├── start_library.bat
+    └── start_library.sh
+```
+
+To start the local library server:
+
+-   **Windows:** Double-click `start_library.bat`
+-   **Linux/macOS:** Run `./start_library.sh`
+
+The launcher starts a lightweight local web server and automatically
+opens the Offline Library Dashboard in your default browser.
+
+> **Note:** The dashboard is generated for books downloaded using the
+> `--web-viewer` option.
+
+------------------------------------------------------------------------
+
+# 📁 Output Structure
+
+``` text
+downloads/
+├── books/
+│   ├── data/                    # Downloaded EPUBs & Web Reader assets
+│   ├── index.html               # Offline Library Dashboard
+│   ├── library_state.json       # Library metadata & custom tags
+│   ├── serve_library.py         # Local HTTP server
+│   ├── start_library.bat        # Windows launcher
+│   └── start_library.sh         # Linux/macOS launcher
+├── courses/                     # Video & audio course downloads
+└── audiobooks/                  # Audiobook downloads (.m4a)
+```
+
+The launcher scripts provide the easiest way to start the Offline
+Library Dashboard:
+
+-   **Windows:** `start_library.bat`
+-   **Linux/macOS:** `./start_library.sh`
+
+------------------------------------------------------------------------
+
+# 🧪 Running Tests
+
+``` bash
 uv run pytest
 ```
 
----
+------------------------------------------------------------------------
 
-## ⚙️ Advanced Flags & Configuration
+# ⚙️ Command Line Help
 
-Run `uv run oreilly-dl --help` at any time to see all options:
-
-```text
-usage: oreilly-dl [-h] [--email EMAIL] [--password PASSWORD] [--manual-login]
-                  [--no-headless] [--browser {firefox,chrome,stealth}]
-                  [--epub] [--web-viewer] [--audiobook] [--transcripts-only]
-                  [--output-dir OUTPUT_DIR] [--workers WORKERS] [--debug]
-                  [--on24-vtt ON24_VTT] [--event-name EVENT_NAME]
-                  [url]
-
-O'Reilly Course (Video/Audio) Downloader
-
-positional arguments:
-  url                   URL of the course or audiobook
-
-options:
-  -h, --help            show this help message and exit
-  --email EMAIL         Login email
-  --password PASSWORD   Login password
-  --manual-login        Authenticate manually in a visible browser profile
-  --no-headless         Run scraper browser in non-headless mode
-  --browser {firefox,chrome,stealth}
-                        Browser type to use for scraping (default: stealth)
-  --epub                Download O'Reilly books as EPUB files
-  --web-viewer          Generate interactive local HTML/CSS reader assets
-  --audiobook           Download audiobooks as .m4a audio files
-  --transcripts-only    Download text transcripts only (skip media files)
-  --output-dir OUTPUT_DIR
-                        Directory to save downloaded files (default: downloads)
-  --workers WORKERS     Max parallel media downloads (default: 3)
-  --debug               Enable file logging to downloader.log
-  --on24-vtt ON24_VTT   Direct URL to an ON24 VTT subtitle file to extract a
-                        live-event transcript
-  --event-name EVENT_NAME
-                        Name of the event to save the transcript under (default:
-                        ON24_Live_Event)
+``` bash
+uv run oreilly-dl --help
 ```
 
----
+------------------------------------------------------------------------
 
-## 📁 Output Structure
+# 🔧 Troubleshooting
 
-The downloader automatically categorizes and organizes your files into subdirectories under the `downloads/` directory:
+## Authentication Issues
 
-```text
-oreilly-downloader/
-├── downloads/
-│   ├── books/
-│   │   ├── index.html               # Central Library Dashboard
-│   │   ├── serve_library.py         # Library server
-│   │   └── data/
-│   │       └── Learning Spark/      # Extracted book assets
-│   │           ├── book/
-│   │           └── Learning Spark.epub
-│   │
-│   ├── courses/                     # Video & Audio Course downloads
-│   │   └── AWS Solutions Architect/
-│   │       ├── course_structure.json
-│   │       ├── failed_downloads.json
-│   │       ├── 01 - Cloud Concepts/
-│   │       │   ├── 01 - Video Intro.mp4
-│   │       │   └── 01 - Video Intro_transcript.txt
-│   │       └── ...
-│   │
-│   └── audiobooks/                  # Audiobook downloads (.m4a files)
-│       └── Designing Distributed Systems/
+``` bash
+uv run oreilly-dl --manual-login
 ```
 
----
+## Video Download Issues
 
-## 🔧 Troubleshooting
+Verify that `ffmpeg` is installed and available in your system `PATH`.
 
-**"Authentication Failed" or stuck on Captcha?**
-Use `--manual-login` to authenticate yourself safely in a real window:
-```bash
-uv run oreilly-dl --manual-login --browser stealth
+## Debug Logging
+
+``` bash
+uv run oreilly-dl "COURSE_URL" --debug
 ```
 
-**"ImportError: No module named 'distutils'" on Windows?**
-This is resolved natively due to our `uv` setup, but if you bypassed it, make sure standard `setuptools` is in your environment (handled automatically by `uv sync`).
+------------------------------------------------------------------------
 
-**Video downloads are failing?**
-Verify `ffmpeg` is genuinely installed and available in your global system `$PATH`. `ffmpeg -version` should return its version details in your terminal.
+# ⚠️ Disclaimer
 
-**Stuck on an unexpected error or want to report an issue?**
-Run the downloader with the `--debug` flag to generate a diagnostics file:
-```bash
-uv run oreilly-dl "https://learning.oreilly.com/course/..." --debug
-```
-This intercepts standard console output and writes a clean, timestamped event log along with the full tracebacks of any uncaught exceptions to `downloader.log` in your current working directory. Include this file when opening issues.
+This project is intended for **educational purposes and personal offline
+archiving**. Users are responsible for complying with O'Reilly Media's
+Terms of Service and applicable copyright laws.
 
----
+------------------------------------------------------------------------
 
-## ⚠️ Disclaimer
+# 📄 License
 
-This tool is strictly for **educational purposes and personal offline archiving**. Users are responsible for complying with O'Reilly Media's Terms of Service. Please respect copyright and intellectual property rights.
-
-## 📄 License
-
-MIT License - see the `LICENSE` file for details.
-
----
-
-## 🎬 ON24 Live Event Transcripts
-
-O'Reilly live training videos are often hosted on the ON24 platform and cannot be downloaded directly. However, you can extract their transcripts standalone:
-
-### Step 1: Find VTT Subtitle URL
-1. Open the ON24 video page in your browser
-2. Press **F12** to open DevTools -> **Console** tab
-3. Copy and paste the script below to find the VTT file URL:
-```javascript
-// Browser Console Script to Find ON24 VTT Subtitle URL
-(function () {
-    console.log('🔍 Searching for VTT subtitle files...');
-    performance.getEntriesByType('resource').forEach(entry => {
-        if (entry.name.includes('.vtt') || entry.name.includes('.srt') ||       
-            entry.name.includes('caption') || entry.name.includes('subtitle')) {
-            console.log('🎯 Found:', entry.name);
-        }
-    });
-    let originalFetch = window.fetch;
-    window.fetch = function (...args) {
-        let url = args[0];
-        if (typeof url === 'string' && (url.includes('.vtt') || url.includes('.srt') || url.includes('caption'))) {
-            console.log('🎯 Subtitle URL:', url);
-        }
-        return originalFetch.apply(this, args);
-    };
-    console.log('✓ Monitoring for subtitle files... Play the video if needed.');
-})();
-```
-4. Press **Enter** - it will output the VTT file URL
-
-### Step 2: Download Transcript
-Run the main `oreilly-dl` tool using the `--on24-vtt` option and provide an optional name:
-
-```bash
-uv run oreilly-dl --on24-vtt "https://event.on24.com/..." --event-name "My Live Event"
-```
-
-The transcript will be neatly parsed, stripped of junk tags, and saved as a plain text file inside `downloads/My Live Event/full_transcript.txt`.
+MIT License.
