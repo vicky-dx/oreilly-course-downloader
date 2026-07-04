@@ -330,6 +330,29 @@ def process_course(config: DownloaderConfig):
         if not _handle_authentication(driver, auth, config.email, config.password, config.manual_login):
             return
 
+        if config.epub:
+            import requests
+            from .core.epub import BookDownloaderService
+            
+            # Setup session cookies from browser driver
+            session = requests.Session()
+            session.headers.update({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+            })
+            try:
+                for cookie in driver.get_cookies():
+                    session.cookies.set(cookie['name'], cookie['value'])
+            except Exception as ce:
+                print(Fore.YELLOW + f"  ⚠️ Failed to copy cookies from browser: {ce}")
+
+            book_dl = BookDownloaderService(output_dir=config.output_dir)
+            success = book_dl.download_book(config, session)
+            if success:
+                print(Fore.GREEN + "\n✨ Book downloaded and packaged successfully!")
+            else:
+                print(Fore.RED + "\n❌ Failed to download or package the book.")
+            return
+
         # Retrieve Kaltura session token (ks) if we are in normal download mode
         ks = None
         if not config.manual_login:
@@ -380,8 +403,11 @@ def process_course(config: DownloaderConfig):
         print(Fore.GREEN + f"✅ Found {len(course.modules)} modules")
         if is_audio_only:
             print(Fore.CYAN + "🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
+            base_dir = os.path.join(downloader.output_dir, "audiobooks")
+        else:
+            base_dir = os.path.join(downloader.output_dir, "courses")
 
-        course_dir = PathManager.get_course_dir(downloader.output_dir, course.title)
+        course_dir = PathManager.get_course_dir(base_dir, course.title)
         os.makedirs(course_dir, exist_ok=True)
 
         with open(
@@ -400,7 +426,60 @@ def process_course(config: DownloaderConfig):
 
 def main():
     parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
-    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
+    parser.add_argument("--email", help="Login email")
+    parser.add_argument("--password", help="Login password")
+    parser.add_argument(
+        "--manual-login",
+        action="store_true",
+        help="Authenticate manually in a visible browser profile",
+    )
+    parser.add_argument(
+        "--no-headless",
+        action="store_true",
+        help="Run scraper browser in non-headless mode",
+    )
+    parser.add_argument(
+        "--browser",
+        choices=["firefox", "chrome", "stealth"],
+        default="stealth",
+        help="Browser type to use for scraping (default: stealth)",
+    )
+    parser.add_argument(
+        "--epub",
+        action="store_true",
+        help="Download O'Reilly books as EPUB files.",
+    )
+    parser.add_argument(
+        "--web-viewer",
+        action="store_true",
+        help="Generate an interactive, responsive local web reader application for offline viewing.",
+    )
+    parser.add_argument(
+        "--audiobook",
+        action="store_true",
+        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
+    )
+    parser.add_argument(
+        "--transcripts-only",
+        action="store_true",
+        help="Only download text transcripts. Skip media m3u8 downloading.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="downloads",
+        help="Directory to save downloaded files (default: downloads)",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=3,
+        help="Max parallel media downloads (default: 3)",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable file logging to downloader.log",
+    )
     parser.add_argument(
         "--on24-vtt",
         help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
@@ -408,34 +487,9 @@ def main():
     parser.add_argument(
         "--event-name",
         default="ON24_Live_Event",
-        help="Name of the event to save the transcript under.",
+        help="Name of the event to save the transcript under (default: ON24_Live_Event).",
     )
-    parser.add_argument("--email", help="Login email")
-    parser.add_argument("--password", help="Login password")
-    parser.add_argument(
-        "--transcripts-only",
-        action="store_true",
-        help="Only download text transcripts. Skip media m3u8 downloading.",
-    )
-    parser.add_argument(
-        "--audiobook",
-        action="store_true",
-        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
-    )
-    parser.add_argument("--manual-login", action="store_true")
-    parser.add_argument("--no-headless", action="store_true")
-    parser.add_argument(
-        "--browser", choices=["firefox", "chrome", "stealth"], default="stealth"
-    )
-    parser.add_argument(
-        "--output-dir", default="downloads", help="Directory to save downloaded files"
-    )
-    parser.add_argument(
-        "--workers", type=int, default=3, help="Max parallel media downloads"
-    )
-    parser.add_argument(
-        "--debug", action="store_true", help="Enable file logging to downloader.log"
-    )
+    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
 
     args = parser.parse_args()
 
@@ -475,6 +529,10 @@ def main():
             "The course URL is required unless using --manual-login or --on24-vtt"
         )
 
+    is_epub = args.epub
+    if args.url and "/library/view/" in args.url:
+        is_epub = True
+
     config = DownloaderConfig(
         url=args.url,
         email=args.email,
@@ -486,6 +544,8 @@ def main():
         output_dir=args.output_dir,
         max_workers=args.workers,
         audiobook=args.audiobook,
+        epub=is_epub,
+        web_viewer=args.web_viewer,
     )
 
     process_course(config)
