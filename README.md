@@ -1,6 +1,6 @@
-# O'Reilly Downloader (Video & Audiobook) 🎓
+# O'Reilly Downloader (Video, Audiobook & eBook) 🎓
 
-A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses and audiobooks** with their videos, audio chapters, and transcripts, automatically organizing them by modules. 
+A powerful, high-performance Python CLI tool to download **complete O'Reilly Learning courses, books, and audiobooks** with their videos, text chapters, EPUB packaging, audio chapters, and transcripts, automatically organizing them into structured directories.
 
 > **Important Architecture Update:** This project has been entirely rewritten into a modern Python package managed by **[`uv`](https://docs.astral.sh/uv/)**. It's now faster, perfectly cleanly containerized, and much easier to install on any OS.
 ## ✨ Features
@@ -9,7 +9,8 @@ A powerful, high-performance Python CLI tool to download **complete O'Reilly Lea
 - **📚 Complete Course Downloads**: Extract entire courses with all modules and lessons hierarchically intact.
 - **🎥 Video Downloads**: High-quality video downloads via HLS/m3u8 raw streams using `ffmpeg`.
 - **🎧 Audiobook Downloads**: Native audiobook and audio course downloads saved in high-quality `.m4a` format.
-- **🏛️ Central Offline Library Dashboard**: Automatically compiles a beautiful local dashboard (`index.html`) containing all downloaded courses/audiobooks with search indexing, reading progress tracking, custom tags overriding, and keyboard navigation.
+- **📖 eBook (EPUB) Downloads**: Extract full O'Reilly text books as standard `.epub` files along with interactive HTML reader pages for offline viewing.
+- **🏛️ Central Offline Library Dashboard**: Automatically compiles a beautiful local dashboard (`index.html`) containing all downloaded courses, books, and audiobooks with search indexing, reading progress tracking, custom tags overriding, and keyboard navigation.
 - **📝 Native Transcripts**: Extracts actual text-based video transcripts parsed directly from the O'Reilly API, saving them as timestamps.
 - **⚡ Transcripts-Only Mode**: Bypass video downloads entirely. Skips video streams and extracts just the text (~100x faster, zero storage weight).
 - **🗂️ Smart Organization**: Structures output folders logically. If there are no custom sub-lessons, videos are saved directly inside their parent Chapter directories.
@@ -80,6 +81,21 @@ To download an audiobook, append the `--audiobook` flag. The tool automatically 
 ```bash
 uv run oreilly-dl "https://learning.oreilly.com/videos/designing-distributed-systems/9781663754035/" \
   --audiobook
+```
+
+#### Option E: Download eBooks (EPUB) 📖
+To download a text book as a standard, standalone EPUB file, use the `--epub` flag:
+```bash
+uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/" \
+  --epub
+```
+
+#### Option F: Download eBooks with Local Interactive Web Reader 🏛️
+To extract a book, generate local web assets, and automatically register it inside the Central Library Dashboard, pass both the `--epub` and `--web-viewer` flags:
+```bash
+uv run oreilly-dl "https://learning.oreilly.com/library/view/learning-spark-2nd/9781492050728/" \
+  --epub \
+  --web-viewer
 ```
 
 ---
