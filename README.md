@@ -93,7 +93,7 @@ This features a premium, Apple Books/Steam-inspired interface that allows you to
 ### Features
 - **🗂️ Dynamic Left Sidebar**: Instantly filter collections by Reading Status, Bookmarks, or dynamically calculated subject counts (e.g. `Python (12)`).
 - **📝 Category/Tag Override**: Edit category metadata tags on any book directly from the interface. These persist in your local profile database so you can group books your own way.
-- **🔍 150ms Debounced Fuzzy Search**: Search title, author, publisher, and descriptions instantly.
+- **🔍 Fuzzy Search**: Search title, author, publisher, and descriptions instantly.
 - **⌨️ Keyboard-Driven UI**: Navigates using Arrow keys, toggles drawer metadata details with `Space`, opens the reading reader in a tab with `Enter`, and shows keyboard guide with `?`.
 - **🌓 Adaptive Theme Modes**: Smooth transitions between premium Dark and Light theme presets.
 

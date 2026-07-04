@@ -2528,9 +2528,27 @@ class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
                                     year = year_match.group(0)
                                     
                             cover_url = ""
-                            cover_rel = os.path.join("book", "assets", "cover.png")
-                            if os.path.exists(os.path.join(folder_path, cover_rel)):
-                                cover_url = f"/data/{urllib.parse.quote(folder)}/book/assets/cover.png"
+                            candidates = [
+                                "book/assets/cover.png",
+                                "book/assets/cover.jpg",
+                                "book/assets/cover.jpeg",
+                                "book/Images/cover.png",
+                                "book/Images/cover.jpg",
+                                "book/Images/cover.jpeg",
+                                "book/Images/Cover.png",
+                                "book/Images/Cover.jpg",
+                                "book/Images/Cover.jpeg",
+                                "book/images/cover.png",
+                                "book/images/cover.jpg",
+                                "book/images/cover.jpeg",
+                                "book/images/Cover.png",
+                                "book/images/Cover.jpg",
+                                "book/images/Cover.jpeg"
+                            ]
+                            for candidate in candidates:
+                                if os.path.exists(os.path.join(folder_path, candidate)):
+                                    cover_url = f"/data/{urllib.parse.quote(folder)}/{candidate.replace(os.path.sep, '/')}"
+                                    break
                                 
                             books.append({
                                 "folder": f"data/{folder}",
