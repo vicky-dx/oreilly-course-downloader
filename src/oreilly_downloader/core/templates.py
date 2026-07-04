@@ -468,7 +468,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
     .sidebar-tab.active {
       opacity: 1;
-      border-bottom: 2px solid #d3002d;
+      border-bottom: 2px solid #007a87; /* O'Reilly Teal bottom border */
     }
 
     #sidebar-tab-content-chapters,
@@ -480,16 +480,65 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       display: none;
     }
 
+    .search-wrapper {
+      position: relative;
+      padding: 10px 15px;
+      border-bottom: 1px solid var(--sidebar-border);
+      display: flex;
+      align-items: center;
+      background-color: var(--sidebar-bg);
+    }
+
+    #toc-search {
+      width: 100%;
+      padding: 8px 30px 8px 12px;
+      font-size: 13px;
+      border: 1px solid var(--sidebar-border);
+      border-radius: 4px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #toc-search:focus {
+      border-color: #007a87; /* O'Reilly Teal */
+    }
+
+    #toc-search-clear {
+      position: absolute;
+      right: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      opacity: 0.5;
+      user-select: none;
+      color: var(--text-color);
+    }
+
+    #toc-search-clear:hover {
+      opacity: 1;
+    }
+
     #toc-list {
-      list-style: none;
-      padding: 10px 0;
-      margin: 0;
+      position: relative;
+      border-left: 2px solid #007a87; /* O'Reilly Teal/Green vertical line */
+      margin: 15px 15px 15px 25px;
+      padding: 0;
     }
 
     #toc-list ul {
       list-style: none;
-      padding-left: 15px;
+      padding: 0;
       margin: 0;
+    }
+
+    #toc-list ul.level-2 {
+      padding-left: 10px;
+    }
+
+    #toc-list ul.level-3 {
+      padding-left: 15px;
     }
 
     #toc-list li {
@@ -497,24 +546,39 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       padding: 0;
     }
 
-    #toc-list li span {
-      display: block;
-      padding: 8px 20px;
+    #toc-list li .item-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 15px 8px 10px;
       cursor: pointer;
       font-size: 14px;
-      line-height: 1.3;
+      line-height: 1.35;
       color: var(--text-color);
-      transition: background 0.1s;
+      transition: background 0.1s, color 0.1s;
     }
 
-    #toc-list li span:hover {
+    #toc-list li .item-wrapper:hover {
       background-color: var(--active-link-bg);
     }
 
-    #toc-list li.active > span {
+    #toc-list li.active > .item-wrapper {
+      font-weight: 700;
+      background-color: var(--active-link-bg);
+      color: #007a87; /* Active text color */
+      border-left: 3px solid #d3002d; /* Left Red indicator border */
+      padding-left: 7px; /* Compensate border width */
+    }
+
+    .chevron {
+      font-size: 11px;
       font-weight: bold;
-      background-color: var(--active-link-bg);
-      border-left: 3px solid #d3002d; /* O'Reilly Red Line */
+      color: var(--text-color);
+      opacity: 0.7;
+      margin-left: 10px;
+      display: inline-flex;
+      align-items: center;
+      transition: transform 0.2s;
     }
 
     #toggle-sidebar {
@@ -993,7 +1057,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="bottom-bar">
           <button id="prev-btn" class="nav-arrow">◀ Previous</button>
           <div id="progress-indicator">
-            <button id="history-back-btn" title="Go back to previous page" style="margin-right: 8px; display: none;">
+            <button id="history-back-btn" class="nav-arrow" title="Go back to previous page" style="margin-right: 8px; display: none; align-items: center; justify-content: center; gap: 4px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
                 <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
               </svg>
@@ -1027,14 +1091,18 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
           <div id="sidebar-book-author">O'Reilly Offline Reader</div>
         </div>
         <div class="sidebar-tabs">
-          <button class="sidebar-tab active" id="tab-chapters">Chapters</button>
-          <button class="sidebar-tab" id="tab-notes">Notes</button>
+          <button class="sidebar-tab active" id="tab-chapters">Contents</button>
+          <button class="sidebar-tab" id="tab-notes">Highlights</button>
         </div>
       </div>
       
       <!-- Chapters content panel -->
       <div id="sidebar-tab-content-chapters">
-        <ul id="toc-list"></ul>
+        <div class="search-wrapper">
+          <input type="text" id="toc-search" placeholder="Search topics..." autocomplete="off">
+          <span id="toc-search-clear" class="hidden">&times;</span>
+        </div>
+        <div id="toc-list"></div>
       </div>
 
       <!-- Notes content panel -->
@@ -1173,6 +1241,12 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
   <!-- Note Hover Tooltip -->
   <div id="note-hover-tooltip" class="hidden"></div>
 
+  <!-- Lightbox Modal for Images -->
+  <div id="image-lightbox" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; transition: opacity 0.2s ease;">
+    <span id="close-lightbox" style="position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 35px; font-weight: bold; cursor: pointer; user-select: none;">&times;</span>
+    <img id="lightbox-img" src="" alt="Enlarged figure" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+  </div>
+
   <script>
     let currentChapter = "";
     let flatChapters = [];
@@ -1182,6 +1256,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     let activeHighlightId = null; // Active highlight being edited in modal
     let tempSelectionRange = null; // Hold range between text selection and note modal input
     let historyStack = [];
+    let isScrollingFromClick = false;
     
     // Toggle sidebar visibility
     const sidebar = document.getElementById('sidebar');
@@ -1206,6 +1281,66 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       updateNotesSidebar();
     });
 
+    // TOC Sidebar Real-time Search/Filter Logic
+    const searchInput = document.getElementById('toc-search');
+    const searchClear = document.getElementById('toc-search-clear');
+    
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      
+      if (query === "") {
+        searchClear.classList.add('hidden');
+        document.querySelectorAll('#toc-list li').forEach(li => {
+          li.style.display = '';
+        });
+        const activeLi = document.querySelector('#toc-list li.active');
+        if (activeLi) {
+          updateAccordionState(activeLi);
+        }
+        return;
+      }
+      
+      searchClear.classList.remove('hidden');
+      
+      // Hide all items and their nested ul folders initially
+      const allLis = document.querySelectorAll('#toc-list li');
+      allLis.forEach(li => {
+        li.style.display = 'none';
+        const subUl = li.querySelector('ul');
+        if (subUl) subUl.style.display = 'none';
+      });
+      
+      allLis.forEach(li => {
+        const span = li.querySelector('.item-wrapper > span');
+        if (span && span.textContent.toLowerCase().includes(query)) {
+          // Show this matched list item
+          li.style.display = '';
+          
+          // Force matched folders to open
+          const subUl = li.querySelector('ul');
+          if (subUl) subUl.style.display = 'block';
+          
+          // Show all parent list items and container ul blocks
+          let parent = li.parentElement;
+          while (parent && parent.id !== 'toc-list') {
+            if (parent.tagName === 'UL') {
+              parent.style.display = 'block';
+            }
+            if (parent.tagName === 'LI') {
+              parent.style.display = '';
+            }
+            parent = parent.parentElement;
+          }
+        }
+      });
+    });
+    
+    searchClear.addEventListener('click', () => {
+      searchInput.value = "";
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.focus();
+    });
+
     // Settings popup logic
     const gearBtn = document.getElementById('settings-gear-btn');
     const popup = document.getElementById('settings-popup');
@@ -1224,10 +1359,13 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('history-back-btn').addEventListener('click', () => {
       if (historyStack.length > 0) {
         const prev = historyStack.pop();
-        const baseSrc = prev.split('#')[0];
-        const li = document.querySelector(`li[data-src="${prev}"]`) || 
+        const prevSrc = typeof prev === 'string' ? prev : prev.src;
+        const prevScrollTop = typeof prev === 'object' ? prev.scrollTop : 0;
+        
+        const baseSrc = prevSrc.split('#')[0];
+        const li = document.querySelector(`li[data-src="${prevSrc}"]`) || 
                    document.querySelector(`li[data-src^="${baseSrc}"]`);
-        loadChapter(prev, li);
+        loadChapter(prevSrc, li, prevScrollTop);
         
         if (historyStack.length === 0) {
           document.getElementById('history-back-btn').style.display = 'none';
@@ -1814,9 +1952,7 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         
         // Clicking note list item navigates to exact chapter and scrolls
         item.addEventListener('click', () => {
-          const liTarget = document.querySelector(`li[data-src="${note.chapter}"]`) || 
-                           document.querySelector(`li[data-src^="${baseCh}"]`);
-          loadChapter(note.chapter, liTarget);
+          navigateTo(note.chapter);
           
           // Smooth scroll to highlight
           setTimeout(() => {
@@ -1857,12 +1993,14 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       });
     }
 
-    // Recursive TOC NCX XML Parser
-    function parseNode(node, container) {
+    // Recursive TOC NCX XML Parser with chevron accordions
+    function parseNode(node, container, level = 1) {
       const children = Array.from(node.childNodes).filter(n => n.nodeName === 'navPoint');
       if (children.length === 0) return;
       
       const ul = document.createElement('ul');
+      ul.classList.add(`level-${level}`);
+      
       children.forEach(child => {
         const labelEl = child.querySelector('navLabel > text') || child.getElementsByTagName('text')[0];
         const contentEl = child.querySelector('content') || child.getElementsByTagName('content')[0];
@@ -1873,22 +2011,93 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         
         const li = document.createElement('li');
         li.setAttribute('data-src', src);
+        li.classList.add(`item-level-${level}`);
+        
+        const itemWrapper = document.createElement('div');
+        itemWrapper.classList.add('item-wrapper');
         
         const span = document.createElement('span');
         span.textContent = label;
-        li.appendChild(span);
+        itemWrapper.appendChild(span);
         
         flatChapters.push({ label, src });
         
-        span.addEventListener('click', (e) => {
+        // If this navPoint has child navPoints, it is collapsible
+        const hasChildren = Array.from(child.childNodes).some(n => n.nodeName === 'navPoint');
+        if (hasChildren) {
+          li.classList.add('collapsible');
+          const chevron = document.createElement('span');
+          chevron.className = 'chevron';
+          chevron.innerHTML = '▼'; // Default collapsed state representation
+          
+          chevron.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent parent itemWrapper click event from bubbling (stops navigation)
+            const subUl = Array.from(li.childNodes).find(n => n.nodeName === 'UL' || n.tagName === 'UL');
+            if (subUl) {
+              const isCollapsed = subUl.style.display === 'none' || subUl.style.display === '';
+              if (isCollapsed) {
+                subUl.style.display = 'block';
+                chevron.innerHTML = '▲';
+                chevron.classList.add('expanded');
+              } else {
+                subUl.style.display = 'none';
+                chevron.innerHTML = '▼';
+                chevron.classList.remove('expanded');
+              }
+            }
+          });
+          
+          itemWrapper.appendChild(chevron);
+        }
+        
+        li.appendChild(itemWrapper);
+        ul.appendChild(li);
+        
+        // Recursively parse children
+        parseNode(child, li, level + 1);
+        
+        // Event listener for navigation
+        itemWrapper.addEventListener('click', (e) => {
           e.stopPropagation();
           navigateTo(src);
         });
-        
-        ul.appendChild(li);
-        parseNode(child, li);
       });
       container.appendChild(ul);
+    }
+
+    // Dynamic accordion toggler checking DOM ancestor tree relationships
+    function updateAccordionState(activeLi) {
+      const allCollapsible = document.querySelectorAll('#toc-list li.collapsible');
+      allCollapsible.forEach(li => {
+        const subUl = li.querySelector('ul');
+        const chevron = li.querySelector('.chevron');
+        if (!subUl) return;
+
+        // Check if this li is an ancestor of the activeLi (or is the activeLi itself)
+        let isAncestor = false;
+        let temp = activeLi;
+        while (temp && temp.id !== 'toc-list') {
+          if (temp === li) {
+            isAncestor = true;
+            break;
+          }
+          temp = temp.parentElement;
+        }
+
+        if (isAncestor) {
+          subUl.style.display = 'block';
+          if (chevron) {
+            chevron.innerHTML = '▲';
+            chevron.classList.add('expanded');
+          }
+        } else {
+          subUl.style.display = 'none';
+          if (chevron) {
+            chevron.innerHTML = '▼';
+            chevron.classList.remove('expanded');
+          }
+        }
+      });
     }
 
     // Load table of contents
@@ -1965,10 +2174,14 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       } else {
         nextBtn.style.visibility = 'hidden';
       }
-    // Navigate with history tracking (pushes previous src to history stack)
+    // Navigate with history tracking (pushes previous src & scroll position to history stack)
     function navigateTo(src) {
       if (currentChapter && currentChapter !== src) {
-        historyStack.push(currentChapter);
+        const mainContent = document.getElementById('main-content');
+        historyStack.push({
+          src: currentChapter,
+          scrollTop: mainContent ? mainContent.scrollTop : 0
+        });
         if (historyStack.length > 50) historyStack.shift();
         
         const backBtn = document.getElementById('history-back-btn');
@@ -1981,10 +2194,14 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     // Load XHTML chapter dynamically
-    function loadChapter(src, activeElement) {
+    function loadChapter(src, activeElement, restoreScrollTop) {
       const baseSrc = src.split('#')[0];
       const fragmentId = src.split('#')[1];
       const currentBase = currentChapter.split('#')[0];
+
+      // Update URL search parameters silently
+      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?ch=${src}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
 
       // Update active sidebar item
       const listItems = document.querySelectorAll('#toc-list li');
@@ -1993,11 +2210,11 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         activeElement.classList.add('active');
         document.getElementById('current-chapter-title').innerText = activeElement.querySelector('span').textContent;
         
-        let parent = activeElement.parentElement;
-        while (parent && parent.id !== 'toc-list') {
-          if (parent.tagName === 'LI') parent.classList.add('active');
-          parent = parent.parentElement;
-        }
+        // Auto-scroll sidebar TOC container to bring the active element into view
+        activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Update chevrons and recursive accordion lists
+        updateAccordionState(activeElement);
       }
 
       // Update index for prev/next navigation (exact match first, then base fallback)
@@ -2010,14 +2227,19 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       if (currentBase === baseSrc && currentChapter !== "") {
         // Same chapter, just scroll to fragment element
         currentChapter = src;
-        if (fragmentId) {
+        if (restoreScrollTop !== undefined && restoreScrollTop !== null) {
+          document.getElementById('main-content').scrollTop = restoreScrollTop;
+        } else if (fragmentId) {
           const fragmentEl = document.getElementById(fragmentId);
           if (fragmentEl) {
+            isScrollingFromClick = true;
             fragmentEl.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => { isScrollingFromClick = false; }, 800);
             return;
           }
+        } else {
+          document.getElementById('main-content').scrollTop = 0;
         }
-        document.getElementById('main-content').scrollTop = 0;
         return;
       }
 
@@ -2037,23 +2259,25 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
           // Re-apply notes & highlights for the freshly loaded chapter
           applyHighlightsForCurrentChapter();
 
-          if (fragmentId) {
+          if (restoreScrollTop !== undefined && restoreScrollTop !== null) {
+            document.getElementById('main-content').scrollTop = restoreScrollTop;
+          } else if (fragmentId) {
             const fragmentEl = document.getElementById(fragmentId);
             if (fragmentEl) {
+              isScrollingFromClick = true;
               fragmentEl.scrollIntoView({ behavior: 'smooth' });
+              setTimeout(() => { isScrollingFromClick = false; }, 800);
               return;
             }
+          } else {
+            document.getElementById('main-content').scrollTop = 0;
           }
-          document.getElementById('main-content').scrollTop = 0;
         })
         .catch(err => {
           wrapper.innerHTML = `<div style='text-align:center; color:red; padding-top: 150px;'><h3>Failed to load chapter: ${baseSrc}</h3></div>`;
           console.error(err);
         });
 
-      // Update URL search parameters silently
-      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?ch=${src}`;
-      window.history.replaceState({ path: newUrl }, '', newUrl);
     }
 
     // Intercept clicks on links inside book content to keep navigation local and SPA-based
@@ -2070,18 +2294,40 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
         return;
       }
 
+      // Check if it's an image link (e.g. figure-1.jpg)
+      const isImage = href.match(/\.(jpg|jpeg|png|gif|svg|webp|bmp)(?:\?.*)?$/i);
+      if (isImage) {
+        e.preventDefault();
+        showImageLightbox(href);
+        return;
+      }
+
       // Local bookmark hash links (e.g. #co_CO1-1)
       if (href.startsWith('#')) {
         e.preventDefault();
+        
+        // Push the current scroll position to history stack before jumping
+        const mainContent = document.getElementById('main-content');
+        historyStack.push({
+          src: currentChapter,
+          scrollTop: mainContent ? mainContent.scrollTop : 0
+        });
+        if (historyStack.length > 50) historyStack.shift();
+        
+        const backBtn = document.getElementById('history-back-btn');
+        if (backBtn) backBtn.style.display = 'inline-flex';
+
         const targetId = href.substring(1);
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
+          isScrollingFromClick = true;
           targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           targetEl.style.transition = 'background-color 0.3s';
           const oldBg = targetEl.style.backgroundColor;
           targetEl.style.backgroundColor = 'rgba(255, 235, 59, 0.3)';
           setTimeout(() => {
             targetEl.style.backgroundColor = oldBg;
+            isScrollingFromClick = false;
           }, 1000);
         }
         return;
@@ -2093,6 +2339,89 @@ WEB_VIEWER_HTML_TEMPLATE = """<!DOCTYPE html>
       // Find matching TOC list item to sync sidebar
       const targetSrc = href;
       navigateTo(targetSrc);
+    });
+
+    function showImageLightbox(src) {
+      const lightbox = document.getElementById('image-lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      lightbox.classList.remove('hidden');
+      void lightbox.offsetWidth; // Trigger layout
+      lightbox.style.opacity = '1';
+    }
+
+    function hideImageLightbox() {
+      const lightbox = document.getElementById('image-lightbox');
+      lightbox.style.opacity = '0';
+      setTimeout(() => {
+        lightbox.classList.add('hidden');
+        document.getElementById('lightbox-img').src = '';
+      }, 200);
+    }
+
+    document.getElementById('close-lightbox').addEventListener('click', hideImageLightbox);
+    document.getElementById('image-lightbox').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('image-lightbox')) {
+        hideImageLightbox();
+      }
+    });
+
+    // ScrollSpy active TOC tracking on scroll
+    let scrollSpyTimeout = null;
+
+    function handleScrollSpy() {
+      if (isScrollingFromClick) return;
+      const mainContent = document.getElementById('main-content');
+      if (!mainContent) return;
+      
+      const currentBase = currentChapter.split('#')[0];
+      const items = [];
+      document.querySelectorAll('#toc-list li').forEach(li => {
+        const src = li.getAttribute('data-src');
+        if (src && src.split('#')[0] === currentBase) {
+          const fragId = src.split('#')[1] || null;
+          items.push({ li, fragId });
+        }
+      });
+      
+      if (items.length === 0) return;
+      
+      let activeItem = items[0];
+      const scrollThreshold = 120;
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.fragId) {
+          const targetEl = document.getElementById(item.fragId);
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            const mainRect = mainContent.getBoundingClientRect();
+            const relativeTop = rect.top - mainRect.top;
+            if (relativeTop <= scrollThreshold) {
+              activeItem = item;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+      
+      if (activeItem && !activeItem.li.classList.contains('active')) {
+        document.querySelectorAll('#toc-list li').forEach(li => li.classList.remove('active'));
+        activeItem.li.classList.add('active');
+        document.getElementById('current-chapter-title').innerText = activeItem.li.querySelector('span').textContent;
+        
+        // Auto-scroll sidebar TOC container to bring the active element into view
+        activeItem.li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Update chevrons and recursive accordion lists
+        updateAccordionState(activeItem.li);
+      }
+    }
+
+    document.getElementById('main-content').addEventListener('scroll', () => {
+      if (scrollSpyTimeout) clearTimeout(scrollSpyTimeout);
+      scrollSpyTimeout = setTimeout(handleScrollSpy, 50);
     });
   </script>
 </body>
