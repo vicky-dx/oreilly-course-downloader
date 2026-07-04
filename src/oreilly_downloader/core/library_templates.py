@@ -1303,7 +1303,7 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
     class LibraryStorage {
       static get KEY() { return 'library-data-v1'; }
 
-      static save(readingMap, preferences) {
+      static async save(readingMap, preferences) {
         try {
           const readingArray = Array.from(readingMap.entries());
           const payload = {
@@ -1312,37 +1312,15 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
             reading: readingArray
           };
           localStorage.setItem(this.KEY, JSON.stringify(payload));
+          
+          await fetch('/api/library_state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
         } catch (e) {
           console.error("Storage save failed:", e);
         }
-      }
-
-      static load() {
-        const defaultPrefs = {
-          theme: 'dark',
-          sort: 'title',
-          lastView: 'home'
-        };
-        let readingMap = new Map();
-        let preferences = defaultPrefs;
-
-        try {
-          const stored = localStorage.getItem(this.KEY);
-          if (stored) {
-            const payload = JSON.parse(stored);
-            if (payload && payload.version === 1) {
-              if (payload.preferences) {
-                preferences = { ...defaultPrefs, ...payload.preferences };
-              }
-              if (payload.reading) {
-                readingMap = new Map(payload.reading);
-              }
-            }
-          }
-        } catch (e) {
-          console.warn("Storage load failed or corrupted, defaults used:", e);
-        }
-        return { readingMap, preferences };
       }
     }
 
@@ -1378,13 +1356,16 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
     // --- 3. Library Store ---
     class LibraryStore {
       constructor() {
-        const { readingMap, preferences } = LibraryStorage.load();
         this.state = {
           books: [],
-          readingStates: readingMap,
-          preferences,
+          readingStates: new Map(),
+          preferences: {
+            theme: 'dark',
+            sort: 'title',
+            lastView: 'home'
+          },
           ui: {
-            currentView: preferences.lastView || 'home',
+            currentView: 'home',
             activeCategory: null,
             selectedIndex: null,
             searchQuery: '',
@@ -1521,6 +1502,49 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
         });
       }
 
+      initialize(serverState, rawBooks) {
+        if (serverState) {
+          if (serverState.preferences) {
+            this.state.preferences = { ...this.state.preferences, ...serverState.preferences };
+            this.state.ui.currentView = this.state.preferences.lastView || 'home';
+          }
+          if (serverState.reading) {
+            this.state.readingStates = new Map(serverState.reading);
+          }
+        }
+
+        const books = rawBooks.map(b => {
+          const author = b.author && !['unknown', 'unknown author', 'n/a', '-', ''].includes(b.author.trim().toLowerCase()) 
+            ? b.author.trim() 
+            : null;
+          const publisher = b.publisher && !['unknown', 'n/a', '-', ''].includes(b.publisher.trim().toLowerCase()) 
+            ? b.publisher.trim() 
+            : null;
+          
+          const defaultCategories = b.category && b.category !== 'Unknown' 
+            ? b.category.split(/[,;|]/).map(c => c.trim()).filter(Boolean)
+            : [];
+
+          const rs = this.state.readingStates.get(b.folder);
+          const categories = rs && rs.categories ? rs.categories : defaultCategories;
+
+          return {
+            ...b,
+            author,
+            publisher,
+            defaultCategories,
+            categories
+          };
+        });
+
+        this.state.books = books;
+        SearchIndexer.build(this.state.books, this.searchMap);
+        this.state.ui.pagination.hasMore = this.state.ui.pagination.visibleCount < this.filteredBooks.length;
+
+        document.getElementById('sort-select').value = this.state.preferences.sort;
+        this.notify();
+      }
+
       dispatch(action) {
         let changed = false;
         let saveState = false;
@@ -1602,7 +1626,6 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
               book.categories = categories;
             }
 
-            // Rebuild search index
             SearchIndexer.build(this.state.books, this.searchMap);
 
             changed = true;
@@ -2338,43 +2361,27 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
       `;
 
       try {
-        const res = await fetch('/api/books');
-        if (!res.ok) throw new Error("Server error");
-        const rawBooks = await res.json();
+        const [stateRes, booksRes] = await Promise.all([
+          fetch('/api/library_state').catch(e => null),
+          fetch('/api/books')
+        ]);
         
-        // Loader normalizations
-        const books = rawBooks.map(b => {
-          const author = b.author && !['unknown', 'unknown author', 'n/a', '-', ''].includes(b.author.trim().toLowerCase()) 
-            ? b.author.trim() 
-            : null;
-          const publisher = b.publisher && !['unknown', 'n/a', '-', ''].includes(b.publisher.trim().toLowerCase()) 
-            ? b.publisher.trim() 
-            : null;
-          
-          const defaultCategories = b.category && b.category !== 'Unknown' 
-            ? b.category.split(/[,;|]/).map(c => c.trim()).filter(Boolean)
-            : [];
+        if (!booksRes || !booksRes.ok) throw new Error("Books fetch failed");
 
-          // Retrieve custom category settings from persisted states
-          const rs = store.state.readingStates.get(b.folder);
-          const categories = rs && rs.categories ? rs.categories : defaultCategories;
+        let serverState = null;
+        if (stateRes && stateRes.ok) {
+          serverState = await stateRes.json();
+        } else {
+          const stored = localStorage.getItem('library-data-v1');
+          if (stored) {
+            serverState = JSON.parse(stored);
+          }
+        }
 
-          return {
-            ...b,
-            author,
-            publisher,
-            defaultCategories,
-            categories
-          };
-        });
-
-        // Initialize sorting selection dropdown state based on saved preferences
-        document.getElementById('sort-select').value = store.state.preferences.sort;
-
-        // Dispatch books and render workspace
-        store.dispatch({ type: 'SET_BOOKS', payload: { books } });
+        const rawBooks = await booksRes.json();
+        store.initialize(serverState, rawBooks);
       } catch (err) {
-        console.error("Failed to load library books list:", err);
+        console.error("Failed to load library data:", err);
         workspace.innerHTML = `
           <div class="greeting-section" style="text-align: center; border-color: var(--accent-color);">
             <h2 class="greeting-title" style="color: var(--accent-color);">Failed to load library</h2>
@@ -2389,6 +2396,7 @@ LIBRARY_INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>
 """
+
 
 
 
@@ -2537,7 +2545,24 @@ class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
                             })
             self.wfile.write(json.dumps(books).encode('utf-8'))
             return
+
+        elif decoded_path == "/api/library_state":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
             
+            state_file = "library_state.json"
+            if os.path.exists(state_file):
+                try:
+                    with open(state_file, "r", encoding="utf-8") as f:
+                        self.wfile.write(f.read().encode('utf-8'))
+                    return
+                except Exception:
+                    pass
+            self.wfile.write(b'{"version":1,"preferences":{},"reading":[]}')
+            return
+
         elif decoded_path.endswith("/book/notes.json"):
             # Intercept and return [] if notes.json is not created yet
             leading_path = decoded_path.lstrip("/")
@@ -2553,7 +2578,29 @@ class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         decoded_path = urllib.parse.unquote(self.path)
-        if decoded_path.endswith("/book/notes.json"):
+        if decoded_path == "/api/library_state":
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data.decode('utf-8'))
+                    
+                    state_file = "library_state.json"
+                    with open(state_file, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"success"}')
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode('utf-8'))
+                return
+        elif decoded_path.endswith("/book/notes.json"):
             try:
                 content_length = int(self.headers.get('Content-Length', 0))
                 if content_length > 0:
@@ -2657,7 +2704,7 @@ if __name__ == "__main__":
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n👋 Stopping library server. Goodbye!")
+        print("\\\\n👋 Stopping library server. Goodbye!")
 """
 
 LIBRARY_BAT_LAUNCHER_TEMPLATE = """@echo off
