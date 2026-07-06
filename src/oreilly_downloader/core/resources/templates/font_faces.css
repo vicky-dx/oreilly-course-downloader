@@ -1,0 +1,42 @@
+@font-face {
+  font-family: 'DejaVuSans';
+  font-weight: bold;
+  font-style: normal;
+  src: url('DejaVuSans-Bold.otf');
+}
+@font-face {
+  font-family: 'DejaVuSerif';
+  font-weight: normal;
+  font-style: normal;
+  src: url('DejaVuSerif.otf');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: normal;
+  font-style: normal;
+  src: url('UbuntuMono-Regular.otf');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: bold;
+  font-style: normal;
+  src: url('UbuntuMono-Bold.otf');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: normal;
+  font-style: italic;
+  src: url('UbuntuMono-Italic.otf');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: bold;
+  font-style: italic;
+  src: url('UbuntuMono-BoldItalic.otf');
+}
+@font-face {
+  font-family: 'Ubuntu Mono BoldItal';
+  font-weight: bold;
+  font-style: italic;
+  src: url('UbuntuMono-BoldItalic.otf');
+}

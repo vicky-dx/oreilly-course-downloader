@@ -1,3 +1,4 @@
+from .logger import Logger
 import os
 from colorama import Fore, init
 import undetected_chromedriver as uc  # type: ignore
@@ -7,8 +8,9 @@ init(autoreset=True)
 
 
 class StealthChromeBrowser(IBrowser):
-    def __init__(self, headless=True):
+    def __init__(self, headless=True, clean_session=False):
         self.headless = headless
+        self.clean_session = clean_session
         self.driver = None
 
     def _get_options(self):
@@ -43,9 +45,21 @@ class StealthChromeBrowser(IBrowser):
 
     def start(self):
         prof = os.path.join(os.getcwd(), "browser_profile_stealth")
+        if self.clean_session:
+            import shutil
+            if os.path.exists(prof):
+                Logger.warning("🧹 Cleaning previous browser session profile to ensure a fresh registration...")
+                # Kill zombie processes first to release file locks
+                self._kill_zombie_chrome_processes(prof)
+                try:
+                    shutil.rmtree(prof, ignore_errors=True)
+                except Exception as e:
+                    Logger.error(f" Could not fully clear session folder: {e}")
+
         lock_file = os.path.join(prof, "lockfile")
+
         if os.path.exists(lock_file):
-            print(Fore.YELLOW + "🧹 Stale browser profile lock detected. Automatically cleaning up background processes...")
+            Logger.warning("🧹 Stale browser profile lock detected. Automatically cleaning up background processes...")
             self._kill_zombie_chrome_processes(prof)
             try:
                 if os.path.exists(lock_file):
@@ -53,22 +67,22 @@ class StealthChromeBrowser(IBrowser):
             except Exception:
                 pass
 
-        print(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
+        Logger.info(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
 
         def handle_lock_error(exception):
             err_msg = str(exception)
             if "cannot connect to chrome" in err_msg.lower() or "chrome not reachable" in err_msg.lower():
-                print(Fore.RED + "\n⚠️ Browser Profile Lock Detected!")
-                print(Fore.YELLOW + "It looks like background Chrome/Chromedriver processes from a previous run are still active and locking the profile directory:")
-                print(Fore.YELLOW + f"   Folder: {prof}")
-                print(Fore.CYAN + "\n👉 Solution:")
-                print(Fore.CYAN + "   1. Open Task Manager and terminate any active 'chrome.exe' or 'chromedriver.exe' processes.")
-                print(Fore.CYAN + "   2. Alternatively, run the script with '--browser chrome' or '--browser firefox'.")
+                Logger.error("Browser Profile Lock Detected!")
+                Logger.warning("It looks like background Chrome/Chromedriver processes from a previous run are still active and locking the profile directory:")
+                Logger.warning(f"   Folder: {prof}")
+                Logger.info("👉 Solution:")
+                Logger.info("   1. Open Task Manager and terminate any active 'chrome.exe' or 'chromedriver.exe' processes.")
+                Logger.info("   2. Alternatively, run the script with '--browser chrome' or '--browser firefox'.")
                 return RuntimeError("Chrome profile locked by background processes. Please clean up Task Manager and rerun.")
             return exception
 
         try:
-            self.driver = uc.Chrome(options=self._get_options(), user_data_dir=prof)
+            raw_driver = uc.Chrome(options=self._get_options(), user_data_dir=prof)
         except Exception as e:
             err_msg = str(e)
             
@@ -79,11 +93,9 @@ class StealthChromeBrowser(IBrowser):
                 match = re.search(r"current browser version is (\d+)", err_msg, re.IGNORECASE)
                 if match:
                     ver = int(match.group(1))
-                    print(
-                        f"⚠️ Chrome version mismatch. Retrying with driver version {ver}..."
-                    )
+                    Logger.warning(f" Chrome version mismatch. Retrying with driver version {ver}...")
                     try:
-                        self.driver = uc.Chrome(
+                        raw_driver = uc.Chrome(
                             options=self._get_options(),
                             user_data_dir=prof,
                             version_main=ver,
@@ -98,8 +110,12 @@ class StealthChromeBrowser(IBrowser):
                 lock_err = handle_lock_error(e)
                 raise lock_err
 
+        from .browser import Browser
+        self.raw_driver = raw_driver
+        self.driver = Browser(raw_driver)
         return self.driver
 
     def stop(self):
-        if self.driver:
-            self.driver.quit()
+        if hasattr(self, 'raw_driver') and self.raw_driver:
+            self.raw_driver.quit()
+

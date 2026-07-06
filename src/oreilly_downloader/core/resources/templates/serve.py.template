@@ -1,0 +1,144 @@
+import http.server
+import json
+import os
+import sys
+import socket
+import webbrowser
+import threading
+import urllib.request
+
+# Reconfigure stdout/stderr to utf-8 to prevent encoding crashes on Windows CMD
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+if sys.stderr.encoding != 'utf-8':
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
+class OReillyRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+    def do_GET(self):
+        if self.path == "/api/book_path":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            path_data = {"path": os.path.abspath(".")}
+            self.wfile.write(json.dumps(path_data).encode('utf-8'))
+            return
+        elif self.path == "/book/notes.json":
+            target_path = os.path.join("book", "notes.json")
+            if not os.path.exists(target_path):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(b"[]")
+                return
+        super().do_GET()
+
+    def do_POST(self):
+        if self.path == "/book/notes.json":
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data.decode('utf-8'))
+                    
+                    target_path = os.path.join("book", "notes.json")
+                    with open(target_path, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"success"}')
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode('utf-8'))
+                return
+        self.send_response(400)
+        self.end_headers()
+        self.wfile.write(b'{"status":"error","message":"Invalid endpoint"}')
+
+class OReillyHTTPServer(http.server.HTTPServer):
+    allow_reuse_address = sys.platform != 'win32'
+
+def check_existing_server(port, current_path):
+    try:
+        url = f"http://127.0.0.1:{port}/api/book_path"
+        req = urllib.request.Request(url)
+        # Disable proxy handlers for direct local connection to avoid hangs
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=2.0) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                path = data.get("path")
+                if path:
+                    return os.path.normcase(os.path.abspath(path)) == os.path.normcase(os.path.abspath(current_path))
+    except Exception:
+        pass
+    return False
+
+if __name__ == "__main__":
+    # Always serve from the directory containing this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+    current_path = os.path.abspath(".")
+
+    port = None
+    existing_port = None
+
+    for p in range(8000, 8021):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if sys.platform != 'win32':
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind(('127.0.0.1', p))
+            s.close()
+            port = p
+            break
+        except socket.error:
+            if check_existing_server(p, current_path):
+                existing_port = p
+                break
+
+    if existing_port:
+        url = f"http://127.0.0.1:{existing_port}/book/index.html"
+        Logger.info(f"ℹ️ Book reader server is already running for this book on port {existing_port}.")
+        Logger.info("🔗 Opening reader page in browser...")
+        webbrowser.open(url)
+        sys.exit(0)
+
+    if not port:
+        Logger.error(" Error: Could not find any free port between 8000 and 8020 to start the server.")
+        sys.exit(1)
+
+    server_address = ('127.0.0.1', port)
+    httpd = OReillyHTTPServer(server_address, OReillyRequestHandler)
+    
+    url = f"http://127.0.0.1:{port}/book/index.html"
+    Logger.info(f"🚀 Starting O'Reilly Offline Reader Server on {url}")
+    Logger.info("Press Ctrl+C inside this window to stop the server.")
+
+    # Auto-open browser tab
+    def open_browser():
+        webbrowser.open(url)
+    threading.Timer(0.5, open_browser).start()
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        Logger.info("\n👋 Stopping reader server. Goodbye!")

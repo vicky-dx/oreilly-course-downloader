@@ -1,3 +1,4 @@
+from .browsers import Logger
 import os
 import re
 import json
@@ -99,11 +100,11 @@ class BookDownloaderService:
                             try:
                                 with open(path, "r", encoding="utf-8") as f:
                                     css_content = f.read()
-                                print(Fore.GREEN + f"🎨 Found and applied custom CSS override from: {path}")
+                                Logger.success(f"🎨 Found and applied custom CSS override from: {path}")
                                 found_override = True
                                 break
                             except Exception as ce:
-                                print(Fore.YELLOW + f"⚠️ Failed to read CSS override file {path}: {ce}")
+                                Logger.warning(f" Failed to read CSS override file {path}: {ce}")
                     
                     css_content = FONT_FACES_TEMPLATE + css_content + FORMATTING_OVERRIDES
                     with open(dest_path, "w", encoding="utf-8") as f:
@@ -129,22 +130,22 @@ class BookDownloaderService:
         """Downloads the complete O'Reilly book assets and packages them into an EPUB file."""
         isbn = self.extract_isbn(config.url)
         if not isbn:
-            print(Fore.RED + f"❌ Could not extract a valid ISBN/Book ID from URL: {config.url}")
+            Logger.error(f" Could not extract a valid ISBN/Book ID from URL: {config.url}")
             return False
 
-        print(Fore.CYAN + f"📖 Detected Book ID (ISBN): {isbn}")
+        Logger.info(f"📖 Detected Book ID (ISBN): {isbn}")
         
         # 1. Fetch book metadata
         meta_url = f"https://learning.oreilly.com/api/v2/epubs/urn:orm:book:{isbn}/"
-        print(Fore.CYAN + f"⚡ Fetching book metadata...")
+        Logger.info(f"⚡ Fetching book metadata...")
         try:
             meta_resp = session.get(meta_url, timeout=15)
             if meta_resp.status_code != 200:
-                print(Fore.RED + f"❌ O'Reilly API returned status {meta_resp.status_code} for metadata. Are you authenticated?")
+                Logger.error(f" O'Reilly API returned status {meta_resp.status_code} for metadata. Are you authenticated?")
                 return False
             meta_data = meta_resp.json()
         except Exception as e:
-            print(Fore.RED + f"❌ Failed to fetch book metadata: {e}")
+            Logger.error(f" Failed to fetch book metadata: {e}")
             return False
 
         # Extract title and sanitize it
@@ -153,27 +154,27 @@ class BookDownloaderService:
         book_title = re.sub(r'\s*\[book\]\s*$', "", raw_title, flags=re.IGNORECASE).strip()
         sanitized_title = SanityUtils.sanitize_filename(book_title)
         
-        print(Fore.GREEN + f"📖 Title: {book_title}")
+        Logger.success(f"📖 Title: {book_title}")
         
         # 2. Fetch files list
         files_url = f"https://learning.oreilly.com/api/v2/epubs/urn:orm:book:{isbn}/files/?limit=1000"
-        print(Fore.CYAN + f"⚡ Fetching book file structure...")
+        Logger.info(f"⚡ Fetching book file structure...")
         try:
             files_resp = session.get(files_url, timeout=15)
             if files_resp.status_code != 200:
-                print(Fore.RED + f"❌ O'Reilly API returned status {files_resp.status_code} for files list.")
+                Logger.error(f" O'Reilly API returned status {files_resp.status_code} for files list.")
                 return False
             files_data = files_resp.json()
         except Exception as e:
-            print(Fore.RED + f"❌ Failed to fetch book file structure: {e}")
+            Logger.error(f" Failed to fetch book file structure: {e}")
             return False
 
         results = files_data.get("results", [])
         if not results:
-            print(Fore.RED + "❌ No book files were returned by the O'Reilly API.")
+            Logger.error(" No book files were returned by the O'Reilly API.")
             return False
 
-        print(Fore.GREEN + f"✅ Found {len(results)} assets (HTML, images, CSS, fonts).")
+        Logger.success(f" Found {len(results)} assets (HTML, images, CSS, fonts).")
 
         # Create temporary working directory inside output_dir
         temp_dir = os.path.join(self.output_dir, f".temp_{isbn}")
@@ -185,7 +186,7 @@ class BookDownloaderService:
         
         # 3. Concurrently download all files
         max_workers = config.max_workers
-        print(Fore.CYAN + f"📥 Downloading book assets concurrently (using {max_workers} workers)...")
+        Logger.info(f"📥 Downloading book assets concurrently (using {max_workers} workers)...")
 
         def _download_task(asset: Dict[str, Any]) -> Dict[str, Any]:
             full_path = asset.get("full_path")
@@ -211,15 +212,15 @@ class BookDownloaderService:
 
         # DLQ Reporting
         if failed_assets:
-            print(Fore.YELLOW + f"⚠️ Failed to download {len(failed_assets)} asset(s).")
+            Logger.warning(f" Failed to download {len(failed_assets)} asset(s).")
             # If critical metadata files (OPF or NCX) failed, abort
             critical_failures = [f for f in failed_assets if f.get("full_path") in ["content.opf", "toc.ncx"]]
             if critical_failures:
-                print(Fore.RED + f"❌ Critical metadata asset(s) { [f.get('full_path') for f in critical_failures] } failed. Aborting EPUB creation.")
+                Logger.error(f" Critical metadata asset(s) { [f.get('full_path') for f in critical_failures] } failed. Aborting EPUB creation.")
                 shutil.rmtree(temp_dir)
                 return False
             else:
-                print(Fore.YELLOW + "Non-critical assets failed. Attempting to package EPUB anyway...")
+                Logger.warning("Non-critical assets failed. Attempting to package EPUB anyway...")
 
         # 4. Package into EPUB file
         # Create books/{sanitized_title}/ parent directory structure
@@ -228,7 +229,7 @@ class BookDownloaderService:
 
         epub_filename = f"{sanitized_title}.epub"
         epub_path = os.path.join(book_root_dir, epub_filename)
-        print(Fore.CYAN + f"📦 Packaging EPUB file: {epub_path}...")
+        Logger.info(f"📦 Packaging EPUB file: {epub_path}...")
         
         try:
             with zipfile.ZipFile(epub_path, "w", zipfile.ZIP_DEFLATED) as epub:
@@ -261,7 +262,7 @@ class BookDownloaderService:
                         
                         epub.write(full_path, rel_zip_path)
             
-            print(Fore.GREEN + f"🎉 Successfully created EPUB: {epub_path}")
+            Logger.success(f"🎉 Successfully created EPUB: {epub_path}")
 
             # 5. If web_viewer configuration is enabled, copy the temp directory to output interactive folder
             if getattr(config, "web_viewer", False):
@@ -286,22 +287,15 @@ class BookDownloaderService:
                     # Ensure local override_v1.css stylesheet exists to prevent console 404 error
                     override_css_path = os.path.join(book_assets_dir, "override_v1.css")
                     if not os.path.exists(override_css_path):
-                        copied = False
-                        for p in [
-                            os.path.join(os.getcwd(), "..", "override_v1.css"),
-                            os.path.join(os.getcwd(), "override_v1.css"),
-                            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "override_v1.css")
-                        ]:
-                            if os.path.exists(p):
-                                try:
-                                    shutil.copy(p, override_css_path)
-                                    copied = True
-                                    break
-                                except Exception:
-                                    pass
-                        if not copied:
-                            with open(override_css_path, "w", encoding="utf-8") as f:
-                                f.write("/* Custom CSS overrides for book web viewer */\n")
+                        try:
+                            import importlib.resources
+                            ref = importlib.resources.files("oreilly_downloader.core.resources.templates").joinpath("override_v1.css")
+                            override_css_content = ref.read_text(encoding="utf-8")
+                        except Exception:
+                            override_css_content = "/* Custom CSS overrides for book web viewer */\n"
+
+                        with open(override_css_path, "w", encoding="utf-8") as f:
+                            f.write(override_css_content)
 
                     # Only write book reader assets, no individual viewer servers/launchers required.
 
@@ -331,16 +325,16 @@ class BookDownloaderService:
                     except Exception:
                         pass
 
-                    print(Fore.GREEN + f"🎉 Successfully created interactive web viewer assets under: {book_assets_dir}")
-                    print(Fore.GREEN + f"📚 Unified Library Dashboard created/updated at: {library_dir}")
-                    print(Fore.GREEN + f"👉 Run '{os.path.join(library_dir, 'start_library.bat')}' (Windows) or './start_library.sh' (Mac/Linux) to view all your books!")
+                    Logger.success(f"🎉 Successfully created interactive web viewer assets under: {book_assets_dir}")
+                    Logger.success(f"📚 Unified Library Dashboard created/updated at: {library_dir}")
+                    Logger.success(f"👉 Run '{os.path.join(library_dir, 'start_library.bat')}' (Windows) or './start_library.sh' (Mac/Linux) to view all your books!")
                 except Exception as wve:
-                    print(Fore.YELLOW + f"⚠️ Warning: Could not update interactive web viewer folder: {wve}")
-                    print(Fore.YELLOW + "👉 Please close any open start_viewer.bat console window and try again.")
+                    Logger.warning(f" Warning: Could not update interactive web viewer folder: {wve}")
+                    Logger.warning("👉 Please close any open start_viewer.bat console window and try again.")
 
             return True
         except Exception as e:
-            print(Fore.RED + f"❌ Failed to package EPUB file: {e}")
+            Logger.error(f" Failed to package EPUB file: {e}")
             return False
         finally:
             # Clean up temporary downloads

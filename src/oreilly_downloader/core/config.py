@@ -16,6 +16,9 @@ class DownloaderConfig:
     audiobook: bool = False
     epub: bool = False
     web_viewer: bool = False
+    auto_signup: bool = False
+    base_email: Optional[str] = None
+
 
 
 

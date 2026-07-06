@@ -1,3 +1,4 @@
+from .browsers import Logger
 import re
 import requests
 from typing import List, Dict, Optional
@@ -7,19 +8,19 @@ from colorama import Fore
 class VttProcessor:
     @staticmethod
     def download_vtt(url: str) -> Optional[str]:
-        print(Fore.CYAN + f"📥 Downloading VTT file from: {url}")
+        Logger.info(f"📥 Downloading VTT file from: {url}")
         try:
             response = requests.get(url)
             response.raise_for_status()
-            print(Fore.GREEN + f"✅ Downloaded {len(response.content)} bytes")
+            Logger.success(f" Downloaded {len(response.content)} bytes")
             return response.text
         except Exception as e:
-            print(Fore.RED + f"❌ Error: {e}")
+            Logger.error(f" Error: {e}")
             return None
 
     @staticmethod
     def parse_vtt(vtt_content: str) -> List[Dict[str, str]]:
-        print(Fore.CYAN + "\n📝 Parsing VTT file...")
+        Logger.info("📝 Parsing VTT file...")
         lines = vtt_content.split("\n")
         captions = []
 
@@ -56,12 +57,12 @@ class VttProcessor:
                         )
             i += 1
 
-        print(Fore.GREEN + f"✅ Parsed {len(captions)} caption entries")
+        Logger.success(f" Parsed {len(captions)} caption entries")
         return captions
 
     @staticmethod
     def format_transcript(captions: List[Dict[str, str]], event_name: str) -> str:
-        print(Fore.CYAN + "\n📄 Formatting transcript...")
+        Logger.info("📄 Formatting transcript...")
 
         transcript = f"{event_name}\n"
         transcript += "O'Reilly Live Event - Video Transcript\n"
@@ -72,5 +73,5 @@ class VttProcessor:
         for caption in captions:
             transcript += f"[{caption['start']}] {caption['text']}\n\n"
 
-        print(Fore.GREEN + f"✅ Formatted {len(transcript)} characters")
+        Logger.success(f" Formatted {len(transcript)} characters")
         return transcript

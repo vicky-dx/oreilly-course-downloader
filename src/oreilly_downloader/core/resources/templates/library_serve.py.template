@@ -1,0 +1,323 @@
+import http.server
+import json
+import os
+import sys
+import socket
+import webbrowser
+import threading
+import urllib.request
+import urllib.parse
+import re
+
+# Reconfigure stdout/stderr to utf-8 to prevent encoding crashes on Windows CMD
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+if sys.stderr.encoding != 'utf-8':
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
+class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+    def do_GET(self):
+        decoded_path = urllib.parse.unquote(self.path)
+        
+        if decoded_path == "/api/library_path":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            path_data = {"path": os.path.abspath(".")}
+            self.wfile.write(json.dumps(path_data).encode('utf-8'))
+            return
+            
+        elif decoded_path == "/api/books":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            
+            books = []
+            data_dir = "data"
+            if os.path.exists(data_dir) and os.path.isdir(data_dir):
+                for folder in os.listdir(data_dir):
+                    folder_path = os.path.join(data_dir, folder)
+                    if os.path.isdir(folder_path):
+                        book_index_path = os.path.join(folder_path, "book", "index.html")
+                        if os.path.exists(book_index_path):
+                            # Initialize metadata attributes
+                            title = folder
+                            author = "Unknown"
+                            publisher = "Unknown"
+                            date = "Unknown"
+                            year = "Unknown"
+                            description = "No description available."
+                            category = "Tech"
+                            
+                            # Parse content.opf primarily
+                            opf_path = os.path.join(folder_path, "book", "content.opf")
+                            if os.path.exists(opf_path):
+                                try:
+                                    with open(opf_path, "r", encoding="utf-8") as f:
+                                        opf_str = f.read()
+                                        
+                                    title_match = re.search(r'<dc:title[^>]*>(.*?)</dc:title>', opf_str, re.DOTALL)
+                                    if title_match:
+                                        title = title_match.group(1).strip()
+                                        
+                                    creator_match = re.search(r'<dc:creator[^>]*>(.*?)</dc:creator>', opf_str, re.DOTALL)
+                                    if creator_match:
+                                        author = creator_match.group(1).strip()
+                                        
+                                    publisher_match = re.search(r'<dc:publisher[^>]*>(.*?)</dc:publisher>', opf_str, re.DOTALL)
+                                    if publisher_match:
+                                        publisher = publisher_match.group(1).strip()
+                                        
+                                    date_match = re.search(r'<dc:date[^>]*>(.*?)</dc:date>', opf_str, re.DOTALL)
+                                    if date_match:
+                                        date = date_match.group(1).strip()
+                                        # Extract 4-digit year
+                                        year_match = re.search(r'\d{4}', date)
+                                        if year_match:
+                                            year = year_match.group(0)
+                                            
+                                    desc_match = re.search(r'<dc:description[^>]*>(.*?)</dc:description>', opf_str, re.DOTALL)
+                                    if desc_match:
+                                        description = desc_match.group(1).strip()
+                                        description = re.sub(r'<[^>]*>', '', description) # Remove raw XML/HTML tags
+                                        
+                                    subject_match = re.search(r'<dc:subject[^>]*>(.*?)</dc:subject>', opf_str, re.DOTALL)
+                                    if subject_match:
+                                        category = subject_match.group(1).strip()
+                                except Exception:
+                                    pass
+                            
+                            # Fallback to toc.ncx if OPF title/creator parsing failed
+                            if title == folder or author == "Unknown":
+                                toc_path = os.path.join(folder_path, "book", "toc.ncx")
+                                if os.path.exists(toc_path):
+                                    try:
+                                        with open(toc_path, "r", encoding="utf-8") as f:
+                                            xml_str = f.read()
+                                            
+                                        title_match = re.search(r'<docTitle>\s*<text>(.*?)</text>\s*</docTitle>', xml_str, re.DOTALL)
+                                        if title_match and title == folder:
+                                            title = title_match.group(1).strip()
+                                            
+                                        author_match = re.search(r'<docAuthor>\s*<text>(.*?)</text>\s*</docAuthor>', xml_str, re.DOTALL)
+                                        if author_match and author == "Unknown":
+                                            author = author_match.group(1).strip()
+                                    except Exception:
+                                        pass
+                            
+                            # Format year if not resolved
+                            if year == "Unknown" and date != "Unknown":
+                                year_match = re.search(r'\d{4}', date)
+                                if year_match:
+                                    year = year_match.group(0)
+                                    
+                            cover_url = ""
+                            candidates = [
+                                "book/assets/cover.png",
+                                "book/assets/cover.jpg",
+                                "book/assets/cover.jpeg",
+                                "book/Images/cover.png",
+                                "book/Images/cover.jpg",
+                                "book/Images/cover.jpeg",
+                                "book/Images/Cover.png",
+                                "book/Images/Cover.jpg",
+                                "book/Images/Cover.jpeg",
+                                "book/images/cover.png",
+                                "book/images/cover.jpg",
+                                "book/images/cover.jpeg",
+                                "book/images/Cover.png",
+                                "book/images/Cover.jpg",
+                                "book/images/Cover.jpeg"
+                            ]
+                            for candidate in candidates:
+                                if os.path.exists(os.path.join(folder_path, candidate)):
+                                    cover_url = f"/data/{urllib.parse.quote(folder)}/{candidate.replace(os.path.sep, '/')}"
+                                    break
+                                
+                            books.append({
+                                "folder": f"data/{folder}",
+                                "title": title,
+                                "author": author,
+                                "publisher": publisher,
+                                "date": date,
+                                "year": year,
+                                "description": description,
+                                "category": category,
+                                "cover_url": cover_url
+                            })
+            self.wfile.write(json.dumps(books).encode('utf-8'))
+            return
+
+        elif decoded_path == "/api/library_state":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            
+            state_file = "library_state.json"
+            if os.path.exists(state_file):
+                try:
+                    with open(state_file, "r", encoding="utf-8") as f:
+                        self.wfile.write(f.read().encode('utf-8'))
+                    return
+                except Exception:
+                    pass
+            self.wfile.write(b'{"version":1,"preferences":{},"reading":[]}')
+            return
+
+        elif decoded_path.endswith("/book/notes.json"):
+            # Intercept and return [] if notes.json is not created yet
+            leading_path = decoded_path.lstrip("/")
+            if not os.path.exists(leading_path):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(b"[]")
+                return
+                
+        super().do_GET()
+
+    def do_POST(self):
+        decoded_path = urllib.parse.unquote(self.path)
+        if decoded_path == "/api/library_state":
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data.decode('utf-8'))
+                    
+                    state_file = "library_state.json"
+                    with open(state_file, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"success"}')
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode('utf-8'))
+                return
+        elif decoded_path.endswith("/book/notes.json"):
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data.decode('utf-8'))
+                    
+                    leading_path = decoded_path.lstrip("/")
+                    # Ensure path traversal security
+                    target_path = os.path.abspath(leading_path)
+                    root_path = os.path.abspath(".")
+                    if not target_path.startswith(root_path):
+                        self.send_response(403)
+                        self.end_headers()
+                        return
+                        
+                    # Create parent folder if not exists
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    with open(target_path, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"success"}')
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode('utf-8'))
+                return
+        self.send_response(400)
+        self.end_headers()
+        self.wfile.write(b'{"status":"error","message":"Invalid endpoint"}')
+
+class OReillyLibraryHTTPServer(http.server.HTTPServer):
+    allow_reuse_address = sys.platform != 'win32'
+
+def check_existing_library_server(port, current_path):
+    try:
+        url = f"http://127.0.0.1:{port}/api/library_path"
+        req = urllib.request.Request(url)
+        # Disable proxy handlers for direct local connection to avoid hangs
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=2.0) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                path = data.get("path")
+                if path:
+                    return os.path.normcase(os.path.abspath(path)) == os.path.normcase(os.path.abspath(current_path))
+    except Exception:
+        pass
+    return False
+
+if __name__ == "__main__":
+    # Always serve from the directory containing this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+    current_path = os.path.abspath(".")
+
+    port = None
+    existing_port = None
+
+    for p in range(8000, 8021):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if sys.platform != 'win32':
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind(('127.0.0.1', p))
+            s.close()
+            port = p
+            break
+        except socket.error:
+            if check_existing_library_server(p, current_path):
+                existing_port = p
+                break
+
+    if existing_port:
+        url = f"http://127.0.0.1:{existing_port}/index.html"
+        print(f"ℹ️ Library server is already running on port {existing_port}.")
+        print("🔗 Opening library in browser...")
+        webbrowser.open(url)
+        sys.exit(0)
+
+    if not port:
+        print("❌ Error: Could not find any free port between 8000 and 8020 to start the library server.")
+        sys.exit(1)
+
+    server_address = ('127.0.0.1', port)
+    httpd = OReillyLibraryHTTPServer(server_address, OReillyLibraryRequestHandler)
+    
+    url = f"http://127.0.0.1:{port}/index.html"
+    print(f"🚀 Starting O'Reilly Offline Library Server on {url}")
+    print("Press Ctrl+C inside this window to stop the server.")
+
+    # Auto-open browser tab
+    def open_browser():
+        webbrowser.open(url)
+    threading.Timer(0.5, open_browser).start()
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\n👋 Stopping library server. Goodbye!")

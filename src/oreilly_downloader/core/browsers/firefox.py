@@ -6,8 +6,9 @@ from .base import IBrowser
 
 
 class FirefoxBrowser(IBrowser):
-    def __init__(self, headless=True):
+    def __init__(self, headless=True, clean_session=False):
         self.headless = headless
+        self.clean_session = clean_session
         self.driver = None
 
     def start(self):
@@ -16,17 +17,30 @@ class FirefoxBrowser(IBrowser):
             opts.add_argument("--headless")
 
         prof = os.path.join(os.getcwd(), "firefox_profile")
+        if self.clean_session:
+            import shutil
+            if os.path.exists(prof):
+                try:
+                    shutil.rmtree(prof, ignore_errors=True)
+                except Exception:
+                    pass
         if not os.path.exists(prof):
             os.makedirs(prof)
 
         opts.add_argument("-profile")
         opts.add_argument(prof)
 
-        self.driver = webdriver.Firefox(
+        from .browser import Browser
+        
+        raw_driver = webdriver.Firefox(
             service=Service(GeckoDriverManager().install()), options=opts
         )
+        self.raw_driver = raw_driver
+        self.driver = Browser(raw_driver)
         return self.driver
 
+
     def stop(self):
-        if self.driver:
-            self.driver.quit()
+        if hasattr(self, 'raw_driver') and self.raw_driver:
+            self.raw_driver.quit()
+

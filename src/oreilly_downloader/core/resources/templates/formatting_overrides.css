@@ -1,0 +1,45 @@
+
+/* Beautiful Code Block Styling */
+.orm-ChapterReader-codeSnippetContainer,
+pre[data-type="programlisting"],
+pre {
+  background-color: #f6f8fa !important;
+  border: 1px solid #e1e4e8 !important;
+  border-radius: 6px !important;
+  padding: 12px 16px !important;
+  margin: 20px 0 !important;
+  font-family: "Ubuntu Mono", monospace !important;
+  font-size: 0.85em !important;
+  line-height: 1.45 !important;
+  display: block !important;
+  overflow-x: auto !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+/* Beautiful Figure & Image Centering Override */
+#book-content #sbo-rt-content figure,
+#book-content #sbo-rt-content .figure {
+  text-align: center !important;
+  margin: 24px auto !important;
+  display: block !important;
+  border: none !important;
+  padding: 0 !important;
+}
+#book-content #sbo-rt-content figure img {
+  display: block !important;
+  margin: 0 auto 8px auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+#book-content #sbo-rt-content .figure h6,
+#book-content #sbo-rt-content figcaption,
+#book-content #sbo-rt-content .figure_legend h6 {
+  text-align: center !important;
+  font-family: "Noto serif", serif !important;
+  font-size: 0.750em !important;
+  font-weight: bold !important;
+  margin-top: 8px !important;
+  display: block !important;
+  line-height: 1.25 !important;
+}

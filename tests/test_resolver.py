@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from oreilly_downloader.core.extractor import MediaUrlResolver
+from oreilly_downloader.core.media_resolver import MediaUrlResolver
 
 class MockResponse:
     def __init__(self, json_data, status_code=200):

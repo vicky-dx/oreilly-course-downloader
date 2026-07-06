@@ -1,0 +1,2599 @@
+/*  ----------------------------
+//    BASE CSS RESET
+//    ---------------------------- */
+
+#book-content #sbo-rt-content div,
+#book-content #sbo-rt-content figure,
+#book-content #sbo-rt-content .figure,
+#book-content #sbo-rt-content code,
+#book-content #sbo-rt-content dir,
+#book-content #sbo-rt-content figcaption,
+#book-content #sbo-rt-content dl,
+#book-content #sbo-rt-content dt,
+#book-content #sbo-rt-content dd,
+#book-content #sbo-rt-content ul,
+#book-content #sbo-rt-content ol,
+#book-content #sbo-rt-content li
+#book-content #sbo-rt-content h1,
+#book-content #sbo-rt-content h2,
+#book-content #sbo-rt-content h3,
+#book-content #sbo-rt-content h4,
+#book-content #sbo-rt-content h5,
+#book-content #sbo-rt-content h6,
+#book-content #sbo-rt-content pre,
+#book-content #sbo-rt-content form,
+#book-content #sbo-rt-content fieldset,
+#book-content #sbo-rt-content menu,
+#book-content #sbo-rt-content input,
+#book-content #sbo-rt-content textarea,
+#book-content #sbo-rt-content p,
+#book-content #sbo-rt-content blockquote,
+#book-content #sbo-rt-content th,
+#book-content #sbo-rt-content td {
+    margin: 0;
+    padding: 0;
+    -webkit-margin-before: 0;
+    -webkit-margin-after: 0;
+    line-height: 1.5rem;
+}
+#book-content #sbo-rt-content div {
+    background-color: inherit;
+}
+#book-content #sbo-rt-content table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: none;
+    font-size: inherit;
+}
+#book-content #sbo-rt-content fieldset,
+#book-content #sbo-rt-content img {
+    border:0;
+    height: auto;
+}
+#book-content #sbo-rt-content address,
+#book-content #sbo-rt-content caption,
+#book-content #sbo-rt-content cite,
+#book-content #sbo-rt-content code,
+#book-content #sbo-rt-content dfn,
+#book-content #sbo-rt-content strong,
+#book-content #sbo-rt-content th,
+#book-content #sbo-rt-content var {
+    font-style:normal;
+    font-weight:normal;
+}
+#book-content #sbo-rt-content strong,
+#book-content #sbo-rt-content strong>code {
+    font-weight: bold;
+}
+#book-content #sbo-rt-content code {
+    font-family: "Consolas", Courier, monospace;
+}
+#book-content #sbo-rt-content caption,
+#book-content #sbo-rt-content th {
+    text-align:left;
+}
+#book-content #sbo-rt-content h1,
+#book-content #sbo-rt-content h2,
+#book-content #sbo-rt-content h3,
+#book-content #sbo-rt-content h4,
+#book-content #sbo-rt-content h5,
+#book-content #sbo-rt-content h6 {
+    font-size:100%;
+    font-weight:normal;
+}
+#book-content #sbo-rt-content q:before,
+#book-content #sbo-rt-content q:after {
+    content:'';
+}
+#book-content #sbo-rt-content abbr,
+#book-content #sbo-rt-content acronym {
+    border:0;
+}
+#book-content #sbo-rt-content em {
+    font-style: italic;
+}
+#book-content #sbo-rt-content em,
+#book-content #sbo-rt-content em>code {
+    font-style: italic;
+}
+
+.ucvMode-black #book-content #sbo-rt-content h1,
+.ucvMode-black #book-content #sbo-rt-content h2,
+.ucvMode-black #book-content #sbo-rt-content h3,
+.ucvMode-black #book-content #sbo-rt-content h4,
+.ucvMode-black #book-content #sbo-rt-content h5,
+.ucvMode-black #book-content #sbo-rt-content h6 {
+    color: #fff !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table {
+    color:#3d3b49;
+}
+
+/*  ----------------------------
+//    ADDITIONAL RESET
+//    ---------------------------- */
+
+#book-content #sbo-rt-content article,
+#book-content #sbo-rt-content aside,
+#book-content #sbo-rt-content details,
+#book-content #sbo-rt-content figcaption,
+#book-content #sbo-rt-content figure,
+#book-content #sbo-rt-content footer,
+#book-content #sbo-rt-content header,
+#book-content #sbo-rt-content hgroup,
+#book-content #sbo-rt-content nav,
+#book-content #sbo-rt-content section {
+    display: block;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+#book-content #sbo-rt-content audio,
+#book-content #sbo-rt-content canvas,
+#book-content #sbo-rt-content video {
+    display: inline-block;
+}
+
+#book-content #sbo-rt-content audio:not([controls]) { display: none; }
+
+html {
+    font-size: 100% !important;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+#book-content #sbo-rt-content sub,
+#book-content #sbo-rt-content sup {
+    position: relative !important;
+    font-size: 0.750em;
+    line-height: 0;
+    vertical-align: baseline;
+    left: 0;
+    font-weight: 600;
+}
+
+#book-content #sbo-rt-content sup { top: -0.5em; }
+#book-content #sbo-rt-content sub { bottom: -0.25em; }
+
+#book-content #sbo-rt-content .footnotes,
+#book-content #sbo-rt-content div[data-type="footnotes"],
+#book-content #sbo-rt-content .footnote {
+    border-top: 1px solid #8B889A;
+    padding: 1.750em 0 0 0 !important;
+}
+
+#book-content {
+    font-family: Noto Serif,serif !important;
+    margin-bottom: 80px !important;
+}
+
+#book-content #sbo-rt-content .guideList,
+#book-content #sbo-rt-content .pageList {
+    display: none;
+}
+
+#book-content #sbo-rt-content section {
+    margin-bottom: 32px !important;
+}
+
+/*  ----------------------------
+//    HEADERS
+//    ---------------------------- */
+#book-content #sbo-rt-content h1,
+#book-content #sbo-rt-content h2,
+#book-content #sbo-rt-content h3,
+#book-content #sbo-rt-content h4,
+#book-content #sbo-rt-content h5,
+#book-content #sbo-rt-content h6,
+#book-content #sbo-rt-content .heading-1,
+#book-content #sbo-rt-content .paragraph-head,
+#book-content #sbo-rt-content .cn-chapter-number,
+#book-content #sbo-rt-content .heading-3,
+#book-content #sbo-rt-content .title_document,
+#book-content #sbo-rt-content .fm_title_document,
+#book-content #sbo-rt-content .box_title,
+#book-content #sbo-rt-content .chaptertitle,
+#book-content #sbo-rt-content .chapterTitle,
+#book-content #sbo-rt-content .chapterNumber {
+    background-color: transparent;
+    color: #3d3b49 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-family: "Noto Serif", serif !important;
+    font-size: 1.875em !important;
+    font-style: normal;
+    font-weight: 100 !important;
+    line-height: 1.5 !important;
+    word-wrap: break-word;
+    margin: 0 !important;
+}
+#book-content #sbo-rt-content h1,
+#book-content #sbo-rt-content .chaptertitle {
+    margin: 0 0 32px 0 !important;
+    text-align: left !important;
+}
+#book-content #sbo-rt-content h2 {  /* MIKE TO CHECK ALL H* ELEMENTS */
+    font-size: 1.375em !important;
+    font-weight: bold !important;
+    line-height: 1.5 !important;
+    margin: 0 0 24px 0 !important;
+}
+#book-content #sbo-rt-content h3 {
+    font-size: 1.125em !important;
+    font-weight: bold !important;
+    line-height: 1.5 !important;
+    margin: 0 0 24px 0 !important;
+}
+#book-content #sbo-rt-content h4 {
+    font-size: 1em !important;
+    font-weight: bold !important;
+    line-height: 1.5 !important;
+    margin: 0 0 24px 0 !important;
+}
+#book-content #sbo-rt-content h5,
+#book-content #sbo-rt-content h6 {
+    font-size: 1em !important;
+    font-weight: bold !important;
+    line-height: 1.5 !important;
+    margin: 0 0 24px 0 !important;
+}
+
+/* Links */
+
+#book-content #sbo-rt-content a,
+#book-content #sbo-rt-content a:link,
+#book-content #sbo-rt-content a:visited {
+    color: #d3002d !important;
+    text-decoration: underline;
+    font-family: "Noto serif", serif !important;
+    font-size: inherit !important;
+
+}
+#book-content #sbo-rt-content a:focus,
+#book-content #sbo-rt-content a:hover {
+    color: #9f0027 !important;
+    text-decoration-line: underline !important;
+    text-decoration-style: solid;
+    font-size: inherit;
+}
+
+.ucvMode-black #book-content #sbo-rt-content a,
+.ucvMode-black #book-content #sbo-rt-content a:link,
+.ucvMode-black #book-content #sbo-rt-content a:visited {
+    color: #85E6EA !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content a:hover,
+.ucvMode-black #book-content #sbo-rt-content a:active {
+    color: #17d2cc !important;
+    text-decoration: none;
+}
+
+.ucvMode-black #book-content #sbo-rt-content a:focus {
+    color: #17d2cc !important;
+    text-decoration: underline;
+}
+
+.ucvMode-black #sbo-rt-content .margin,
+.ucvMode-black #sbo-rt-content .cf {
+    color: #85E6EA;
+}
+
+.ucvMode-black #sbo-rt-content .red, .ucvMode-black #sbo-rt-content .caption {
+    color: #fff;
+}
+
+.ucvMode-black #sbo-rt-content ul.bull,
+.ucvMode-black #sbo-rt-content ul li p.bullet,
+.ucvMode-black #sbo-rt-content .note,
+.ucvMode-black #sbo-rt-content li p.number,
+.ucvMode-black #sbo-rt-content ol,
+.ucvMode-black #sbo-rt-content .sb-noindent,
+.ucvMode-black #sbo-rt-content .sb-noindenti,
+.ucvMode-black #sbo-rt-content .sidebartitle,
+.ucvMode-black #sbo-rt-content .red1 {
+    color: #fff;
+}
+
+.ucvMode-black #sbo-rt-content div.feature {
+    background-color: inherit;
+    border: 1px solid #fff;
+    padding: 1rem !important;
+    margin: 1rem 0 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table.calibre7 {
+    background-color: inherit;
+}
+/* Misc typography */
+#book-content #sbo-rt-content hr,
+#book-content #sbo-rt-content .small { font-size: .6em; }
+#book-content #sbo-rt-content .sc,
+#book-content #sbo-rt-content abbr,
+#book-content #sbo-rt-content acronym {
+    font-size: .85em;
+    text-transform: uppercase;
+    letter-spacing: 0.063em;
+}
+
+#book-content #sbo-rt-content p,
+#book-content #sbo-rt-content .note p,
+#book-content #sbo-rt-content blockquote,
+#book-content #sbo-rt-content blockquote p,
+#book-content #sbo-rt-content .blockquote p {
+    font-family: "Noto serif", serif !important;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.75 !important;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    margin: 0 0 24px 0 !important;
+    text-indent: unset;
+    text-align: left;
+    color: unset;
+}
+
+#book-content #sbo-rt-content blockquote,
+#book-content #sbo-rt-content .blockquote {
+    margin: 0 24px 24px !important;
+}
+
+#book-content #sbo-rt-content blockquote p:last-child,
+#book-content #sbo-rt-content .blockquote p:last-child {
+    margin-bottom: 0 !important;
+}
+
+#book-content #sbo-rt-content blockquote,
+#book-content #sbo-rt-content blockquote p {
+    font-style: italic;
+}
+
+#book-content #sbo-rt-content blockquote p[data-type="attribution"],
+#book-content #sbo-rt-content aside .byline {
+    text-align: right;
+    font-style: normal !important;
+}
+
+#book-content #sbo-rt-content blockquote p[data-type="attribution"] {
+    margin-top: -24px !important;
+}
+
+#book-content #sbo-rt-content blockquote > p[data-type="attribution"] {
+    margin-top: 0 !important;
+}
+
+#book-content #sbo-rt-content div.tip,
+#book-content #sbo-rt-content .tip,
+#book-content #sbo-rt-content div[data-type="tip"],
+#book-content #sbo-rt-content .note,
+#book-content #sbo-rt-content div.note,
+#book-content #sbo-rt-content div[data-type="note"],
+#book-content #sbo-rt-content .warning,
+#book-content #sbo-rt-content div[data-type="warning"],
+#book-content #sbo-rt-content div[data-type="caution"],
+#book-content #sbo-rt-content .note1,
+#book-content #sbo-rt-content .sidebar1,
+#book-content #sbo-rt-content .boxg,
+#book-content #sbo-rt-content div.sidebar,
+#book-content #sbo-rt-content div[data-type="sidebar"],
+#book-content #sbo-rt-content div.warning,
+#book-content #sbo-rt-content .footnotes,
+#book-content #sbo-rt-content div[data-type="footnotes"],
+#book-content #sbo-rt-content .footnote,
+#book-content #sbo-rt-content aside {
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid #8B889A;
+    border-bottom: 1px solid #8B889A;
+    padding: 0 !important;
+    margin: 40px 0 !important;
+    border-radius: 0;
+}
+
+#book-content #sbo-rt-content aside + br {
+    display: none;
+}
+
+#book-content #sbo-rt-content aside > .sidebar {
+    border: 0;
+    margin: 0 !important;
+}
+
+#book-content #sbo-rt-content aside + aside,
+#book-content #sbo-rt-content aside + .footnotes,
+#book-content #sbo-rt-content aside + div[data-type="footnotes"],
+#book-content #sbo-rt-content aside + .footnote,
+#book-content #sbo-rt-content aside + div.tip,
+#book-content #sbo-rt-content aside + .tip,
+#book-content #sbo-rt-content aside + div[data-type="tip"],
+#book-content #sbo-rt-content aside + .note,
+#book-content #sbo-rt-content aside + div.note,
+#book-content #sbo-rt-content aside + div[data-type="note"],
+#book-content #sbo-rt-content aside + .warning,
+#book-content #sbo-rt-content aside + div[data-type="warning"],
+#book-content #sbo-rt-content aside + div[data-type="caution"] {
+    border-top: 0;
+}
+
+#book-content #sbo-rt-content section + .footnotes,
+#book-content #sbo-rt-content section + div[data-type="footnotes"],
+#book-content #sbo-rt-content section + .footnote {
+    border-top: 0;
+    margin-top: 60px !important;
+}
+
+#book-content #sbo-rt-content aside + aside,
+#book-content #sbo-rt-content aside + .footnotes,
+#book-content #sbo-rt-content aside + div[data-type="footnotes"],
+#book-content #sbo-rt-content aside + .footnote,
+#book-content #sbo-rt-content aside + div.tip,
+#book-content #sbo-rt-content aside + .tip,
+#book-content #sbo-rt-content aside + div[data-type="tip"],
+#book-content #sbo-rt-content aside + .note,
+#book-content #sbo-rt-content aside + div.note,
+#book-content #sbo-rt-content aside + div[data-type="note"],
+#book-content #sbo-rt-content aside + .warning,
+#book-content #sbo-rt-content aside + div[data-type="warning"],
+#book-content #sbo-rt-content aside + div[data-type="caution"] {
+    border-top: 0;
+}
+
+#book-content #sbo-rt-content section + .footnotes,
+#book-content #sbo-rt-content section + div[data-type="footnotes"],
+#book-content #sbo-rt-content section + .footnote {
+    border-top: 0;
+    margin-top: 60px !important;
+}
+
+#book-content #sbo-rt-content .footnotes,
+#book-content #sbo-rt-content div[data-type="footnotes"],
+#book-content #sbo-rt-content .footnote {
+    border-bottom: none;
+}
+
+#book-content #sbo-rt-content div.tip h1,
+#book-content #sbo-rt-content div.tip h2,
+#book-content #sbo-rt-content div.tip h3,
+#book-content #sbo-rt-content div.tip h4,
+#book-content #sbo-rt-content div.tip h5,
+#book-content #sbo-rt-content div.tip h6,
+#book-content #sbo-rt-content div.tip .title,
+#book-content #sbo-rt-content .tip h1,
+#book-content #sbo-rt-content .tip h2,
+#book-content #sbo-rt-content .tip h3,
+#book-content #sbo-rt-content .tip h4,
+#book-content #sbo-rt-content .tip h5,
+#book-content #sbo-rt-content .tip h6,
+#book-content #sbo-rt-content .tip .title,
+#book-content #sbo-rt-content div[data-type="tip"] h1,
+#book-content #sbo-rt-content div[data-type="tip"] h2,
+#book-content #sbo-rt-content div[data-type="tip"] h3,
+#book-content #sbo-rt-content div[data-type="tip"] h4,
+#book-content #sbo-rt-content div[data-type="tip"] h5,
+#book-content #sbo-rt-content div[data-type="tip"] h6,
+#book-content #sbo-rt-content div[data-type="tip"] .title,
+#book-content #sbo-rt-content .note h3,
+#book-content #sbo-rt-content .note h6,
+#book-content #sbo-rt-content .note .title,
+#book-content #sbo-rt-content div.note h1,
+#book-content #sbo-rt-content div.note h2,
+#book-content #sbo-rt-content div.note h3,
+#book-content #sbo-rt-content div.note h4,
+#book-content #sbo-rt-content div.note h5,
+#book-content #sbo-rt-content div.note h6,
+#book-content #sbo-rt-content div.note .title,
+#book-content #sbo-rt-content div[data-type="note"] h1,
+#book-content #sbo-rt-content div[data-type="note"] h2,
+#book-content #sbo-rt-content div[data-type="note"] h3,
+#book-content #sbo-rt-content div[data-type="note"] h4,
+#book-content #sbo-rt-content div[data-type="note"] h5,
+#book-content #sbo-rt-content div[data-type="note"] h6,
+#book-content #sbo-rt-content div[data-type="note"] .title,
+#book-content #sbo-rt-content .warning h1,
+#book-content #sbo-rt-content .warning h2,
+#book-content #sbo-rt-content .warning h3,
+#book-content #sbo-rt-content .warning h4,
+#book-content #sbo-rt-content .warning h5,
+#book-content #sbo-rt-content .warning h6,
+#book-content #sbo-rt-content .warning .title,
+#book-content #sbo-rt-content div[data-type="warning"] h1,
+#book-content #sbo-rt-content div[data-type="warning"] h2,
+#book-content #sbo-rt-content div[data-type="warning"] h3,
+#book-content #sbo-rt-content div[data-type="warning"] h4,
+#book-content #sbo-rt-content div[data-type="warning"] h5,
+#book-content #sbo-rt-content div[data-type="warning"] h6,
+#book-content #sbo-rt-content div[data-type="warning"] .title,
+#book-content #sbo-rt-content div[data-type="caution"] h1,
+#book-content #sbo-rt-content div[data-type="caution"] h2,
+#book-content #sbo-rt-content div[data-type="caution"] h3,
+#book-content #sbo-rt-content div[data-type="caution"] h4,
+#book-content #sbo-rt-content div[data-type="caution"] h5,
+#book-content #sbo-rt-content div[data-type="caution"] h6,
+#book-content #sbo-rt-content .note1 h3,
+#book-content #sbo-rt-content .note1 h6,
+#book-content #sbo-rt-content .note1 .title,
+#book-content #sbo-rt-content .sidebar1 h3,
+#book-content #sbo-rt-content .sidebar1 h6,
+#book-content #sbo-rt-content .sidebar1 .title,
+#book-content #sbo-rt-content .boxg h3,
+#book-content #sbo-rt-content .boxg h6,
+#book-content #sbo-rt-content .boxg .title,
+#book-content #sbo-rt-content div.sidebar h1,
+#book-content #sbo-rt-content div.sidebar h2,
+#book-content #sbo-rt-content div.sidebar h3,
+#book-content #sbo-rt-content div.sidebar h4,
+#book-content #sbo-rt-content div.sidebar h5,
+#book-content #sbo-rt-content div.sidebar h6,
+#book-content #sbo-rt-content div.sidebar .title,
+#book-content #sbo-rt-content div[data-type="sidebar"] h1,
+#book-content #sbo-rt-content div[data-type="sidebar"] h2,
+#book-content #sbo-rt-content div[data-type="sidebar"] h3,
+#book-content #sbo-rt-content div[data-type="sidebar"] h4,
+#book-content #sbo-rt-content div[data-type="sidebar"] h5,
+#book-content #sbo-rt-content div[data-type="sidebar"] h6,
+#book-content #sbo-rt-content div[data-type="sidebar"] .title,
+#book-content #sbo-rt-content .footnotes h1,
+#book-content #sbo-rt-content .footnotes h2,
+#book-content #sbo-rt-content .footnotes h3,
+#book-content #sbo-rt-content .footnotes h4,
+#book-content #sbo-rt-content .footnotes h5,
+#book-content #sbo-rt-content .footnotes h6,
+#book-content #sbo-rt-content div[data-type="footnotes"] h1,
+#book-content #sbo-rt-content div[data-type="footnotes"] h2,
+#book-content #sbo-rt-content div[data-type="footnotes"] h3,
+#book-content #sbo-rt-content div[data-type="footnotes"] h4,
+#book-content #sbo-rt-content div[data-type="footnotes"] h5,
+#book-content #sbo-rt-content div[data-type="footnotes"] h6,
+#book-content #sbo-rt-content .footnote h1,
+#book-content #sbo-rt-content .footnote h2,
+#book-content #sbo-rt-content .footnote h3,
+#book-content #sbo-rt-content .footnote h4,
+#book-content #sbo-rt-content .footnote h5,
+#book-content #sbo-rt-content .footnote h6,
+#book-content #sbo-rt-content aside h1,
+#book-content #sbo-rt-content aside h2,
+#book-content #sbo-rt-content aside h3,
+#book-content #sbo-rt-content aside h4,
+#book-content #sbo-rt-content aside h5,
+#book-content #sbo-rt-content aside h6 {
+    color: #286061 !important;
+    font-family: Guardian Text Sans\ 2, sans-serif !important;
+    font-size: 0.688em !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    text-align: left;
+    margin: 14px 0 7px 0 !important;
+    text-transform: uppercase;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div.tip h1,
+.ucvMode-black #book-content #sbo-rt-content div.tip h2,
+.ucvMode-black #book-content #sbo-rt-content div.tip h3,
+.ucvMode-black #book-content #sbo-rt-content div.tip h4,
+.ucvMode-black #book-content #sbo-rt-content div.tip h5,
+.ucvMode-black #book-content #sbo-rt-content div.tip h6,
+.ucvMode-black #book-content #sbo-rt-content div.tip .title,
+.ucvMode-black #book-content #sbo-rt-content .tip h1,
+.ucvMode-black #book-content #sbo-rt-content .tip h2,
+.ucvMode-black #book-content #sbo-rt-content .tip h3,
+.ucvMode-black #book-content #sbo-rt-content .tip h4,
+.ucvMode-black #book-content #sbo-rt-content .tip h5,
+.ucvMode-black #book-content #sbo-rt-content .tip h6,
+.ucvMode-black #book-content #sbo-rt-content .tip .title,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] h6,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="tip"] .title,
+.ucvMode-black #book-content #sbo-rt-content .note h3,
+.ucvMode-black #book-content #sbo-rt-content .note h6,
+.ucvMode-black #book-content #sbo-rt-content .note .title,
+.ucvMode-black #book-content #sbo-rt-content div.note h1,
+.ucvMode-black #book-content #sbo-rt-content div.note h2,
+.ucvMode-black #book-content #sbo-rt-content div.note h3,
+.ucvMode-black #book-content #sbo-rt-content div.note h4,
+.ucvMode-black #book-content #sbo-rt-content div.note h5,
+.ucvMode-black #book-content #sbo-rt-content div.note h6,
+.ucvMode-black #book-content #sbo-rt-content div.note .title,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] h6,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="note"] .title,
+.ucvMode-black #book-content #sbo-rt-content .warning h1,
+.ucvMode-black #book-content #sbo-rt-content .warning h2,
+.ucvMode-black #book-content #sbo-rt-content .warning h3,
+.ucvMode-black #book-content #sbo-rt-content .warning h4,
+.ucvMode-black #book-content #sbo-rt-content .warning h5,
+.ucvMode-black #book-content #sbo-rt-content .warning h6,
+.ucvMode-black #book-content #sbo-rt-content .warning .title,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] h6,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="warning"] .title,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="caution"] h6,
+.ucvMode-black #book-content #sbo-rt-content .note1 h3,
+.ucvMode-black #book-content #sbo-rt-content .note1 h6,
+.ucvMode-black #book-content #sbo-rt-content .note1 .title,
+.ucvMode-black #book-content #sbo-rt-content .sidebar1 h3,
+.ucvMode-black #book-content #sbo-rt-content .sidebar1 h6,
+.ucvMode-black #book-content #sbo-rt-content .sidebar1 .title,
+.ucvMode-black #book-content #sbo-rt-content .boxg h3,
+.ucvMode-black #book-content #sbo-rt-content .boxg h6,
+.ucvMode-black #book-content #sbo-rt-content .boxg .title,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h1,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h2,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h3,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h4,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h5,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar h6,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar .title,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] h6,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="sidebar"] .title,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h1,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h2,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h3,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h4,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h5,
+.ucvMode-black #book-content #sbo-rt-content .footnotes h6,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h1,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h2,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h3,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h4,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h5,
+.ucvMode-black #book-content #sbo-rt-content div[data-type="footnotes"] h6,
+.ucvMode-black #book-content #sbo-rt-content .footnote h1,
+.ucvMode-black #book-content #sbo-rt-content .footnote h2,
+.ucvMode-black #book-content #sbo-rt-content .footnote h3,
+.ucvMode-black #book-content #sbo-rt-content .footnote h4,
+.ucvMode-black #book-content #sbo-rt-content .footnote h5,
+.ucvMode-black #book-content #sbo-rt-content .footnote h6,
+.ucvMode-black #book-content #sbo-rt-content aside h1,
+.ucvMode-black #book-content #sbo-rt-content aside h2,
+.ucvMode-black #book-content #sbo-rt-content aside h3,
+.ucvMode-black #book-content #sbo-rt-content aside h4,
+.ucvMode-black #book-content #sbo-rt-content aside h5,
+.ucvMode-black #book-content #sbo-rt-content aside h6 {
+    color: #4DF0F0 !important;
+}
+
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h1,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h2,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h3,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h4,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h5,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip h6,
+.ucvMode-sepia #book-content #sbo-rt-content div.tip .title,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h1,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h2,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h3,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h4,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h5,
+.ucvMode-sepia #book-content #sbo-rt-content .tip h6,
+.ucvMode-sepia #book-content #sbo-rt-content .tip .title,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="tip"] .title,
+.ucvMode-sepia #book-content #sbo-rt-content .note h3,
+.ucvMode-sepia #book-content #sbo-rt-content .note h6,
+.ucvMode-sepia #book-content #sbo-rt-content .note .title,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h1,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h2,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h3,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h4,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h5,
+.ucvMode-sepia #book-content #sbo-rt-content div.note h6,
+.ucvMode-sepia #book-content #sbo-rt-content div.note .title,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="note"] .title,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h1,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h2,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h3,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h4,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h5,
+.ucvMode-sepia #book-content #sbo-rt-content .warning h6,
+.ucvMode-sepia #book-content #sbo-rt-content .warning .title,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="warning"] .title,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="caution"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content .note1 h3,
+.ucvMode-sepia #book-content #sbo-rt-content .note1 h6,
+.ucvMode-sepia #book-content #sbo-rt-content .note1 .title,
+.ucvMode-sepia #book-content #sbo-rt-content .sidebar1 h3,
+.ucvMode-sepia #book-content #sbo-rt-content .sidebar1 h6,
+.ucvMode-sepia #book-content #sbo-rt-content .sidebar1 .title,
+.ucvMode-sepia #book-content #sbo-rt-content .boxg h3,
+.ucvMode-sepia #book-content #sbo-rt-content .boxg h6,
+.ucvMode-sepia #book-content #sbo-rt-content .boxg .title,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h1,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h2,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h3,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h4,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h5,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar h6,
+.ucvMode-sepia #book-content #sbo-rt-content div.sidebar .title,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="sidebar"] .title,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h1,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h2,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h3,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h4,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h5,
+.ucvMode-sepia #book-content #sbo-rt-content .footnotes h6,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h1,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h2,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h3,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h4,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h5,
+.ucvMode-sepia #book-content #sbo-rt-content div[data-type="footnotes"] h6,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h1,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h2,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h3,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h4,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h5,
+.ucvMode-sepia #book-content #sbo-rt-content .footnote h6,
+.ucvMode-sepia #book-content #sbo-rt-content aside h1,
+.ucvMode-sepia #book-content #sbo-rt-content aside h2,
+.ucvMode-sepia #book-content #sbo-rt-content aside h3,
+.ucvMode-sepia #book-content #sbo-rt-content aside h4,
+.ucvMode-sepia #book-content #sbo-rt-content aside h5,
+.ucvMode-sepia #book-content #sbo-rt-content aside h6 {
+    color: #125D61 !important;
+}
+
+#book-content #sbo-rt-content .footnotes p:first-child,
+#book-content #sbo-rt-content div[data-type="footnotes"] p:first-child,
+#book-content #sbo-rt-content .footnote p:first-child {
+    margin-top: 24px !important;
+}
+
+#book-content #sbo-rt-content .warning h1,
+#book-content #sbo-rt-content .warning h2,
+#book-content #sbo-rt-content .warning h3,
+#book-content #sbo-rt-content .warning h4,
+#book-content #sbo-rt-content .warning h5,
+#book-content #sbo-rt-content .warning h6,
+#book-content #sbo-rt-content .warning .title,
+#book-content #sbo-rt-content div[data-type="warning"] h1,
+#book-content #sbo-rt-content div[data-type="warning"] h2,
+#book-content #sbo-rt-content div[data-type="warning"] h3,
+#book-content #sbo-rt-content div[data-type="warning"] h4,
+#book-content #sbo-rt-content div[data-type="warning"] h5,
+#book-content #sbo-rt-content div[data-type="warning"] h6,
+#book-content #sbo-rt-content div[data-type="caution"] h1,
+#book-content #sbo-rt-content div[data-type="caution"] h2,
+#book-content #sbo-rt-content div[data-type="caution"] h3,
+#book-content #sbo-rt-content div[data-type="caution"] h4,
+#book-content #sbo-rt-content div[data-type="caution"] h5,
+#book-content #sbo-rt-content div[data-type="caution"] h6,
+#book-content #sbo-rt-content div[data-type="warning"] .title {
+    color: #aa8f00 !important;
+}
+
+#book-content #sbo-rt-content div.tip hr,
+#book-content #sbo-rt-content .tip hr,
+#book-content #sbo-rt-content .note hr,
+#book-content #sbo-rt-content div.note hr,
+#book-content #sbo-rt-content div[data-type="note"] hr,
+#book-content #sbo-rt-content .warning hr,
+#book-content #sbo-rt-content .note1 hr,
+#book-content #sbo-rt-content .sidebar1 hr,
+#book-content #sbo-rt-content .boxg hr,
+#book-content #sbo-rt-content div.sidebar hr,
+#book-content #sbo-rt-content div.warning hr {
+    display: none;
+}
+
+#book-content #sbo-rt-content div.tip img,
+#book-content #sbo-rt-content div.tip img:hover,
+#book-content #sbo-rt-content .tip img,
+#book-content #sbo-rt-content .tip img:hover,
+#book-content #sbo-rt-content .note img,
+#book-content #sbo-rt-content .note img:hover,
+#book-content #sbo-rt-content div.note img,
+#book-content #sbo-rt-content div.note img:hover,
+#book-content #sbo-rt-content div[data-type="note"] img,
+#book-content #sbo-rt-content div[data-type="note"] img:hover,
+#book-content #sbo-rt-content .warning img,
+#book-content #sbo-rt-content .warning img:hover,
+#book-content #sbo-rt-content .note1 img,
+#book-content #sbo-rt-content .note1 img:hover,
+#book-content #sbo-rt-content .sidebar1 img,
+#book-content #sbo-rt-content .sidebar1 img:hover,
+#book-content #sbo-rt-content .boxg img,
+#book-content #sbo-rt-content .boxg img:hover,
+#book-content #sbo-rt-content div.sidebar img,
+#book-content #sbo-rt-content div.sidebar img:hover,
+#book-content #sbo-rt-content div.warning img,
+#book-content #sbo-rt-content div.warning img:hover {
+    border: none;
+    background-color: transparent;
+}
+
+#book-content #sbo-rt-content .tip h3,
+#book-content #sbo-rt-content .note h3,
+#book-content #sbo-rt-content .warning h3 {
+    margin-top: 0;
+}
+
+#book-content #sbo-rt-content .note1 .note {
+    background: transparent none no-repeat scroll 0 0;
+    border: none;
+    margin: 0 !important;
+    padding: 0;
+}
+
+#book-content #sbo-rt-content .codelink {
+    font-size: 80% !important;
+}
+
+#book-content #sbo-rt-content .totri-image-wrapper,
+#book-content #sbo-rt-content .totri-image-wrapper p {
+    text-align: center;
+}
+
+#book-content #sbo-rt-content pre,
+#book-content #sbo-rt-content .pre:not(code.docutils.literal.notranslate > .pre),
+#book-content #sbo-rt-content p.pre,
+#book-content #sbo-rt-content .pre1,
+#book-content #sbo-rt-content .pre-ex,
+#book-content #sbo-rt-content .pre-ex1,
+#book-content #sbo-rt-content .pre_w {
+    font-family: "Consolas", Courier, monospace !important;
+    line-height: 1.5 !important;
+    margin: 24px 0 !important;
+    padding: 0.75em 1.500em !important;
+    background-color: #EEF2F6 !important;
+    font-size: 1em !important;
+    color: #3D3B49 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-hyphens: none;
+    word-wrap: initial !important;
+    word-break: keep-all !important;
+    white-space: pre !important;
+}
+
+#book-content #sbo-rt-content p.codelink + p.pre {
+    white-space: nowrap !important;
+}
+
+#book-content #sbo-rt-content pre code {
+    font-size: inherit !important;
+    padding: 0 !important;
+    overflow-wrap: normal;
+}
+
+/*Strip these colors*/
+#book-content #sbo-rt-content .pd_lightblue,
+#book-content #sbo-rt-content .skycolor,
+#book-content #sbo-rt-content .tabcolor,
+#book-content #sbo-rt-content .tab_num,
+#book-content #sbo-rt-content .pd_white {
+    color: #3D3B49 !important;
+}
+
+/*  ----------------------------
+//    DIRTY OVERRIDES
+//    ---------------------------- */
+#book-content #sbo-rt-content .indenthangingB,
+#book-content #sbo-rt-content .indenthanging {
+    /*indenthangingB is typical ordered list in many books MIKE*/
+    @include rem('margin', 0 0 10px 35px);
+}
+
+#book-content #sbo-rt-content .bul_hang1,
+#book-content #sbo-rt-content .bul_hang,
+#book-content #sbo-rt-content .bul_hang2,
+#book-content #sbo-rt-content .bul_hang3,
+#book-content #sbo-rt-content .hanging-i,
+#book-content #sbo-rt-content .indentbullet {
+    text-indent: -0.625em !important;
+}
+
+#book-content #sbo-rt-content .bul_hang1::before,
+#book-content #sbo-rt-content .bul_hang::before,
+#book-content #sbo-rt-content .bul_hang2::before,
+#book-content #sbo-rt-content .bul_hang3::before,
+#book-content #sbo-rt-content .hanging-i::before,
+#book-content #sbo-rt-content .indentbullet::before {
+    content: "â€¢ ";
+    position: relative;
+    left: -0.625em;
+}
+
+#book-content #sbo-rt-content .bul_hang1 img,
+#book-content #sbo-rt-content .bul_hang img,
+#book-content #sbo-rt-content .bul_hang2 img,
+#book-content #sbo-rt-content .bul_hang3 img,
+#book-content #sbo-rt-content .hanging-i img,
+#book-content #sbo-rt-content .indentbullet img {
+    display: none;
+}
+
+#book-content #sbo-rt-content .box_title {
+    font-size: 165% !important;
+    margin: 1em 0 0.5em;
+}
+
+#book-content #sbo-rt-content figure,
+#book-content #sbo-rt-content .figure_legend,
+#book-content #sbo-rt-content .figure {
+    border: none !important;
+    margin: 32px 0 !important;
+    padding: 0 !important;
+}
+
+#book-content #sbo-rt-content figure img {
+    margin-bottom: 8px;
+    width: auto!important;
+    height: auto!important;
+}
+
+#book-content #sbo-rt-content figure.image img {
+    width: 100% !important;
+}
+
+p.figure img {
+    width: 100% !important;
+}
+
+#book-content #sbo-rt-content .figure_legend h1,
+#book-content #sbo-rt-content .figure_legend h2,
+#book-content #sbo-rt-content .figure_legend h3,
+#book-content #sbo-rt-content .figure_legend h4,
+#book-content #sbo-rt-content .figure_legend h5,
+#book-content #sbo-rt-content .figure_legend h6,
+#book-content #sbo-rt-content .figure_legend p,
+#book-content #sbo-rt-content .figure h1,
+#book-content #sbo-rt-content .figure h2,
+#book-content #sbo-rt-content .figure h3,
+#book-content #sbo-rt-content .figure h4,
+#book-content #sbo-rt-content .figure h5,
+#book-content #sbo-rt-content .figure h6,
+#book-content #sbo-rt-content .figure p,
+#book-content #sbo-rt-content figcaption p,
+#book-content #sbo-rt-content table caption {
+    font-family: "Noto serif", serif !important;
+    font-size: 0.750em !important;
+    font-weight: 400 !important;
+    line-height: 1.125 !important;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    margin: 0 0 24px 0 !important;
+    padding: 0.5em 0 0 0;
+}
+
+#book-content #sbo-rt-content table caption {
+    margin-bottom: 0.5em !important;
+}
+
+#book-content #sbo-rt-content .centera,
+#book-content #sbo-rt-content .centerb {
+    margin: 0;
+    text-align: center;
+}
+
+#book-content #sbo-rt-content div.pdf-page div,
+#book-content #sbo-rt-content div.title,
+#book-content #sbo-rt-content div.title1,
+#book-content #sbo-rt-content div.author,
+#book-content #sbo-rt-content div.author1,
+#book-content #sbo-rt-content div.pub,
+#book-content #sbo-rt-content div.pub1,
+#book-content #sbo-rt-content div.chapno,
+#book-content #sbo-rt-content div.chaptitle,
+#book-content #sbo-rt-content div.halftitle,
+#book-content #sbo-rt-content div.halftitle1,
+#book-content #sbo-rt-content div.fmtitle,
+#book-content #sbo-rt-content div.fmtitle1,
+#book-content #sbo-rt-content div.head,
+#book-content #sbo-rt-content div.head1 {
+    line-height: initial;
+}
+
+#book-content #sbo-rt-content div.center {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+#book-content #sbo-rt-content div.captions {
+    margin-top: 0.2rem;
+    margin-bottom: 1rem;
+}
+
+#book-content #sbo-rt-content.calibre table.fm-contenttable-g colgroup.calibre3 {
+    display: none;
+}
+
+/*  ----------------------------
+//    TABLES
+//    ---------------------------- */
+
+#book-content #sbo-rt-content table {
+    border: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    background-color: #fff;
+    margin: 0 0 24px 0 !important;
+    overflow: auto; /* EOIN check on mobile device */
+    text-align: left;
+    display: block !important;
+}
+#book-content #sbo-rt-content table pre {
+    border: none;
+    background-color: transparent;
+    padding: 0px;
+}
+
+#book-content #sbo-rt-content table img.totri-border {
+    padding: 0;
+    border: none;
+}
+#book-content #sbo-rt-content thead {
+    border: 0 !important;
+    background-color: #EEF2F6;
+}
+#book-content #sbo-rt-content thead,
+#book-content #sbo-rt-content thead th,
+#book-content #sbo-rt-content thead td {
+    padding: 0.875em;
+    font-weight: bold !important;
+    font-family: "Noto serif", serif !important;
+    font-size: 1em;
+    line-height: 1.75 !important;
+    border: 0 !important;
+    vertical-align: middle;
+}
+#book-content #sbo-rt-content tbody td,
+#book-content #sbo-rt-content table { padding: 0.875em; }
+#book-content #sbo-rt-content tbody tr,
+#book-content #sbo-rt-content table tr,
+#book-content #sbo-rt-content tbody tr td,
+#book-content #sbo-rt-content table tr td { border: 0 !important; }
+#book-content #sbo-rt-content tbody tr:last-child { border-bottom: 0; }
+#book-content #sbo-rt-content tbody tr:nth-child(even) { background-color: #EEF2F6; }
+#book-content #sbo-rt-content tbody tr:nth-child(even) code,
+#book-content #sbo-rt-content tbody tr:nth-child(even) .codeLabel {
+    background-color: #fff !important;
+}
+#book-content #sbo-rt-content table p,
+#book-content #sbo-rt-content table tr td {
+    font-family: "Noto serif", serif !important;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.75 !important;
+    margin-bottom: 0 !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+#book-content #sbo-rt-content div.pageavoid table.tbody tbody tr td.tb,
+#book-content #sbo-rt-content div.pageavoid table.tbody tbody tr td.tbs,
+#book-content #sbo-rt-content div.pageavoid table.tbody tbody tr td.tcolhd,
+#book-content #sbo-rt-content section div.pageavoid table.tbody thead tr td.tcolhd,
+#book-content #sbo-rt-content section div.pageavoid table.tbody tbody tr td.tb,
+#book-content #sbo-rt-content .tb,
+#book-content #sbo-rt-content h2.fm-head {
+    text-indent: 0;
+}
+
+/*  ----------------------------
+//    LISTS
+//    ---------------------------- */
+
+#book-content #sbo-rt-content ol,
+#book-content #sbo-rt-content ul,
+#book-content #sbo-rt-content dl,
+#book-content #sbo-rt-content menu,
+#book-content #sbo-rt-content dir {
+    list-style:none;
+    margin: 24px 0 24px 24px !important;
+}
+
+#book-content #sbo-rt-content h3 + ul {
+    margin-top: 0 !important;
+}
+
+#book-content #sbo-rt-content dd  ol,
+#book-content #sbo-rt-content ul  ul,
+#book-content #sbo-rt-content ol  ol {
+    margin-top: 0 !important;
+}
+#book-content #sbo-rt-content ul  li ul,
+#book-content #sbo-rt-content ol  li ol {
+    margin-bottom: 0 !important;
+}
+
+#book-content #sbo-rt-content ul li,
+#book-content #sbo-rt-content ol li {
+    font-family: "Noto serif", serif !important;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.75 !important;
+    margin: 0 !important;
+    text-align: left;
+}
+
+#book-content #sbo-rt-content ul li {
+    list-style: disc;
+    list-style-position: outside !important;
+    margin: 0 !important;
+}
+#book-content #sbo-rt-content ol li:not([class^="numlist"]) {
+    list-style: decimal;
+    list-style-position: outside;
+}
+
+#book-content #sbo-rt-content ol[class^="alpha-lower-p"] > li,
+#book-content #sbo-rt-content ol[class^="alpha-upper-p"] > li {
+    list-style: none;
+}
+
+#book-content #sbo-rt-content ol[class^="alpha-lower-p"] > li > p,
+#book-content #sbo-rt-content ol[class^="alpha-upper-p"] > li > p {
+    margin-left: 1em !important;
+}
+
+#book-content #sbo-rt-content ol.biblioentrylist li,
+#book-content #sbo-rt-content ul.simple li,
+#book-content #sbo-rt-content ol.toc li {
+    list-style: none;
+}
+
+#book-content #sbo-rt-content ul li,
+#book-content #sbo-rt-content ol li,
+#book-content #sbo-rt-content ul li p,
+#book-content #sbo-rt-content ol li p {
+    font-family: "Noto serif", serif !important;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.75 !important;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    margin: 0 !important;
+}
+
+/* Allow font size selector to dictate font sizes */
+#book-content #sbo-rt-content ul,
+#book-content #sbo-rt-content ol,
+#book-content #sbo-rt-content kbd,
+#book-content #sbo-rt-content .packt_action {
+    font-size: inherit;
+}
+
+#book-content #sbo-rt-content ul li ul,
+#book-content #sbo-rt-content ul li ol,
+#book-content #sbo-rt-content ol li ul,
+#book-content #sbo-rt-content ol li ol,
+#book-content #sbo-rt-content dl.calloutlist dd ul,
+#book-content #sbo-rt-content dl.calloutlist dd ul {
+    margin: 0 0 0 24px !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist ul li p:first-child {
+    margin-top: 0 !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd > p {
+    margin-bottom: 0 !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd > p:only-child {
+    margin-bottom: 24px !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd {
+    margin-top: 0 !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dt {
+    margin-bottom: -1.5rem !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd ul > li {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd ul > li:first-child {
+    padding-top: 1rem !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist dd ul > li:last-child {
+    padding-bottom: 1rem !important;
+}
+
+#book-content #sbo-rt-content dt {
+    font-family: "Noto serif", serif !important;
+    font-size: 1em !important;
+    font-weight: 400;
+    line-height: 1.75 !important;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    padding: 0 !important;
+}
+
+#book-content #sbo-rt-content dl.calloutlist p:first-child {
+    margin-top: -1.750em !important;
+}
+
+#book-content #sbo-rt-content dt code,
+#book-content #sbo-rt-content ol code,
+#book-content #sbo-rt-content li pre,
+#book-content #sbo-rt-content li code {
+    font-size: inherit;
+}
+
+#book-content #sbo-rt-content li.TOCChapter {
+    margin-top: 2rem !important;
+}
+#book-content #sbo-rt-content li.TOCHeadA {
+    text-indent: 0;
+}
+#book-content #sbo-rt-content li.TOCHeadB {
+    text-indent: 3.6rem;
+}
+
+
+/*  ----------------------------
+//   CODE
+//   ---------------------------- */
+
+#book-content #sbo-rt-content code:not(.docutils.literal.notranslate),
+#book-content #sbo-rt-content code code:not(.docutils.literal.notranslate),
+#book-content #sbo-rt-content .codeLabel {
+    font-family: "Consolas", Courier, monospace;
+    background-color: #EEF2F6 !important;
+    padding: 0.375em 0.250em 0.250em 0.250em;
+    font-style: inherit !important;
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+/*  ----------------------------
+//    IMAGES
+//    ---------------------------- */
+
+#book-content #sbo-rt-content .figure table,
+#book-content #sbo-rt-content .informalfigure,
+#book-content #sbo-rt-content p.image {
+    text-align: center;
+}
+#book-content #sbo-rt-content table img {
+    border: 0px;
+    padding: 1.250em 0;
+    text-align: center;
+    margin: 0 auto;
+}
+#book-content #sbo-rt-content img.totri-border {
+    padding: 0.625em;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    max-width: 100%;
+    height: auto;
+}
+
+#book-content #sbo-rt-content .iconinline img {
+    height: 20px;
+    width: 17px;
+}
+
+#book-content #sbo-rt-content .eq-md {
+    height: 100%;
+    margin-top: 0;
+}
+
+#book-content #sbo-rt-content img {
+    height: auto;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    #book-content #sbo-rt-content {
+        width: 90%;
+        margin: 0 auto;
+    }
+    #book-content #sbo-rt-content .cover {
+        width: 85%;
+    }
+    #book-content #sbo-rt-content .cover img,
+    #book-content #sbo-rt-content img {
+        object-fit: contain;
+    }
+}
+
+#book-content #sbo-rt-content #pdf-main {
+    transform-origin: 0 0;
+    transform: scale(1.5);
+    position: relative;
+}
+
+#sbo-rt-content h1.chapter-title .chapter-name {
+    font-size: 85%;
+}
+
+#book-content #sbo-rt-content img.IMG---Figure {
+    width: 100%;
+}
+
+#book-content  #sbo-rt-content table.arr-recipe {
+    border: 2px solid #3E9A3E !important;
+}
+
+#book-content  #sbo-rt-content table.arr-tip {
+    border: 2px solid #6aa !important;
+}
+
+#book-content #sbo-rt-content .epigraph {
+    margin-right: 1rem !important;
+    padding: 0.5rem !important;
+}
+
+#book-content #sbo-rt-content table.processedcode {
+    border: 1px solid #8bb !important;
+    border-top: none !important;
+    font-family: "Consolas", Courier, monospace;
+}
+
+#book-content #sbo-rt-content table.processedcode td {
+    padding: 0;
+}
+
+#book-content #sbo-rt-content table.processedcode tbody tr td.codeinfo,
+#book-content #sbo-rt-content table.processedcode tbody tr td.codeline {
+    font-family: "Consolas", Courier, monospace !important;
+    background-color: #EEF2F6;
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content table.processedcode tbody td em.string {
+    color: green;
+}
+
+#book-content #sbo-rt-content table.processedcode tbody tr:nth-child(even) {
+    background-color: transparent;
+}
+
+.ucvMode-white #book-content #sbo-rt-content div.brown-bg,
+.ucvMode-sepia #book-content #sbo-rt-content div.brown-bg,
+.ucvMode-white #book-content #sbo-rt-content p.brown-bg-text,
+.ucvMode-sepia #book-content #sbo-rt-content p.brown-bg-text,
+.ucvMode-white #book-content #sbo-rt-content table.bodytable,
+.ucvMode-sepia #book-content #sbo-rt-content table.bodytable,
+.ucvMode-white #book-content #sbo-rt-content .white,
+.ucvMode-sepia #book-content #sbo-rt-content .white,
+.ucvMode-white #book-content #sbo-rt-content .summary,
+.ucvMode-sepia #book-content #sbo-rt-content .summary,
+.ucvMode-white #book-content #sbo-rt-content .summary-title,
+.ucvMode-sepia #book-content #sbo-rt-content .summary-title,
+.ucvMode-white #book-content #sbo-rt-content .summary-subhead,
+.ucvMode-sepia #book-content #sbo-rt-content .summary-subhead,
+.ucvMode-black #book-content #sbo-rt-content table.bodytable > tbody > tr > td.td-entry > .gray,
+#book-content #sbo-rt-content .hljs-con, #book-content #sbo-rt-content .hljs-con-subst,
+.ucvMode-black #book-content #sbo-rt-content .exam1,
+.ucvMode-white #sbo-rt-content .noindente,
+.ucvMode-sepia #sbo-rt-content .noindente {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .gray,
+.ucvMode-black #book-content #sbo-rt-content p.text-14pt,
+.ucvMode-black #book-content #sbo-rt-content p.text-9pt,
+.ucvMode-black #book-content #sbo-rt-content .subhead-18pt {
+    color: #f5f5f5;
+}
+
+#book-content #sbo-rt-content .boxb {
+    background-color: #65205c !important;
+    padding: 1rem;
+    color: #fff;
+}
+#book-content #sbo-rt-content .boxm {
+    background-color: #25295e !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .boxt1 {
+    background-color: #54be91 !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .box2 {
+    background-color: #3777bc !important;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.box1 p,
+#book-content #sbo-rt-content .box2 p,
+#book-content #sbo-rt-content .box2 .box_title,
+#book-content #sbo-rt-content .box2 .box_title .cl {
+    color: #fff !important;
+}
+
+#book-content #sbo-rt-content .def_box,
+#book-content #sbo-rt-content div.box1 {
+    background-color: #804c9e !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .key_box {
+    background-color: #080040 !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .tip_box {
+    background-color: #dd486c !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .ind_box {
+    background-color: #9d75a1 !important;
+    padding: 1rem;
+}
+#book-content #sbo-rt-content .boxpv {
+    background-color: #b1217a !important;
+    padding: 1rem;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .blue,
+.ucvMode-black #book-content #sbo-rt-content .head1,
+.ucvMode-black #book-content #sbo-rt-content .head,
+.ucvMode-black #book-content #sbo-rt-content .body,
+.ucvMode-black #book-content #sbo-rt-content .co-summary-bullet,
+.ucvMode-black #book-content #sbo-rt-content .co-summary-head,
+.ucvMode-black #book-content #sbo-rt-content .fm-combinumeral,
+.ucvMode-black #book-content #sbo-rt-content .fm-figure-caption,
+.ucvMode-black #book-content #sbo-rt-content .fm-table-caption,
+.ucvMode-black #book-content #sbo-rt-content .fm-table-body,
+.ucvMode-black #book-content #sbo-rt-content .fm-callout,
+.ucvMode-black #book-content #sbo-rt-content .fm-callout-head {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .fm-code-listing-caption {
+    background: transparent;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table p > .blue,
+.ucvMode-black #book-content #sbo-rt-content table tr td > .blue {
+    color: #25295e;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div {
+    color: inherit;
+}
+
+.ucvMode-black #book-content #sbo-rt-content pre.codesnippet .blue {
+    color: #00ADEF;
+}
+
+#book-content #sbo-rt-content div.note::before,
+#book-content #sbo-rt-content div.note::after,
+#book-content #sbo-rt-content div.packt_tip::before,
+#book-content #sbo-rt-content div.packt_tip::after {
+    background: transparent;
+    margin: 0;
+}
+
+#book-content #sbo-rt-content div.note,
+#book-content #sbo-rt-content div.packt_tip {
+    padding-left: 6rem !important;
+    margin: 1rem 0 !important;
+}
+
+#book-content #sbo-rt-content .hljs-con-addition,
+#book-content #sbo-rt-content .hljs-con-attr,
+#book-content #sbo-rt-content .hljs-con-bullet,
+#book-content #sbo-rt-content .hljs-con-name,
+#book-content #sbo-rt-content .hljs-con-string,
+#book-content #sbo-rt-content .hljs-con-symbol,
+#book-content #sbo-rt-content .hljs-con-template-tag,
+#book-content #sbo-rt-content .hljs-con-template-variable,
+#book-content #sbo-rt-content .hljs-con-type,
+#book-content #sbo-rt-content .hljs-con-variable {
+    color: #59129a;
+}
+
+#book-content #sbo-rt-content .side1,
+#book-content #sbo-rt-content .div-chap1{
+    margin-bottom: 1.2em !important;
+}
+
+#book-content #sbo-rt-content .div-chap1 {
+    padding: 1rem !important;
+}
+
+#book-content #sbo-rt-content .fm-code-listing-caption code {
+    color: #3d3b49;
+}
+
+.ucvMode-sepia #book-content #sbo-rt-content p.featurepara,
+.ucvMode-white #book-content #sbo-rt-content p.featurepara {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content div.index div[data-type="index"] ul li {
+    list-style: none;
+}
+
+#book-content #sbo-rt-content div.longdesc {
+    position: unset;
+    left: unset;
+    top: unset;
+    width: unset;
+    height: unset;
+    overflow: unset;
+}
+
+#book-content #sbo-rt-content div.pre p.para_fl,
+#book-content #sbo-rt-content div.pre .hang {
+    white-space: normal;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p.boxip,
+.ucvMode-black #book-content #sbo-rt-content p.box-bq {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content figure figcaption p:not(.tab-para),
+.ucvMode-black #book-content #sbo-rt-content section figure figcaption p:not(.tab-para) {
+    color: #fff;
+}
+
+.ucvMode-white #book-content #sbo-rt-content .notee,
+.ucvMode-sepia #book-content #sbo-rt-content .notee {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content ul.sq p.bull,
+.ucvMode-black #book-content #sbo-rt-content figure figcaption p.title-f,
+.ucvMode-black #book-content #sbo-rt-content figure figcaption p.title-t,
+.ucvMode-black #book-content #sbo-rt-content figure figcaption p.source {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content a sup,
+.ucvMode-black #book-content #sbo-rt-content p.fm-footnote sup {
+    color: #85e6ea;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p.copyrightc,
+.ucvMode-black #book-content #sbo-rt-content p.copyrightbody1,
+.ucvMode-black #book-content #sbo-rt-content p.tablebodyc,
+.ucvMode-black #book-content #sbo-rt-content p.body1,
+.ucvMode-black #book-content #sbo-rt-content p.tocchapters,
+.ucvMode-black #book-content #sbo-rt-content p.fm-head-1toc,
+.ucvMode-black #book-content #sbo-rt-content p.tocparts,
+.ucvMode-black #book-content #sbo-rt-content p.grouptitlesix,
+.ucvMode-black #book-content #sbo-rt-content p.level1ix,
+.ucvMode-black #book-content #sbo-rt-content p.level2ix,
+.ucvMode-black #book-content #sbo-rt-content p.fm-head2,
+.ucvMode-black #book-content #sbo-rt-content p.fm-sidebar-title,
+.ucvMode-black #book-content #sbo-rt-content p.fm-footnote,
+.ucvMode-black #book-content #sbo-rt-content p.fm-quote-source,
+.ucvMode-black #book-content #sbo-rt-content p.fm-equation {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content blockquote.packt_quote,
+.ucvMode-black #book-content #sbo-rt-content blockquote.blockquote p {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content blockquote.blockquote p {
+    background-color: #f5f5f5;
+}
+
+#book-content #sbo-rt-content p.Code,
+#book-content #sbo-rt-content p.source-code,
+#book-content #sbo-rt-content pre.source-code,
+#book-content #sbo-rt-content p.snippet.shell,
+#book-content #sbo-rt-content p.snippet.code {
+    font-family: "Consolas", Courier, monospace !important;
+    background-color: #eef2f6;
+    hyphens: none;
+    word-wrap: break-word;
+    padding: 0 1.5em;
+    text-indent: 0;
+    margin: 0 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p.source-code,
+.ucvMode-black #book-content #sbo-rt-content p.snippet.shell,
+.ucvMode-black #book-content #sbo-rt-content p.snippet.code{
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content header h1.title span.number,
+.ucvMode-black #book-content #sbo-rt-content section.chapter ol li::marker,
+.ucvMode-black #book-content #sbo-rt-content section.chapter ol li p,
+.ucvMode-black #book-content #sbo-rt-content section.glossary dl dt dfn {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content figure.figure figcaption div.note p,
+.ucvMode-black #book-content #sbo-rt-content figure.figure figcaption div.source p {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content div.booksection p[class^='bull'] span {
+    margin: 0 0.25rem 0 0;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxb,
+#book-content #sbo-rt-content div.booksection div.box1 p span,
+#book-content #sbo-rt-content div.booksection div.box2 p span,
+#book-content #sbo-rt-content div.booksection div.boxl ul.white,
+#book-content #sbo-rt-content div.booksection div.boxr ul.white,
+#book-content #sbo-rt-content div.booksection div.boxm ul.white {
+    color: #fff;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxl {
+    background-color: #804c9e;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.box3 {
+    background-color: #c6ceea;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.box3a {
+    background-color: #e4e1e0;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.box4 {
+    background-color: #fef9cd;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.box5 {
+    background-color: #cce9e7;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxbr {
+    background-color: #4c2432;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxf {
+    background-color: #b2146f;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxk {
+    background-color: #6d002e;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxo {
+    background-color: #fedfc5;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxp,
+#book-content #sbo-rt-content div.booksection div.ind_box1 {
+    background-color: #e59397;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxp1 {
+    background-color: #245a9c;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxr {
+    background-color: #ae1d58;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.sidebar {
+    background-color: #934258;
+    padding: 1rem !important;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxt {
+    background-color: #00b1c5;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.tool_box {
+    background-color: #3463af;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxw {
+    background-color: #9d75a1;
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.box,
+#book-content #sbo-rt-content div.booksection div.boxv,
+#book-content #sbo-rt-content div.booksection div.scan {
+    padding: 1rem;
+}
+
+#book-content #sbo-rt-content div.booksection div.boxo p.hang {
+    text-indent: 0;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div.booksection .pink,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .vio,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .vio4,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .vio1,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .vio2,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .vio6,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .blue1,
+.ucvMode-black #book-content #sbo-rt-content div.booksection .blue5,
+.ucvMode-black #book-content #sbo-rt-content div.booksection p.block span.blue5,
+.ucvMode-black #book-content #sbo-rt-content div.booksection p[class^='bull'] span,
+.ucvMode-black #book-content #sbo-rt-content div.booksection p.noindentf b {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p.Chapter-Title,
+.ucvMode-black #book-content #sbo-rt-content p.My-Basic-Paragraph,
+.ucvMode-black #book-content #sbo-rt-content p.My-Basic-Paragraph a span,
+.ucvMode-black #book-content #sbo-rt-content p.Numbered-List,
+.ucvMode-black #book-content #sbo-rt-content p.Heading-1-1,
+.ucvMode-black #book-content #sbo-rt-content p.Heading-1-1-1,
+.ucvMode-black #book-content #sbo-rt-content p.Bullet-List,
+.ucvMode-black #book-content #sbo-rt-content p.Figure-Caption,
+.ucvMode-black #book-content #sbo-rt-content p.Table-Caption,
+.ucvMode-black #book-content #sbo-rt-content p.List-Paragraph_wrd_1,
+.ucvMode-black #book-content #sbo-rt-content p.Index-Title,
+.ucvMode-black #book-content #sbo-rt-content p.Index-Section-Head,
+.ucvMode-black #book-content #sbo-rt-content p.Index-Level-1,
+.ucvMode-black #book-content #sbo-rt-content p.Index-Level-2 {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section p.indent,
+.ucvMode-black #book-content #sbo-rt-content section p.noindent,
+.ucvMode-black #book-content #sbo-rt-content section p.footnote,
+.ucvMode-black #book-content #sbo-rt-content section ul.rarrow li p,
+.ucvMode-black #book-content #sbo-rt-content section ol li p,
+.ucvMode-black #book-content #sbo-rt-content section p.step,
+.ucvMode-black #book-content #sbo-rt-content section figure.image-l figcaption,
+.ucvMode-black #book-content #sbo-rt-content section p[class^='question'],
+.ucvMode-black #book-content #sbo-rt-content section p[class^='answer'],
+.ucvMode-black #book-content #sbo-rt-content section div.note p.note-para,
+.ucvMode-black #book-content #sbo-rt-content section div.note div.note-para p,
+.ucvMode-black #book-content #sbo-rt-content section div.note-para3 p.note-para2,
+.ucvMode-black #book-content #sbo-rt-content section p.code-para,
+.ucvMode-black #book-content #sbo-rt-content section p.copy,
+.ucvMode-black #book-content #sbo-rt-content section p.copy1,
+.ucvMode-black #book-content #sbo-rt-content section p.credit,
+.ucvMode-black #book-content #sbo-rt-content section p.credit1,
+.ucvMode-black #book-content #sbo-rt-content section p.copy-title,
+.ucvMode-black #book-content #sbo-rt-content section p.copy-titlea,
+.ucvMode-black #book-content #sbo-rt-content section p.copy-title1,
+.ucvMode-black #book-content #sbo-rt-content section p.copy1a,
+.ucvMode-black #book-content #sbo-rt-content section div.boxw p {
+    color: #fff
+}
+
+.ucvMode-black #book-content #sbo-rt-content .chapterNumber,
+.ucvMode-black #book-content #sbo-rt-content .chapterTitle,
+.ucvMode-black #book-content #sbo-rt-content .chaptertitle,
+.ucvMode-black #book-content #sbo-rt-content p span.codeLabel,
+.ucvMode-black #book-content #sbo-rt-content span.codeLabel,
+.ucvMode-black #book-content #sbo-rt-content tr .left span,
+.ucvMode-black #book-content #sbo-rt-content .tabularentry,
+.ucvMode-black #book-content #sbo-rt-content table,
+.ucvMode-black #book-content #sbo-rt-content table tr,
+.ucvMode-black #book-content #sbo-rt-content table td {
+    color: #fff !important;
+    background-color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content pre .fm-combinumeral {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .fm-combinumeral1 {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content pre .blue {
+    color: #3953A4
+}
+
+.ucvMode-black #book-content #sbo-rt-content table.No-Table-Style,
+.ucvMode-black #book-content #sbo-rt-content table.Basic-Table {
+    background-color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content li.numbered img,
+.ucvMode-black #book-content #sbo-rt-content p.normal img,
+.ucvMode-black #book-content #sbo-rt-content figure.mediaobject img {
+    background-color: #fff;
+}
+
+#book-content #sbo-rt-content div.code {
+    background-color: #e0e0e0;
+    margin: 0.5rem 0 0.8rem 0;
+    padding: 0.5rem;
+}
+
+#book-content #sbo-rt-content div.boxb div.code {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content div.code p span {
+    font-family: "Consolas", Courier, monospace;
+}
+
+#book-content #sbo-rt-content div.code p.code2-a2,
+#book-content #sbo-rt-content div.code p.code2a3 {
+    margin: 0 0 0 6rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.codea1,
+#book-content #sbo-rt-content div.code p.code-1 {
+    margin: 0 0 0 1.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code {
+    margin: 0 !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code-1at {
+    margin: 1.1rem 0 0 1.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1 {
+    margin: 0 0 0 2.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1-a1 {
+    margin: 0 0 0 3.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1-a2 {
+    margin: 0 0 0 4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code2 {
+    margin: 0 0 0 4.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code2-a {
+    margin: 0 0 0 5.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3a {
+    margin: 0 0 0 8.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3-a1 {
+    margin: 0 0 0 8.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code4 {
+    margin: 0 0 0 9.6rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code4a {
+    margin: 0 0 0 10.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code5 {
+    margin: 0 0 0 12rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code5a {
+    margin: 0 0 0 13.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code15 {
+    margin: 0 0 0 15rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code2a1 {
+    margin: 0 0 0 6.6rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code2t {
+    margin: 1rem 0 0 4.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.codea {
+    margin: 0 0 0 0.6rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.codet1 {
+    margin: 2.2rem 0 0 0 !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1t {
+    margin: 1rem 0 0 2.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.codet {
+    margin: 1.1rem 0 0 0 !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code-1a {
+    margin: 0 0 0 1.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1a {
+    margin: 0 0 0 3.6rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1a1 {
+    margin: 0 0 0 4.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code1a1t {
+    margin: 1rem 0 0 4.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3 {
+    margin: 0 0 0 7.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3a1,
+#book-content #sbo-rt-content div.code p.code3b {
+    margin: 0 0 0 9rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3t {
+    margin: 1rem 0 0 7.2rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code3-a {
+    margin: 0 0 0 7.8rem !important;
+    line-height: 1.2rem !important;
+}
+
+#book-content #sbo-rt-content div.code p.code6 {
+    margin: 0 0 0 14.4rem !important;
+    line-height: 1.2rem !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table.borderall tbody td.bgcolor,
+.ucvMode-black #book-content #sbo-rt-content table.borderall tbody td.bgcolor1,
+.ucvMode-black #book-content #sbo-rt-content table.tablem tbody td.bgcolor,
+.ucvMode-black #book-content #sbo-rt-content table.tablem tbody td.bgcolor1,
+.ucvMode-black #book-content #sbo-rt-content div.code p span {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table.borderall,
+.ucvMode-black #book-content #sbo-rt-content table.tablem {
+    background-color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section section aside section h1,
+.ucvMode-black #book-content #sbo-rt-content section section aside section h2 {
+    color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section section figure table thead tr td.bgcolor1,
+.ucvMode-black #book-content #sbo-rt-content section section.feature2 ul.none li,
+.ucvMode-black #book-content #sbo-rt-content section section.feature2 ul.ul-box li,
+.ucvMode-black #book-content #sbo-rt-content section section.feature1 ul.ul-box li,
+.ucvMode-black #book-content #sbo-rt-content section section aside section.feature1 p,
+.ucvMode-black #book-content #sbo-rt-content section section aside section.feature2 p {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section section section aside section p a:link,
+.ucvMode-black #book-content #sbo-rt-content section section code a:link {
+    color: #d3002d !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content img.bi {
+    filter: invert(.8) !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .pdf-page img.bi {
+    filter: invert(.5);
+}
+
+#sbo-rt-content .hljs-con-attribute, #sbo-rt-content .hljs-con-builtin-name, #sbo-rt-content .hljs-con-class, #sbo-rt-content .hljs-con-code, #sbo-rt-content .hljs-con-constructor, #sbo-rt-content .hljs-con-formula, #sbo-rt-content .hljs-con-function, #sbo-rt-content .hljs-con-meta-keyword, #sbo-rt-content .hljs-con-meta-string, #sbo-rt-content .hljs-con-module, #sbo-rt-content .hljs-con-module-access, #sbo-rt-content .hljs-con-operator, #sbo-rt-content .hljs-con-params, #sbo-rt-content .hljs-con-pattern-match, #sbo-rt-content .hljs-con-regexp, #sbo-rt-content .hljs-con-selector-attr, #sbo-rt-content .hljs-con-selector-class, #sbo-rt-content .hljs-con-selector-id, #sbo-rt-content .hljs-con-selector-pseudo, #sbo-rt-content .hljs-con-tag, #sbo-rt-content .hljs-con-typing {
+    color: #6f6f69 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .informaltable table p {
+    color: #3d3b49 !important;
+}
+
+#book-content #sbo-rt-content .follow table,
+#book-content #sbo-rt-content .note table.note {
+    display: table !important;
+    width: 100%;
+}
+
+#book-content #sbo-rt-content .note .Note-Label,
+#book-content #sbo-rt-content .follow .Note-Label {
+    background-color: white;
+    padding-bottom: 1rem;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .follow td,
+.ucvMode-black #book-content #sbo-rt-content .note td,
+.ucvMode-black #book-content #sbo-rt-content .follow .Note-Label,
+.ucvMode-black #book-content #sbo-rt-content .note .Note-Label {
+    background-color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .introCell .intro {
+    color: white;
+}
+
+.ucvMode-black #book-content #sbo-rt-content aside section.feature1 ol.decimal li,
+.ucvMode-black #book-content #sbo-rt-content aside section.feature1 ul.square li,
+.ucvMode-black #book-content #sbo-rt-content aside section.feature1 ul.none li,
+.ucvMode-black #book-content #sbo-rt-content aside section.feature1 section h3 {
+    color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section ol.none li p span,
+.ucvMode-black #book-content #sbo-rt-content section ul.none li p,
+.ucvMode-black #book-content #sbo-rt-content section ul.none li p span,
+.ucvMode-black #book-content #sbo-rt-content section ol.decimal li p span,
+.ucvMode-black #book-content #sbo-rt-content aside section ol.decimal li ol.upper-alpha p span,
+.ucvMode-black #book-content #sbo-rt-content section ul.disc li p,
+.ucvMode-black #book-content #sbo-rt-content section ul.disc li p span,
+.ucvMode-black #book-content #sbo-rt-content aside section ul.disc li p {
+    color: white;
+}
+
+#book-content #sbo-rt-content div.box2 p.pre-ex,
+.ucvMode-black #book-content #sbo-rt-content div.box2 p.pre-ex,
+.ucvMode-black #book-content #sbo-rt-content div.h4_heading p span.highlight,
+.ucvMode-black #book-content #sbo-rt-content div.h4_heading div.code p.code_only {
+    color: #3d3b49 !important;
+}
+
+#book-content #sbo-rt-content div.box1 p[class^='indenthanging'],
+#book-content #sbo-rt-content div.box1 p.box1_txt {
+    color: white;
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-meta {
+    color: #50a14f
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-built_in {
+    color: #c18401;
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-number {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-title {
+    color: #4078f2;
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-keyword {
+    color: #a626a4;
+}
+
+#book-content #sbo-rt-content pre code .hljs-con-literal {
+    color: #069;
+}
+
+#book-content #sbo-rt-content .lg_fa table {
+    display: table !important;
+    width: 100%;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .lg_fa table tbody tr.LG-Follow-Along-Table {
+    color: black !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .lg_important,
+.ucvMode-black #book-content #sbo-rt-content .lg_warning,
+.ucvMode-black #book-content #sbo-rt-content .lg_visualize,
+.ucvMode-black #book-content #sbo-rt-content .lg_note,
+.ucvMode-black #book-content #sbo-rt-content .lg_save_command {
+    background-color: #3d3b49 !important;
+}
+
+#book-content #sbo-rt-content ol.upper-alpha li {
+    list-style: upper-alpha;
+}
+
+#book-content #sbo-rt-content section .chap1 .chaptit,
+#book-content #sbo-rt-content section .part_num {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content section .chap3 .box2 .box2,
+#book-content #sbo-rt-content section .chap2 .box2 .box2,
+#book-content #sbo-rt-content section table tbody tr .tdleft .box .box1,
+#book-content #sbo-rt-content section .box2 .box2 .box2,
+#book-content #sbo-rt-content section .box2 .blockquote .box2 .box2,
+#book-content #sbo-rt-content section table tbody tr .tdleft3c .box1,
+#book-content #sbo-rt-content section table tbody tr .tdleft .box1 .box1 {
+    color: #fff;
+}
+
+#book-content #sbo-rt-content section .box2 .footnoot,
+#book-content #sbo-rt-content section .box2 .box3-title,
+#book-content #sbo-rt-content section .box2 .box3a-title,
+#book-content #sbo-rt-content section .box2 .box3b-title,
+#book-content #sbo-rt-content section .box2 .box3ba-title,
+#book-content #sbo-rt-content section .box2 .box3c-title,
+#book-content #sbo-rt-content section .box2 .tabhead,
+#book-content #sbo-rt-content section .box2 .tabhead1,
+#book-content #sbo-rt-content section .box2 .noindentat,
+#book-content #sbo-rt-content section .box2 .box-exth,
+#book-content #sbo-rt-content section .box2 .box-exth1,
+#book-content #sbo-rt-content section .box2 .noindent,
+#book-content #sbo-rt-content section .box2 .noindentsz1 .bold,
+#book-content #sbo-rt-content section .box2 .noindentsz2,
+#book-content #sbo-rt-content section .box2 .noindentai,
+#book-content #sbo-rt-content section .box2 .noindents,
+#book-content #sbo-rt-content section .box2 .box2a-title,
+#book-content #sbo-rt-content section .box2 .noindenta {
+    color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .mathi,
+.ucvMode-black #book-content #sbo-rt-content .chap2 .alphaa,
+.ucvMode-black #book-content #sbo-rt-content section .chap2 .chaptit1,
+.ucvMode-black #book-content #sbo-rt-content section .chap2 .chaptit2,
+.ucvMode-black #book-content #sbo-rt-content .chap2 .numa .numa,
+.ucvMode-black #book-content #sbo-rt-content section .chap3 .chaptit1,
+.ucvMode-black #book-content #sbo-rt-content section .chap3 .chaptit2,
+.ucvMode-black #book-content #sbo-rt-content section .box3 .noindenta,
+.ucvMode-black #book-content #sbo-rt-content section .box3 .noindentat,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .box .box,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .boxz .boxz,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .numa .numa,
+.ucvMode-black #book-content #sbo-rt-content section .nobox .noindent .bold,
+.ucvMode-black #book-content #sbo-rt-content section .nobox .num .num,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .dash .dash,
+.ucvMode-black #book-content #sbo-rt-content .box4 .box .box,
+.ucvMode-black #book-content #sbo-rt-content section .box5 .dashn .dashn,
+.ucvMode-black #book-content #sbo-rt-content section .box5 .box2a-title1,
+.ucvMode-black #book-content #sbo-rt-content section .box5 .box2a-title2,
+.ucvMode-black #book-content #sbo-rt-content section .box5 .noindentsz,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .hyp .hyp1,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .num1 .num1,
+.ucvMode-black #book-content #sbo-rt-content section .box1 .box-aut,
+.ucvMode-black #book-content #sbo-rt-content section .box1 .box-ext,
+.ucvMode-black #book-content #sbo-rt-content section .box2 .blockquote .hyp {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content section .list li a .key_col,
+#book-content #sbo-rt-content section .list1 li a .key_col,
+#book-content #sbo-rt-content section .bullet a .fig_col1 strong,
+#book-content #sbo-rt-content section p a .fig_col1 strong,
+#book-content #sbo-rt-content section p a .tab_col strong,
+#book-content #sbo-rt-content section .bullet .key_col,
+#book-content #sbo-rt-content section p .key_col {
+    color: #d3002d;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section .list li span,
+.ucvMode-black #book-content #sbo-rt-content section .list1 li,
+.ucvMode-black #book-content #sbo-rt-content section .list1 li span,
+.ucvMode-black #book-content #sbo-rt-content section .number .upperalpha li,
+.ucvMode-black #book-content #sbo-rt-content section .EM_GLOS .KT,
+.ucvMode-black #book-content #sbo-rt-content section .EM_INDX1,
+.ucvMode-black #book-content #sbo-rt-content section .bulleta,
+.ucvMode-black #book-content #sbo-rt-content section .bullet {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section .list li a .key_col,
+.ucvMode-black #book-content #sbo-rt-content section .list1 li a .key_col,
+.ucvMode-black #book-content #sbo-rt-content section p .key_col,
+.ucvMode-black #book-content #sbo-rt-content section .bullet .key_col,
+.ucvMode-black #book-content #sbo-rt-content section .bullet a .fig_col1 strong,
+.ucvMode-black #book-content #sbo-rt-content section p a .tab_col strong,
+.ucvMode-black #book-content #sbo-rt-content section p a .fig_col1 strong {
+    color: #85E6EA;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section .box2c header .subhead,
+.ucvMode-black #book-content #sbo-rt-content section .box2a header h3.subhead,
+.ucvMode-black #book-content #sbo-rt-content section .box2 header .subheadbox_1,
+.ucvMode-black #book-content #sbo-rt-content section .sidebarbg .subheadbox,
+.ucvMode-black #book-content #sbo-rt-content section .sidebar-padding .subheadbox {
+    color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content section div#box5-19 .bullet,
+.ucvMode-black #book-content #sbo-rt-content section .box_3a .noindent,
+.ucvMode-black #book-content #sbo-rt-content section .box2b .noindent,
+.ucvMode-black #book-content #sbo-rt-content section .box2b .bullet,
+.ucvMode-black #book-content #sbo-rt-content section .sidebarbg .bullet,
+.ucvMode-black #book-content #sbo-rt-content section .sidebarbg .noindent,
+.ucvMode-black #book-content #sbo-rt-content section .sidebar-padding .bullet,
+.ucvMode-black #book-content #sbo-rt-content section .box_3aa .noindent {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content section div#box5-19 .noindent1 {
+    color: #3d3b49 !important;
+}
+
+#book-content #sbo-rt-content .biblioEntryList .bibliographyEntry {
+    list-style: none;
+}
+
+.ucvFamily-OpenDyslexic #book-content #sbo-rt-content * {
+    font-family: "OpenDyslexic" !important;
+}
+
+.ucvFamily-SanSerif #book-content #sbo-rt-content * {
+    font-family: "Guardian Sans Text" !important;
+}
+
+#book-content #sbo-rt-content aside section.box {
+    margin-top: 1rem;
+    padding: 10px 15px;
+}
+
+.ucvMode-black #book-content #sbo-rt-content aside section.box {
+    background-color: #4d495c;
+}
+
+.ucvMode-black #book-content #sbo-rt-content aside section.box p,
+.ucvMode-black #book-content #sbo-rt-content aside section.box ul,
+.ucvMode-black #book-content #sbo-rt-content aside section.box h2 {
+    color: #fff !important;
+}
+
+#book-content #sbo-rt-content ol.none > li {
+    list-style-type: none;
+}
+
+#book-content #sbo-rt-content ol li.list-a1 {
+    list-style-type: upper-alpha;
+}
+
+#book-content #sbo-rt-content ol li > ol.UL li {
+    list-style: upper-alpha !important;
+}
+
+#book-content #sbo-rt-content div div[id^='footnote'] p.Footnote span a._idFootnoteAnchor {
+    text-indent: -2rem !important;
+    margin-right: 0.5rem !important;
+}
+
+#book-content #sbo-rt-content div p[data-type="footnote"] sup {
+    top: 0;
+}
+
+#book-content #sbo-rt-content div.sidebar p[class^='noindent'],
+#book-content #sbo-rt-content div.sidebar p[class='blockquotebig'],
+#book-content #sbo-rt-content div.sidebar p[class='blockquoteatt1'],
+#book-content #sbo-rt-content div.sidebar p[class='blockquotep1'] {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p[class^="noindentcolor"],
+.ucvMode-black #book-content #sbo-rt-content p[class^="noindentcolor"] span.black,
+.ucvMode-black #book-content #sbo-rt-content p.caption span.black,
+.ucvMode-black #book-content #sbo-rt-content p.captiona span.black,
+.ucvMode-black #book-content #sbo-rt-content div.sidebar p[class^='noindent'],
+.ucvMode-black #book-content #sbo-rt-content div.sidebar p[class='blockquotebig'],
+.ucvMode-black #book-content #sbo-rt-content div.sidebar p[class='blockquoteatt1'],
+.ucvMode-black #book-content #sbo-rt-content div.sidebar p[class='blockquotep1'] {
+    color: #fff;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div#pdf-main div.pdf-page div.pd div.pf div.pc div {
+    color: transparent;
+}
+
+#book-content #sbo-rt-content div.ProgramCode {
+    margin: 1.5rem 0 !important;
+    padding: 0.75em 1.5em;
+    background-color: #EEF2F6;
+    color: #3D3B49;
+    overflow-y: hidden;
+    -webkit-hyphens: none;
+    display: block;
+}
+
+#book-content #sbo-rt-content div.FixedLine {
+    white-space: pre;
+}
+
+#book-content #sbo-rt-content div.ProgramCode div.LineGroup div {
+    font-family: "Consolas", Courier, monospace;
+}
+
+#book-content #sbo-rt-content .programsa,
+#book-content #sbo-rt-content .programsdd,
+#book-content #sbo-rt-content .programsd,
+#book-content #sbo-rt-content .programs,
+#book-content #sbo-rt-content table p.programd1d,
+#book-content #sbo-rt-content table p.programd1 {
+    font-family: "Consolas", Courier, monospace !important;
+}
+
+#book-content #sbo-rt-content .programsdd,
+#book-content #sbo-rt-content .programsd,
+#book-content #sbo-rt-content .programs {
+    padding: 0.75em 1.5em;
+    background-color: #EEF2F6;
+    color: #3D3B49;
+    overflow-y: hidden;
+    -webkit-hyphens: none;
+    white-space: nowrap;
+    display: block;
+}
+
+.ucvMode-black #book-content #sbo-rt-content table td.table-b {
+    background-color: #FFF;
+    color: #3D3B49;
+}
+
+#book-content #sbo-rt-content div[id^="_idContainer"] {
+    font-size: 1em;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p span.code {
+    color: #3D3B49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .sect1 p span.code,
+.ucvMode-black #book-content #sbo-rt-content .sect2 p span.code,
+.ucvMode-black #book-content #sbo-rt-content p.indent span.code,
+.ucvMode-black #book-content #sbo-rt-content p.noindent span.code,
+.ucvMode-black #book-content #sbo-rt-content p.exe span.code,
+.ucvMode-black #book-content #sbo-rt-content p.programlisting span.code
+ {
+    color: #fff;
+}
+
+#book-content #sbo-rt-content p.exam-para {
+    color: #fff !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .informaltable table td {
+    background-color: #EEF2F6;
+}
+
+#book-content #sbo-rt-content div.note p.notepara,
+#book-content #sbo-rt-content section ul.sq li p.bullet,
+#book-content #sbo-rt-content section ol.number li p,
+#book-content #sbo-rt-content ul.sq li figcaption p.fig-caption {
+    color: #3D3B49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div.note p.notepara,
+.ucvMode-black #book-content #sbo-rt-content section ul.sq li p.bullet,
+.ucvMode-black #book-content #sbo-rt-content section ol.number li p,
+.ucvMode-black #book-content #sbo-rt-content ol.number li ul.sq1 li,
+.ucvMode-black #book-content #sbo-rt-content ol.number li ul.sq2 li,
+.ucvMode-black #book-content #sbo-rt-content ul.sq li figcaption p.fig-caption {
+    color: #FFF;
+}
+
+#book-content #sbo-rt-content ol.number li ul.sq1 li,
+#book-content #sbo-rt-content ol.number li ul.sq2 li {
+    list-style-type: disc;
+}
+
+#book-content #sbo-rt-content aside div.sidebar p.small2 code {
+    background-color: transparent !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content aside div.sidebar p.small2 code {
+    color: #FFF;
+}
+
+#book-content #sbo-rt-content div.chap {
+    font-size: inherit;
+}
+
+#book-content #sbo-rt-content strong.source-inline {
+    font-size: 1em;
+}
+
+#book-content #sbo-rt-content li.bulllist {
+    text-indent: unset;
+}
+
+#book-content #sbo-rt-content table.processedcode td.codeline {
+    font-family: "Consolas", Courier, monospace !important;
+}
+
+#book-content #sbo-rt-content div.interviewBox {
+    padding: 0.625rem;
+    width: 100%;
+    height: 100%;
+}
+
+#book-content #sbo-rt-content img[src*='9781457196362'],
+#book-content #sbo-rt-content img[src*='9781457190063'] {
+    z-index: 0;
+}
+
+#book-content #sbo-rt-content div:has(img[src*="9781457190063"]) div {
+    line-height: initial;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div:has(img[src*="9781457190063"]) div {
+    color: #3d3b49;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div:has(img[src*='9781457196362']) {
+    color: rgb(210,35,42);
+}
+
+#book-content #sbo-rt-content .bg-000000 {
+    color: #fff;
+}
+
+#book-content #sbo-rt-content .bg-c9c9ca {
+    background-color: #c9c9ca;
+    color: #3d3b49 !important;
+}
+
+#book-content #sbo-rt-content .bg-cce0f4,
+#book-content #sbo-rt-content .bg-d8e0ea {
+    color: #3d3b49;
+}
+
+#book-content #sbo-rt-content .bg-eeefef div p {
+    margin: unset !important;
+}
+
+#book-content #sbo-rt-content .bg-eeefef div {
+    background-color: #eeefef;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .bg-eeefef div {
+    background-color: inherit;
+}
+
+.ucvMode-black #book-content #sbo-rt-content span.bg-d2dde9 {
+    color: #3d3b49;
+}
+
+.ucvMode-black #sbo-rt-content span.FigureNumberInline,
+.ucvMode-black #sbo-rt-content span.FigureNumber,
+.ucvMode-black #sbo-rt-content p.FigureCaption,
+.ucvMode-black #sbo-rt-content figcaption.FigureCaption {
+    color: #fff;
+}
+
+/* for transparent images in darkmode */
+.ucvMode-black #sbo-rt-content p.figHolder img {
+    margin-bottom: 0;
+    background-color: #fff;
+}
+
+.ucvMode-black #sbo-rt-content p.Body img {
+    background-color: #fff;
+}
+
+#book-content #sbo-rt-content .fm-code-listing-caption {
+    color: #EAEAEA !important;
+}
+
+#book-content #sbo-rt-content ol li.noteEntry {
+    list-style: none;
+}
+
+#book-content #sbo-rt-content code.greenHL{
+    background-color: #66b2b2 !important;
+}
+
+#book-content #sbo-rt-content code.orangeHL{
+    background-color: #ffb38a !important;
+}
+
+#book-content #sbo-rt-content code.purpleHL{
+    background-color: #93acff !important;
+}
+
+#book-content #sbo-rt-content code.pinkHL{
+    background-color: #d291bc !important;
+}
+
+#book-content #sbo-rt-content code.celeryHL{
+    background-color: #c4cd87 !important;
+}
+
+#book-content #sbo-rt-content code.yellowHL{
+    background-color: #ffe660 !important;
+}
+
+
+#book-content #sbo-rt-content table > tbody > tr > td.left > img,
+#book-content #sbo-rt-content table > tbody> tr > td > span.center > img,
+#book-content #sbo-rt-content .informalEquation > img {
+    padding: unset !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content p.callout-heading, .ucvMode-black #book-content #sbo-rt-content p.callout {
+    color: #3d3b49 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content .readable-text {
+    color: #fff;
+}
+
+#vsc-book-reader #book-content {
+    margin-bottom: 0 !important;
+}
