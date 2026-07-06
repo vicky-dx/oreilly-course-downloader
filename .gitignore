@@ -62,3 +62,6 @@ desktop.ini
 # Logs
 *.log
 downloader.log
+
+# temp folder
+/temp

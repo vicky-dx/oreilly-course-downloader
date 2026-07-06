@@ -53,3 +53,67 @@ pre {
   margin-top: 4px !important;
 }
 
+/* Theme-specific code blocks (pre) overrides */
+.theme-sepia pre[data-type="programlisting"],
+.theme-sepia pre {
+  background-color: #eae0c9 !important;
+  border-color: #dcd0b4 !important;
+  color: #5b4636 !important;
+}
+
+.ucvMode-black pre[data-type="programlisting"],
+.ucvMode-black pre {
+  background-color: #1e1e24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e0e0e0 !important;
+}
+
+/* Inline code overrides (fixes #EEF2F6 light background clash in dark mode) */
+.theme-sepia #book-content #sbo-rt-content code:not(.docutils.literal.notranslate),
+.theme-sepia #book-content #sbo-rt-content code code:not(.docutils.literal.notranslate),
+.theme-sepia #book-content #sbo-rt-content .codeLabel {
+  background-color: rgba(91, 70, 54, 0.08) !important;
+  color: #5b4636 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content code:not(.docutils.literal.notranslate),
+.ucvMode-black #book-content #sbo-rt-content code code:not(.docutils.literal.notranslate),
+.ucvMode-black #book-content #sbo-rt-content .codeLabel {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e0e0e0 !important;
+}
+
+/* Reset for code tags inside pre blocks */
+.theme-sepia #book-content #sbo-rt-content pre code,
+.ucvMode-black #book-content #sbo-rt-content pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Table dark mode overrides (fixes #3D3B49 dark text clash on dark background) */
+.ucvMode-black #book-content #sbo-rt-content table {
+  color: #e0e0e0 !important;
+}
+
+/* Theme-specific box overrides */
+.theme-sepia #book-content #sbo-rt-content div.boxb,
+.theme-sepia #book-content #sbo-rt-content div.boxg,
+.theme-sepia #book-content #sbo-rt-content div.boxr,
+.theme-sepia #book-content #sbo-rt-content div.box,
+.theme-sepia #book-content #sbo-rt-content div.feature {
+  background-color: #eae0c9 !important;
+  color: #5b4636 !important;
+  border-color: #dcd0b4 !important;
+}
+
+.ucvMode-black #book-content #sbo-rt-content div.boxb,
+.ucvMode-black #book-content #sbo-rt-content div.boxg,
+.ucvMode-black #book-content #sbo-rt-content div.boxr,
+.ucvMode-black #book-content #sbo-rt-content div.box,
+.ucvMode-black #book-content #sbo-rt-content div.feature {
+  background-color: #2b2a35 !important;
+  color: #e0e0e0 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+

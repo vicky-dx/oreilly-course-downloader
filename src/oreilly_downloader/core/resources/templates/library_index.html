@@ -2161,7 +2161,9 @@
           </div>
 
           <div class="drawer-actions">
-            <a href="/${book.folder}/book/index.html" target="_blank" class="drawer-primary-btn" onclick="store.dispatch({ type: 'UPDATE_PROGRESS', payload: { folder: '${book.folder}', progress: ${progressState.progress || 1} } })">Read Now</a>
+            <a href="/${book.folder}/book/index.html" target="_blank" class="drawer-primary-btn" onclick="store.dispatch({ type: 'UPDATE_PROGRESS', payload: { folder: '${book.folder}', progress: ${progressState.progress || 1} } })">
+              ${progressState.progress > 0 ? 'Continue Reading' : 'Read Now'}
+            </a>
             
             <div class="drawer-secondary-buttons">
               <button class="drawer-secondary-btn" onclick="store.dispatch({ type: 'TOGGLE_BOOKMARK', payload: { folder: '${book.folder}' } })">

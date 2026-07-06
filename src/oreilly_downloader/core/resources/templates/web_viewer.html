@@ -30,11 +30,11 @@
     }
     
     body.ucvMode-black {
-      --bg-color: #121212;
-      --text-color: #e0e0e0;
-      --sidebar-bg: #1e1e1e;
-      --sidebar-border: #2d2d2d;
-      --active-link-bg: #333333;
+      --bg-color: #3D3B49;
+      --text-color: #f4f4f6;
+      --sidebar-bg: #2b2a35;
+      --sidebar-border: #4e4c5d;
+      --active-link-bg: #4e4c5d;
     }
 
     * { box-sizing: border-box; }
@@ -554,7 +554,7 @@
     }
     .theme-light .color-preview { background-color: #ffffff; color: #222222; border: 1px solid #e1e4e6; }
     .theme-sepia .color-preview { background-color: #f4ecd8; color: #5b4636; border: 1px solid #dcd0b4; }
-    .theme-dark .color-preview { background-color: #2b2b36; color: #e0e0e0; border: 1px solid #333333; }
+    .theme-dark .color-preview { background-color: #3D3B49; color: #f4f4f6; border: 1px solid #4e4c5d; }
 
     /* Width Previews in Popup */
     .width-preview {
@@ -1946,9 +1946,15 @@
         // Parse recursively
         parseNode(navMap, tocList);
 
-        // Auto-load target chapter or first chapter
+        // Auto-load target chapter, last read chapter, or first chapter
         const urlParams = new URLSearchParams(window.location.search);
-        const startCh = urlParams.get('ch') || (flatChapters.length > 0 ? flatChapters[0].src : null);
+        let startCh = urlParams.get('ch');
+        if (!startCh) {
+          startCh = localStorage.getItem('last-read-chapter-' + getBookIsbn());
+        }
+        if (!startCh) {
+          startCh = (flatChapters.length > 0 ? flatChapters[0].src : null);
+        }
         
         // Sync local storage / server notes database
         loadNotesFromServer()
@@ -2018,6 +2024,19 @@
       const fragmentId = src.split('#')[1];
       const currentBase = currentChapter.split('#')[0];
 
+      // Save last read chapter
+      localStorage.setItem('last-read-chapter-' + getBookIsbn(), src);
+
+      let targetScroll = restoreScrollTop;
+      if (targetScroll === undefined || targetScroll === null) {
+        if (currentChapter === "") {
+          const savedScroll = localStorage.getItem('last-read-scroll-' + getBookIsbn() + '-' + src);
+          if (savedScroll) {
+            targetScroll = parseFloat(savedScroll);
+          }
+        }
+      }
+
       // Update URL search parameters silently
       const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?ch=${src}`;
       window.history.replaceState({ path: newUrl }, '', newUrl);
@@ -2046,8 +2065,8 @@
       if (currentBase === baseSrc && currentChapter !== "") {
         // Same chapter, just scroll to fragment element
         currentChapter = src;
-        if (restoreScrollTop !== undefined && restoreScrollTop !== null) {
-          document.getElementById('main-content').scrollTop = restoreScrollTop;
+        if (targetScroll !== undefined && targetScroll !== null) {
+          document.getElementById('main-content').scrollTop = targetScroll;
         } else if (fragmentId) {
           const fragmentEl = document.getElementById(fragmentId);
           if (fragmentEl) {
@@ -2095,8 +2114,8 @@
           // Re-apply notes & highlights for the freshly loaded chapter
           applyHighlightsForCurrentChapter();
 
-          if (restoreScrollTop !== undefined && restoreScrollTop !== null) {
-            document.getElementById('main-content').scrollTop = restoreScrollTop;
+          if (targetScroll !== undefined && targetScroll !== null) {
+            document.getElementById('main-content').scrollTop = targetScroll;
           } else if (fragmentId) {
             const fragmentEl = document.getElementById(fragmentId);
             if (fragmentEl) {
@@ -2158,13 +2177,13 @@
         if (targetEl) {
           isScrollingFromClick = true;
           targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          targetEl.style.transition = 'background-color 0.3s';
+          targetEl.style.transition = 'background-color 0.4s';
           const oldBg = targetEl.style.backgroundColor;
-          targetEl.style.backgroundColor = 'rgba(255, 235, 59, 0.3)';
+          targetEl.style.backgroundColor = 'rgba(1, 132, 132, 0.45)'; // Semi-transparent O'Reilly Teal (#018484)
           setTimeout(() => {
             targetEl.style.backgroundColor = oldBg;
             isScrollingFromClick = false;
-          }, 1000);
+          }, 1500); // Prolong highlight visibility to 1.5s
         }
         return;
       }
@@ -2255,9 +2274,21 @@
       }
     }
 
+    // ScrollSpy active TOC tracking and scroll position saving on scroll
+    let scrollSaveTimeout = null;
+
     document.getElementById('main-content').addEventListener('scroll', () => {
       if (scrollSpyTimeout) clearTimeout(scrollSpyTimeout);
       scrollSpyTimeout = setTimeout(handleScrollSpy, 50);
+
+      // Debounce saving scroll position to avoid performance overhead
+      if (scrollSaveTimeout) clearTimeout(scrollSaveTimeout);
+      scrollSaveTimeout = setTimeout(() => {
+        const mainContent = document.getElementById('main-content');
+        if (mainContent && currentChapter) {
+          localStorage.setItem('last-read-scroll-' + getBookIsbn() + '-' + currentChapter, mainContent.scrollTop);
+        }
+      }, 150);
     });
   </script>
 </body>
