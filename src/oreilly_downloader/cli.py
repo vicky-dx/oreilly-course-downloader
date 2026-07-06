@@ -380,6 +380,10 @@ def process_course(config: DownloaderConfig):
     except Exception as e:
         Logger.debug(f"Failed to check active trial status in process_course: {e}")
 
+    if not config.url:
+        Logger.error(" Error: Course URL is required.")
+        return
+
     Logger.info("🚀 Initializing browser...")
     bm: IBrowser = BrowserFactory.create(
         browser_type=config.browser_type,
@@ -456,16 +460,15 @@ def process_course(config: DownloaderConfig):
 
         # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
         course_title = "OReilly Extracted Course"
-        if driver:
-            try:
-                raw_title = driver.navigation.title
-                if raw_title:
-                    course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
-                    course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
-                    course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
-                    course_title = course_title.strip()
-            except Exception as e:
-                Logger.debug(f"Failed to extract course title from page title: {e}")
+        try:
+            raw_title = driver.navigation.title
+            if raw_title:
+                course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
+                course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
+                course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
+                course_title = course_title.strip()
+        except Exception as e:
+            Logger.debug(f"Failed to extract course title from page title: {e}")
 
         is_audio_only = config.audiobook
 
