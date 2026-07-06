@@ -357,6 +357,14 @@ html {
     font-style: normal !important;
 }
 
+#book-content #sbo-rt-content p.byline,
+#sbo-rt-content p.byline {
+    text-align: left;
+    margin: -33px auto 35px;
+    font-style: italic;
+    font-weight: bold;
+}
+
 #book-content #sbo-rt-content blockquote p[data-type="attribution"] {
     margin-top: -24px !important;
 }

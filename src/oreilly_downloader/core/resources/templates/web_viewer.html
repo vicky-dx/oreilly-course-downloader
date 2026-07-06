@@ -163,8 +163,6 @@
     #main-content {
       flex: 1;
       height: 100%;
-      display: flex;
-      flex-direction: column;
       overflow-y: auto;
       background-color: var(--bg-color);
     }
@@ -173,17 +171,14 @@
       max-width: 800px;
       width: 100%;
       margin: 0 auto;
-      padding: 40px 20px 100px 20px;
+      padding: 40px 20px 120px 20px;
       min-height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      box-sizing: border-box;
     }
 
     #book-content {
       font-size: inherit;
       line-height: 1.6;
-      flex: 1;
     }
 
     #bottom-bar {

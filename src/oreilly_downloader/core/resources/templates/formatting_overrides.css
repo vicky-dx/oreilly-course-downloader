@@ -43,3 +43,13 @@ pre {
   display: block !important;
   line-height: 1.25 !important;
 }
+
+/* Beautiful byline (author/cofounder signature) styling */
+#book-content .byline {
+  font-style: italic !important;
+}
+#book-content .byline.cont {
+  font-style: italic !important;
+  margin-top: 4px !important;
+}
+
