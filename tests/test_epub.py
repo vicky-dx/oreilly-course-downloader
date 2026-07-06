@@ -217,3 +217,52 @@ def test_serve_py_template_syntax():
     except SyntaxError as e:
         pytest.fail(f"SERVE_PY_TEMPLATE contains a Python syntax error: {e}")
 
+
+def test_download_book_skip_if_exists(tmp_path):
+    output_dir = os.path.join(tmp_path, "downloads")
+    os.makedirs(output_dir, exist_ok=True)
+
+    config = DownloaderConfig(
+        url="https://learning.oreilly.com/library/view/test-book/9781491958698/",
+        epub=True,
+        web_viewer=True,
+        output_dir=output_dir,
+    )
+
+    # 1. Pretend that the EPUB and web-viewer files already exist
+    book_title = "Test-Driven Development with Python, 2nd Edition"
+    sanitized_title = "Test-Driven Development with Python, 2nd Edition"
+    book_root_dir = os.path.join(output_dir, "books", "data", sanitized_title)
+    os.makedirs(book_root_dir, exist_ok=True)
+    
+    epub_path = os.path.join(book_root_dir, f"{sanitized_title}.epub")
+    with open(epub_path, "w") as f:
+        f.write("mock epub content")
+        
+    book_assets_dir = os.path.join(book_root_dir, "book")
+    os.makedirs(book_assets_dir, exist_ok=True)
+
+    # 2. Mock requests.Session
+    mock_session = MagicMock()
+    mock_meta_response = MagicMock()
+    mock_meta_response.status_code = 200
+    mock_meta_response.json.return_value = {
+        "title": book_title + " [Book]",
+        "isbn": "9781491958698"
+    }
+    mock_session.get.return_value = mock_meta_response
+
+    # 3. Call download_book
+    service = BookDownloaderService(output_dir=output_dir)
+    success = service.download_book(config, mock_session)
+
+    assert success is True
+    
+    # 4. Verify that we ONLY fetched the metadata, but did NOT make any additional get requests to download files
+    # because the download was skipped.
+    assert mock_session.get.call_count == 1
+    # Check that first call was indeed to the metadata url
+    expected_meta_url = "https://learning.oreilly.com/api/v2/epubs/urn:orm:book:9781491958698/"
+    mock_session.get.assert_called_once_with(expected_meta_url, timeout=15)
+
+

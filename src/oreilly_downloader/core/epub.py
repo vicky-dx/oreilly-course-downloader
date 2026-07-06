@@ -155,6 +155,23 @@ class BookDownloaderService:
         sanitized_title = SanityUtils.sanitize_filename(book_title)
         
         Logger.success(f"📖 Title: {book_title}")
+
+        # Check if the book is already fully downloaded and packaged
+        book_root_dir = os.path.join(self.output_dir, "books", "data", sanitized_title)
+        epub_filename = f"{sanitized_title}.epub"
+        epub_path = os.path.join(book_root_dir, epub_filename)
+        book_assets_dir = os.path.join(book_root_dir, "book")
+        
+        epub_exists = os.path.exists(epub_path)
+        viewer_needed = getattr(config, "web_viewer", False)
+        viewer_exists = os.path.exists(book_assets_dir)
+        
+        if epub_exists and (not viewer_needed or viewer_exists):
+            Logger.success(f" Skipping book: {book_title} (Already downloaded and packaged)")
+            Logger.info(f"   - EPUB: {epub_path}")
+            if viewer_needed:
+                Logger.info(f"   - Web Viewer: {book_assets_dir}")
+            return True
         
         # 2. Fetch files list
         files_url = f"https://learning.oreilly.com/api/v2/epubs/urn:orm:book:{isbn}/files/?limit=1000"

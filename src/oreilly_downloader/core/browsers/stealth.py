@@ -94,6 +94,18 @@ class StealthChromeBrowser(IBrowser):
                 if match:
                     ver = int(match.group(1))
                     Logger.warning(f" Chrome version mismatch. Retrying with driver version {ver}...")
+                    
+                    # Kill background processes and remove lockfile before retrying
+                    # to release the profile directory lock
+                    Logger.info("🧹 Terminating zombie Chrome processes from failed attempt to release profile lock...")
+                    self._kill_zombie_chrome_processes(prof)
+                    try:
+                        if os.path.exists(lock_file):
+                            Logger.info("🧹 Removing profile lockfile...")
+                            os.remove(lock_file)
+                    except Exception as le:
+                        Logger.debug(f"Failed to remove lockfile: {le}")
+                        
                     try:
                         raw_driver = uc.Chrome(
                             options=self._get_options(),

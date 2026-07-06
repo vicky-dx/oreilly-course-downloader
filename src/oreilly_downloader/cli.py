@@ -34,6 +34,12 @@ from .core.vtt import VttProcessor
 from .core.config import DownloaderConfig
 
 
+class HeadlessAutoLoginFailed(Exception):
+    """Raised when auto-login (session restore) fails in headless mode, triggering a headed retry."""
+    pass
+
+
+
 def build_course(structure: dict, title: str = "OReilly Extracted Course") -> Course:
     """Builds a Course object from the scraped structure dict."""
     course = Course(title=title, modules=[], structure=structure)
@@ -83,6 +89,8 @@ def _handle_authentication(
                 if auth.login(email_cached, password_cached):
                     Logger.success("Successfully restored active session!")
                     return True
+                elif config.headless:
+                    raise HeadlessAutoLoginFailed()
             Logger.warning("Existing trial login failed. Proceeding with new trial creation...")
 
         base_email = state.get_base_email()
@@ -160,6 +168,10 @@ def _handle_authentication(
                     if auth.login(email_cached, password_cached):
                         Logger.success("Successfully logged in using cached trial credentials!")
                         return True
+                    elif config.headless:
+                        raise HeadlessAutoLoginFailed()
+        except HeadlessAutoLoginFailed:
+            raise
         except Exception as e:
             Logger.debug(f"Failed during standard trial restore verification: {e}")
 
@@ -384,117 +396,124 @@ def process_course(config: DownloaderConfig):
         Logger.error(" Error: Course URL is required.")
         return
 
-    Logger.info("🚀 Initializing browser...")
-    bm: IBrowser = BrowserFactory.create(
-        browser_type=config.browser_type,
-        headless=config.headless,
-        clean_session=clean_session
-    )
-    driver = bm.start()
-
-
-
-    if not driver:
-        Logger.error(" Failed to start browser")
-        return
-
-    try:
-        auth = AuthService(bm)
-
-        if not _handle_authentication(driver, auth, config):
-            return
-
-        if config.epub:
-            import requests
-            from .core.epub import BookDownloaderService
-            
-            # Setup session cookies from browser driver
-            session = requests.Session()
-            session.headers.update({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
-            })
-            try:
-                for cookie in driver.cookies.get_all():
-                    session.cookies.set(cookie['name'], cookie['value'])
-            except Exception as ce:
-                Logger.warning(f"   Failed to copy cookies from browser: {ce}")
-
-            book_dl = BookDownloaderService(output_dir=config.output_dir)
-            success = book_dl.download_book(config, session)
-            if success:
-                Logger.info("✨ Book downloaded and packaged successfully!")
-            else:
-                Logger.error("Failed to download or package the book.")
-            return
-
-        # Retrieve Kaltura session token (ks) if we are in normal download mode
-        ks = None
-        if not config.manual_login:
-            Logger.info("🔑 Extracting active Kaltura Session (ks) token...")
-            ks = auth.get_ks()
-            if ks:
-                Logger.success(f" Session acquired: {ks[:20]}...")
-            else:
-                Logger.warning(" Failed to acquire Kaltura session (ks). Will rely on sniffer fallback.")
-
-        # Pre-flight check for FFmpeg dependency if downloads are required
-        ffmpeg_path = "ffmpeg"
-        if not config.transcripts_only:
-            detected_path = SanityUtils.get_ffmpeg_path()
-            if not detected_path:
-                Logger.error("Critical dependency missing: FFmpeg could not be found.")
-                Logger.warning("Please install FFmpeg and add it to your system PATH, or place ffmpeg.exe in the project directory.")
-                Logger.info("👉 Download URL: https://www.ffmpeg.org/download.html")
-                return
-            ffmpeg_path = detected_path
-
-        scraper = CourseStructureScraper(bm)
-        resolver = MediaUrlResolver(bm, ks=ks)
-        downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
-
-        Logger.info("📚 Extracting course structure...")
-        structure = scraper.extract_course_structure(config.url, config.audiobook)
-        if not structure:
-            Logger.error(" Failed to extract course structure.")
-            return
-
-        # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
-        course_title = "OReilly Extracted Course"
-        try:
-            raw_title = driver.navigation.title
-            if raw_title:
-                course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
-                course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
-                course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
-                course_title = course_title.strip()
-        except Exception as e:
-            Logger.debug(f"Failed to extract course title from page title: {e}")
-
-        is_audio_only = config.audiobook
-
-        course = build_course(structure, title=course_title)
-        Logger.success(f" Found {len(course.modules)} modules")
-        if is_audio_only:
-            Logger.info("🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
-            base_dir = os.path.join(downloader.output_dir, "audiobooks")
-        else:
-            base_dir = os.path.join(downloader.output_dir, "courses")
-
-        course_dir = PathManager.get_course_dir(base_dir, course.title)
-        os.makedirs(course_dir, exist_ok=True)
-
-        with open(
-            os.path.join(course_dir, "course_structure.json"), "w", encoding="utf-8"
-        ) as f:
-            json.dump(course.structure, f, indent=2)
-
-        _download_videos_concurrently(
-            course, driver, scraper, resolver, downloader, config, course_dir, is_audio_only=is_audio_only
+    while True:
+        Logger.info("🚀 Initializing browser...")
+        bm: IBrowser = BrowserFactory.create(
+            browser_type=config.browser_type,
+            headless=config.headless,
+            clean_session=clean_session
         )
+        driver = bm.start()
 
-    finally:
-        bm.stop()
-        Logger.info(f"✨ Done! Cleaned up browser.")
+        if not driver:
+            Logger.error(" Failed to start browser")
+            return
+
+        try:
+            auth = AuthService(bm)
+
+            if not _handle_authentication(driver, auth, config):
+                return
+
+            if config.epub:
+                import requests
+                from .core.epub import BookDownloaderService
+                
+                # Setup session cookies from browser driver
+                session = requests.Session()
+                session.headers.update({
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                })
+                try:
+                    for cookie in driver.cookies.get_all():
+                        session.cookies.set(cookie['name'], cookie['value'])
+                except Exception as ce:
+                    Logger.warning(f"   Failed to copy cookies from browser: {ce}")
+
+                book_dl = BookDownloaderService(output_dir=config.output_dir)
+                success = book_dl.download_book(config, session)
+                if success:
+                    Logger.info("✨ Book downloaded and packaged successfully!")
+                else:
+                    Logger.error("Failed to download or package the book.")
+                return
+
+            # Retrieve Kaltura session token (ks) if we are in normal download mode
+            ks = None
+            if not config.manual_login:
+                Logger.info("🔑 Extracting active Kaltura Session (ks) token...")
+                ks = auth.get_ks()
+                if ks:
+                    Logger.success(f" Session acquired: {ks[:20]}...")
+                else:
+                    Logger.warning(" Failed to acquire Kaltura session (ks). Will rely on sniffer fallback.")
+
+            # Pre-flight check for FFmpeg dependency if downloads are required
+            ffmpeg_path = "ffmpeg"
+            if not config.transcripts_only:
+                detected_path = SanityUtils.get_ffmpeg_path()
+                if not detected_path:
+                    Logger.error("Critical dependency missing: FFmpeg could not be found.")
+                    Logger.warning("Please install FFmpeg and add it to your system PATH, or place ffmpeg.exe in the project directory.")
+                    Logger.info("👉 Download URL: https://www.ffmpeg.org/download.html")
+                    return
+                ffmpeg_path = detected_path
+
+            scraper = CourseStructureScraper(bm)
+            resolver = MediaUrlResolver(bm, ks=ks)
+            downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
+
+            Logger.info("📚 Extracting course structure...")
+            structure = scraper.extract_course_structure(config.url, config.audiobook)
+            if not structure:
+                Logger.error(" Failed to extract course structure.")
+                return
+
+            # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
+            course_title = "OReilly Extracted Course"
+            try:
+                raw_title = driver.navigation.title
+                if raw_title:
+                    course_title = re.sub(r'\s*\[video\]\s*$', "", raw_title, flags=re.IGNORECASE)
+                    course_title = re.sub(r'\s*\[book\]\s*$', "", course_title, flags=re.IGNORECASE)
+                    course_title = re.sub(r'\s*\[(audiobook|audio\s+book)\]\s*$', "", course_title, flags=re.IGNORECASE)
+                    course_title = course_title.strip()
+            except Exception as e:
+                Logger.debug(f"Failed to extract course title from page title: {e}")
+
+            is_audio_only = config.audiobook
+
+            course = build_course(structure, title=course_title)
+            Logger.success(f" Found {len(course.modules)} modules")
+            if is_audio_only:
+                Logger.info("🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
+                base_dir = os.path.join(downloader.output_dir, "audiobooks")
+            else:
+                base_dir = os.path.join(downloader.output_dir, "courses")
+
+            course_dir = PathManager.get_course_dir(base_dir, course.title)
+            os.makedirs(course_dir, exist_ok=True)
+
+            with open(
+                os.path.join(course_dir, "course_structure.json"), "w", encoding="utf-8"
+            ) as f:
+                json.dump(course.structure, f, indent=2)
+
+            _download_videos_concurrently(
+                course, driver, scraper, resolver, downloader, config, course_dir, is_audio_only=is_audio_only
+            )
+            break
+
+        except HeadlessAutoLoginFailed:
+            if config.headless:
+                Logger.warning("⚠️ Headless auto-login failed. Retrying in headed (non-headless) mode...")
+                config.headless = False
+                continue
+            break
+
+        finally:
+            bm.stop()
+            Logger.info(f"✨ Done! Cleaned up browser.")
 
 
 def _init_logging(debug: bool):
@@ -538,6 +557,8 @@ def _validate_arguments(args, parser):
 
 
 def main():
+    import socket
+    socket.setdefaulttimeout(30)
     parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
