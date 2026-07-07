@@ -81,3 +81,36 @@ def test_resolve_via_api_no_ks():
     mock_browser.driver = MagicMock()
     resolver = MediaUrlResolver(browser=mock_browser, ks=None)
     assert resolver._resolve_via_api("some-id") is None
+
+def test_select_resolution():
+    mock_browser = MagicMock()
+    mock_browser.driver = MagicMock()
+    resolver = MediaUrlResolver(browser=mock_browser, ks="dummy-ks")
+
+    # Mock master playlist content
+    master_m3u8 = """#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=854x480
+stream_480.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720
+stream_720.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1920x1080
+stream_1080.m3u8
+"""
+
+    mock_resp = MockResponse(None, 200)
+    mock_resp.text = master_m3u8
+
+    with patch.object(resolver.session, "get", return_value=mock_resp):
+        master_url = "https://cdn.kaltura.com/master.m3u8"
+        
+        # Test default/best selection
+        assert resolver._select_resolution(master_url, "best") == master_url
+        
+        # Test exact 720p selection
+        assert resolver._select_resolution(master_url, "720p") == "https://cdn.kaltura.com/stream_720.m3u8"
+        
+        # Test exact 1080p selection
+        assert resolver._select_resolution(master_url, "1080p") == "https://cdn.kaltura.com/stream_1080.m3u8"
+        
+        # Test fallback when requested height is missing (e.g. 360p falls back to 480p)
+        assert resolver._select_resolution(master_url, "360p") == "https://cdn.kaltura.com/stream_480.m3u8"

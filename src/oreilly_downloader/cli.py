@@ -242,7 +242,7 @@ def _process_single_video(
             return ("error", video, "No transcript available")
     else:
         # Extracting the m3u8 url using our decoupled resolver (tries API first, then falls back to sniffer)
-        m3u8 = resolver.resolve_m3u8_url(video.url)
+        m3u8 = resolver.resolve_m3u8_url(video.url, resolution=config.resolution)
         if m3u8:
             video.m3u8_url = m3u8
             if not is_audio_only:
@@ -625,6 +625,13 @@ def main():
         help="Max parallel media downloads (default: 3)",
     )
     parser.add_argument(
+        "--resolution",
+        "-r",
+        choices=["best", "1080p", "720p", "480p", "360p"],
+        default="best",
+        help="Video download resolution quality selection (default: best)",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable file logging to downloader.log",
@@ -671,6 +678,7 @@ def main():
         web_viewer=args.web_viewer,
         auto_signup=args.auto_signup,
         base_email=args.base_email,
+        resolution=args.resolution,
     )
 
     process_course(config)

@@ -225,17 +225,87 @@ class MediaUrlResolver:
             Logger.error(f" Sniffer fallback failed: {e}")
             return None
 
-    def resolve_m3u8_url(self, video_url: str, timeout: int = 45) -> Optional[str]:
+    def _select_resolution(self, master_url: str, target_resolution: str) -> str:
+        """Parses the master M3U8 file and extracts the sub-playlist URL for the target resolution."""
+        if not target_resolution or target_resolution == "best":
+            return master_url
+
+        try:
+            # Clean up target resolution string (e.g. "720p" -> 720, "1080p" -> 1080)
+            target_height = int(target_resolution.lower().replace("p", ""))
+        except ValueError:
+            return master_url
+
+        try:
+            resp = self.session.get(master_url, timeout=10)
+            if resp.status_code != 200:
+                return master_url
+
+            lines = resp.text.splitlines()
+            streams = [] # list of tuples: (height, url)
+            
+            i = 0
+            while i < len(lines):
+                line = lines[i].strip()
+                if line.startswith("#EXT-X-STREAM-INF:"):
+                    # Extract RESOLUTION value
+                    res_match = re.search(r'RESOLUTION=\d+x(\d+)', line)
+                    if res_match:
+                        height = int(res_match.group(1))
+                        # Read the next non-empty line as the stream URL
+                        i += 1
+                        while i < len(lines) and not lines[i].strip():
+                            i += 1
+                        if i < len(lines):
+                            stream_url = lines[i].strip()
+                            import urllib.parse
+                            absolute_url = urllib.parse.urljoin(master_url, stream_url)
+                            streams.append((height, absolute_url))
+                i += 1
+
+            if not streams:
+                return master_url
+
+            # Sort streams by height descending (best first)
+            streams.sort(key=lambda s: s[0], reverse=True)
+
+            # Find closest match that is <= target_height (or nearest)
+            best_match = None
+            for height, url in streams:
+                if height == target_height:
+                    best_match = url
+                    break
+
+            if best_match:
+                Logger.info(f"🎯 Selected matching stream quality: {target_resolution}")
+                return best_match
+
+            # Fallback to nearest resolution if exact match not found
+            closest_stream = min(streams, key=lambda s: abs(s[0] - target_height))
+            Logger.warning(f"⚠️ Requested resolution {target_resolution} not found. Falling back to nearest: {closest_stream[0]}p")
+            return closest_stream[1]
+
+        except Exception as e:
+            Logger.warning(f"⚠️ Resolution selection failed, falling back to master stream: {e}")
+            return master_url
+
+    def resolve_m3u8_url(self, video_url: str, timeout: int = 45, resolution: str = "best") -> Optional[str]:
         """Tries fast API-based resolution first, then falls back to Selenium sniffer."""
         video_id = self._extract_video_id(video_url)
+        m3u8_url = None
         if video_id and self.ks:
             Logger.info(f"⚡ Attempting fast API-based stream resolution for {video_id}...")
             m3u8_url = self._resolve_via_api(video_id)
             if m3u8_url:
                 Logger.success(f" Stream resolved via API!")
-                return m3u8_url
-            Logger.warning(f" Fast API resolution failed. Falling back to slow browser sniffer...")
-        else:
-            Logger.info(f"⏳ Stream ID not recognized. Initiating browser sniffer (waiting up to {timeout}s)...")
+        
+        if not m3u8_url:
+            if video_id and self.ks:
+                Logger.warning(f" Fast API resolution failed. Falling back to slow browser sniffer...")
+            else:
+                Logger.info(f"⏳ Stream ID not recognized. Initiating browser sniffer (waiting up to {timeout}s)...")
+            m3u8_url = self._resolve_via_sniffer(video_url, timeout)
 
-        return self._resolve_via_sniffer(video_url, timeout)
+        if m3u8_url:
+            return self._select_resolution(m3u8_url, resolution)
+        return None
