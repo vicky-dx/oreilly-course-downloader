@@ -1,13 +1,9 @@
 import argparse
 import os
 import json
-import time
-import concurrent.futures
 import re
 from typing import Optional
-
 from colorama import init, Fore
-from tqdm import tqdm
 import builtins
 import sys
 import traceback
@@ -21,7 +17,7 @@ def _handle_unhandled_exception(exctype, value, tb):
 init(autoreset=True)
 
 from .core.browsers import BrowserFactory, IBrowser, Logger
-from .core.auth import AuthService
+from .core.auth import AuthService, authenticate_session, HeadlessAutoLoginFailed
 from .core.course_scraper import CourseStructureScraper
 from .core.media_resolver import MediaUrlResolver
 from .core.downloader import DownloaderService
@@ -32,12 +28,6 @@ from .core.models import Course, Module, Lesson, Video
 from .core.utils import PathManager, SanityUtils
 from .core.vtt import VttProcessor
 from .core.config import DownloaderConfig
-
-
-class HeadlessAutoLoginFailed(Exception):
-    """Raised when auto-login (session restore) fails in headless mode, triggering a headed retry."""
-    pass
-
 
 
 def build_course(structure: dict, title: str = "OReilly Extracted Course") -> Course:
@@ -60,305 +50,8 @@ def _handle_authentication(
     auth: AuthService,
     config: DownloaderConfig,
 ) -> bool:
-    """Handles the authentication flow either manually, via credentials, or via existing session."""
-    if config.auto_signup:
-        Logger.info("=======================================================")
-        Logger.warning("🆕 AUTOMATIC SIGN UP ACTIVE")
-        Logger.warning("=======================================================")
-
-        from .core.gmail_trick import GmailTrickState, get_dot_variation
-        import random
-        import string
-
-        state = GmailTrickState(config.output_dir)
-        if config.base_email:
-            state.set_base_email(config.base_email)
-
-        # Smart Bypass: Check if a non-expired success entry already exists
-        active_trial = state.get_active_valid_trial(config.base_email)
-        if active_trial:
-            Logger.success(f"Active trial account found: {active_trial.get('email')} (Valid until {active_trial.get('expires_at')})")
-            if auth.is_logged_in():
-                Logger.success("Existing session is already authenticated. Skipping auto-signup.")
-                return True
-            
-            email_cached = active_trial.get("email")
-            password_cached = active_trial.get("password")
-            if email_cached and password_cached:
-                Logger.info("Attempting to restore session using cached credentials...")
-                if auth.login(email_cached, password_cached):
-                    Logger.success("Successfully restored active session!")
-                    return True
-                elif config.headless:
-                    raise HeadlessAutoLoginFailed()
-            Logger.warning("Existing trial login failed. Proceeding with new trial creation...")
-
-        base_email = state.get_base_email()
-        if not base_email:
-            Logger.error(" Error: Base email is required for auto-signup.")
-            Logger.warning("👉 Solution: Run 'uv run oreilly-dl --auto-signup --base-email \"your_email@gmail.com\"'")
-            return False
-
-        index = state.get_unused_random_index()
-        email_variant = get_dot_variation(base_email, index)
-
-        first_names = ["John", "Jane", "Robert", "Emily", "Michael", "Sarah", "David", "Jessica", "James", "Karen", "Thomas", "Lisa", "Charles", "Sandra"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson"]
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
-
-        # Generate a strong 16-character password
-        chars = string.ascii_letters + string.digits + "!@#$%^&*"
-        password = "".join(random.choice(chars) for _ in range(16))
-
-        Logger.info(f"📧 Base Email:    {base_email}")
-        Logger.info(f"📧 Email Variant: {email_variant} (Index: {index})")
-        Logger.info(f"👤 Name:          {first_name} {last_name}")
-        Logger.info(f"🔑 Password:      {password}")
-        Logger.warning("=======================================================\n")
-
-        success = auth.register_account(email_variant, password, first_name, last_name)
-        if success:
-            state.add_history(email_variant, index, "success", password=password)
-            Logger.success("Confirmed registered and logged in successfully. Profile saved!")
-            Logger.success(f"📝 Registered account details:")
-            Logger.success(f"   - Email: {email_variant}")
-            Logger.success(f"   - Password: {password}")
-            Logger.info("✨ You can now close the browser and run standard downloads without credentials.")
-        else:
-            state.add_history(email_variant, index, "failed", password=password)
-            Logger.error("Registration failed or OTP was incorrect.")
-        return False
-
-    if config.manual_login:
-        Logger.info("=======================================================")
-        Logger.warning(" MANUAL LOGIN MODE ACTIVE")
-        Logger.warning("=======================================================")
-
-        driver.navigation.to("https://learning.oreilly.com/accounts/login/")
-        Logger.info("⏳ Please log in via the newly opened browser window.")
-        Logger.warning("⏳ ONCE YOU ARE SUCCESSFULLY ON THE HOMEPAGE:")
-        input("👉 Press ENTER here in the terminal to continue...")
-
-        if auth.is_logged_in():
-            Logger.success(" Confirmed logged in manually. Profile saved!")
-        else:
-            Logger.error(" Warning: Could not detect logged-in state.")
-        Logger.success("✨ Manual setup complete. Please close and run the script normally to download courses.")
-        return False
-
-    if config.email and config.password:
-        if not auth.login(config.email, config.password):
-            Logger.error("Authentication failed. (Possible CAPTCHA block or invalid credentials)")
-            Logger.warning("👉 Solution: Run 'uv run oreilly-dl --manual-login --browser stealth' to log in yourself safely.")
-            return False
-        return True
-
-    if not auth.is_logged_in():
-        # Check if we have cached active trial credentials to automatically restore the session
-        from .core.gmail_trick import GmailTrickState
-        try:
-            state = GmailTrickState(config.output_dir)
-            active_trial = state.get_active_valid_trial()
-            if active_trial:
-                email_cached = active_trial.get("email")
-                password_cached = active_trial.get("password")
-                if email_cached and password_cached:
-                    Logger.info("Detected valid active trial account in history. Attempting auto-login...")
-                    if auth.login(email_cached, password_cached):
-                        Logger.success("Successfully logged in using cached trial credentials!")
-                        return True
-                    elif config.headless:
-                        raise HeadlessAutoLoginFailed()
-        except HeadlessAutoLoginFailed:
-            raise
-        except Exception as e:
-            Logger.debug(f"Failed during standard trial restore verification: {e}")
-
-        Logger.error("Error: You are NOT logged in.")
-        Logger.warning("👉 Solution: pass '--email' and '--password', OR use '--manual-login' / '--auto-signup'")
-        return False
-
-    return True
-
-
-def _process_single_video(
-    executor: concurrent.futures.ThreadPoolExecutor,
-    video: Video,
-    vid_idx: int,
-    lesson_title: str,
-    less_idx: int,
-    module_title: str,
-    mod_idx: int,
-    course_dir: str,
-    driver,
-    scraper: CourseStructureScraper,
-    resolver: MediaUrlResolver,
-    downloader: DownloaderService,
-    config: DownloaderConfig,
-    is_audio_only: bool = False,
-) -> Optional[tuple]:
-    """Handles extraction and immediate download of a single video. Returns Tuple if active action taken."""
-    vid_file, txt_file = PathManager.get_video_paths(
-        course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audio_only
-    )
-
-    if is_audio_only:
-        if os.path.exists(vid_file):
-            Logger.warning(f" Skipping {video.title} (audio already exists)")
-            return None
-    else:
-        if config.transcripts_only and os.path.exists(txt_file):
-            Logger.warning(f" Skipping {video.title} (transcript already extracted)")
-            return None
-        elif not config.transcripts_only and os.path.exists(vid_file):
-            # Video is downloaded. Check if the transcript is missing.
-            if not os.path.exists(txt_file):
-                Logger.warning(f" Video exists but transcript is missing for {video.title}. Extracting transcript...")
-                video.transcript = scraper.extract_transcript(video.url, resolver)
-                if video.transcript:
-                    downloader.save_transcript(video.transcript, txt_file)
-                    Logger.success(f" Transcript extracted.")
-            else:
-                Logger.warning(f" Skipping {video.title} (video and transcript already exist)")
-            return None
-
-    media_icon = "🎧" if is_audio_only else "🎥"
-    media_type = "Audio" if is_audio_only else "Video"
-    Logger.info(f"{media_icon} Extracting data for {media_type}: {video.title}")
-    Logger.warning(f"📁 Saving to folder: {os.path.basename(os.path.dirname(vid_file))}")
-
-    if config.transcripts_only:
-        if is_audio_only:
-            Logger.error(f" Transcripts-only mode is not applicable for audiobooks.")
-            return ("error", video, "Transcripts not supported for audiobooks")
-        video.transcript = scraper.extract_transcript(video.url, resolver)
-        if video.transcript:
-            downloader.save_transcript(video.transcript, txt_file)
-            Logger.success(f" Transcript extracted.")
-            return None
-        else:
-            Logger.error(f" No transcript available.")
-            return ("error", video, "No transcript available")
-    else:
-        # Extracting the m3u8 url using our decoupled resolver (tries API first, then falls back to sniffer)
-        m3u8 = resolver.resolve_m3u8_url(video.url, resolution=config.resolution)
-        if m3u8:
-            video.m3u8_url = m3u8
-            if not is_audio_only:
-                video.transcript = scraper.extract_transcript(video.url, resolver)
-                if video.transcript:
-                    downloader.save_transcript(video.transcript, txt_file)
-
-            Logger.success(f" M3U8 Fetched. Queuing {video.title} for background download...")
-            future = executor.submit(downloader.download_video, m3u8, vid_file)
-            return (future, video, vid_file)
-        else:
-            Logger.error(f" No m3u8 found.")
-            return ("error", video, "Could not resolve M3U8 stream URL")
-
-
-def _download_videos_concurrently(
-    course: Course,
-    driver,
-    scraper: CourseStructureScraper,
-    resolver: MediaUrlResolver,
-    downloader: DownloaderService,
-    config: DownloaderConfig,
-    course_dir: str,
-    is_audio_only: bool = False,
-):
-    """Iterates through the course structure and dispatches video processing with a bounded queue to avoid M3U8 expiration."""
-
-    if not is_audio_only and config.resolution != "best":
-        Logger.info(f"🎥 Target video resolution: {config.resolution}")
-
-    max_workers = config.max_workers
-    running_futures = set()
-    future_to_video = {}
-    failed_items = []
-
-    def process_done_futures(done_set):
-        for f in done_set:
-            if f in future_to_video:
-                video, vid_file = future_to_video.pop(f)
-                try:
-                    success = f.result()
-                    if not success:
-                        failed_items.append({
-                            "title": video.title,
-                            "url": video.url,
-                            "path": vid_file,
-                            "error": "ffmpeg download failed"
-                        })
-                except Exception as e:
-                    failed_items.append({
-                        "title": video.title,
-                        "url": video.url,
-                        "path": vid_file,
-                        "error": f"Exception: {str(e)}"
-                    })
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for mod_idx, module in enumerate(course.modules, 1):
-            for less_idx, lesson in enumerate(module.lessons, 1):
-                for vid_idx, video in enumerate(lesson.videos, 1):
-
-                    # Bounding the queue: Wait if we already have max_workers active downloads
-                    while len(running_futures) >= max_workers:
-                        done, running_futures = concurrent.futures.wait(
-                            running_futures,
-                            return_when=concurrent.futures.FIRST_COMPLETED,
-                        )
-                        process_done_futures(done)
-
-                    res = _process_single_video(
-                        executor=executor,
-                        video=video,
-                        vid_idx=vid_idx,
-                        lesson_title=lesson.title,
-                        less_idx=less_idx,
-                        module_title=module.title,
-                        mod_idx=mod_idx,
-                        course_dir=course_dir,
-                        driver=driver,
-                        scraper=scraper,
-                        resolver=resolver,
-                        downloader=downloader,
-                        config=config,
-                        is_audio_only=is_audio_only,
-                    )
-
-                    if res:
-                        if res[0] == "error":
-                            _, video, err_msg = res
-                            failed_items.append({
-                                "title": video.title,
-                                "url": video.url,
-                                "error": err_msg
-                            })
-                        else:
-                            future, video, vid_file = res
-                            running_futures.add(future)
-                            future_to_video[future] = (video, vid_file)
-
-        if running_futures:
-            done, _ = concurrent.futures.wait(running_futures)
-            process_done_futures(done)
-
-    # Dead Letter Queue (DLQ) Reporting and Exporting
-    if failed_items:
-        dlq_path = os.path.join(course_dir, "failed_downloads.json")
-        try:
-            with open(dlq_path, "w", encoding="utf-8") as f:
-                json.dump(failed_items, f, indent=2)
-            Logger.warning(f"{len(failed_items)} items failed to process/download.")
-            Logger.warning(f"👉 Dead Letter Queue (DLQ) log exported to: {dlq_path}")
-        except Exception as e:
-            Logger.error(f"{len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
-    else:
-        media_name = "audiobook chapters" if is_audio_only else "course videos"
-        Logger.success(f"All {media_name} processed successfully!")
+    """Delegates authentication orchestration to AuthService helper (preserves test mocking compatibility)."""
+    return authenticate_session(auth, config)
 
 
 def process_course(config: DownloaderConfig):
@@ -385,22 +78,21 @@ def process_course(config: DownloaderConfig):
                 last_success = success_entries[-1]
                 active_trial = state.get_active_valid_trial()
                 if not active_trial:
-                    Logger.warning("=======================================================")
-                    Logger.warning("  ACTIVE TRIAL ACCOUNT HAS EXPIRED!")
-                    Logger.warning("=======================================================")
-                    Logger.info(f"Active Account:  {last_success.get('email')}")
-                    Logger.info(f"Expiration Date: {last_success.get('expires_at')}")
-                    Logger.warning("👉 Run 'uv run oreilly-dl --auto-signup' to create a new trial.")
-                    Logger.warning("=======================================================\n")
+                    Logger.panel("⚠️ ACTIVE TRIAL ACCOUNT HAS EXPIRED!", [
+                        f"Active Account:  {last_success.get('email')}",
+                        f"Expiration Date: {last_success.get('expires_at')}",
+                        "",
+                        "👉 Run 'uv run oreilly-dl --auto-signup' to create a new trial."
+                    ], border_color=Fore.YELLOW)
     except Exception as e:
         Logger.debug(f"Failed to check active trial status in process_course: {e}")
 
-    if not config.url:
+    if not config.url and not config.manual_login and not config.auto_signup:
         Logger.error(" Error: Course URL is required.")
         return
 
     while True:
-        Logger.info("🚀 Initializing browser...")
+        Logger.info("Initializing browser...")
         bm: IBrowser = BrowserFactory.create(
             browser_type=config.browser_type,
             headless=config.headless,
@@ -416,6 +108,10 @@ def process_course(config: DownloaderConfig):
             auth = AuthService(bm)
 
             if not _handle_authentication(driver, auth, config):
+                return
+
+            if not config.url:
+                Logger.success("Session profile authenticated and saved successfully!")
                 return
 
             if config.epub:
@@ -436,7 +132,7 @@ def process_course(config: DownloaderConfig):
                 book_dl = BookDownloaderService(output_dir=config.output_dir)
                 success = book_dl.download_book(config, session)
                 if success:
-                    Logger.info("✨ Book downloaded and packaged successfully!")
+                    Logger.info("Book downloaded and packaged successfully!")
                 else:
                     Logger.error("Failed to download or package the book.")
                 return
@@ -466,13 +162,13 @@ def process_course(config: DownloaderConfig):
             resolver = MediaUrlResolver(bm, ks=ks)
             downloader = DownloaderService(output_dir=config.output_dir, ffmpeg_path=ffmpeg_path)
 
-            Logger.info("📚 Extracting course structure...")
+            Logger.info("Extracting course structure...")
             structure = scraper.extract_course_structure(config.url, config.audiobook)
             if not structure:
                 Logger.error(" Failed to extract course structure.")
                 return
 
-            # Dynamically extract course title from driver title (removing common suffix like [Video], [Book], [Audiobook], or [Audio Book])
+            # Dynamically extract course title from driver title
             course_title = "OReilly Extracted Course"
             try:
                 raw_title = driver.navigation.title
@@ -502,21 +198,21 @@ def process_course(config: DownloaderConfig):
             ) as f:
                 json.dump(course.structure, f, indent=2)
 
-            _download_videos_concurrently(
-                course, driver, scraper, resolver, downloader, config, course_dir, is_audio_only=is_audio_only
+            downloader.download_course(
+                course, scraper, resolver, config, course_dir, is_audio_only=is_audio_only
             )
             break
 
         except HeadlessAutoLoginFailed:
             if config.headless:
-                Logger.warning("⚠️ Headless auto-login failed. Retrying in headed (non-headless) mode...")
+                Logger.warning("Headless auto-login failed. Retrying in headed (non-headless) mode...")
                 config.headless = False
                 continue
             break
 
         finally:
             bm.stop()
-            Logger.info(f"✨ Done! Cleaned up browser.")
+            Logger.info(f"Done! Cleaned up browser.")
 
 
 def _init_logging(debug: bool):
@@ -541,10 +237,15 @@ def _handle_on24_vtt(on24_vtt: str, event_name: str, output_dir: str):
                 dl_svc.output_dir, event_name, "full_transcript.txt"
             )
             dl_svc.save_transcript(transcript, out_path)
-            Logger.info(f"✨ Success! Saved standalone transcript to: {out_path}")
+            Logger.info(f"Success! Saved standalone transcript to: {out_path}")
 
 
 def _validate_arguments(args, parser):
+    # 1. Credentials pair check
+    if (args.email and not args.password) or (args.password and not args.email):
+        parser.error("Both --email and --password must be provided together for credential login")
+
+    # 2. Auto-signup requirements check
     if args.auto_signup:
         if not args.base_email:
             parser.error("--base-email is strictly required when using --auto-signup")
@@ -553,10 +254,57 @@ def _validate_arguments(args, parser):
         if "gmail.com" not in domain and "googlemail.com" not in domain:
             parser.error("--base-email must be a Gmail address (e.g. 'username@gmail.com') as auto-signup works for Gmail only")
 
-    if not args.manual_login and not args.auto_signup and not args.url:
+    # 3. Main URL presence check
+    if not args.manual_login and not args.auto_signup and not args.on24_vtt and not args.url:
         parser.error(
             "The course URL is required unless using --manual-login, --auto-signup or --on24-vtt"
         )
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        Logger.print(f"\n{Fore.RED}❌  Error: {message}")
+        
+        tip = None
+        lower_msg = message.lower()
+        if "both --email and --password" in lower_msg:
+            tip = (
+                "👉 To login with your credentials, pass both options:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl <url> --email your@email.com --password yourpassword"
+            )
+        elif "base-email is strictly required" in lower_msg:
+            tip = (
+                "👉 To register a new account automatically, pass both options:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl <url> --auto-signup --base-email yourname@gmail.com"
+            )
+        elif "must be a gmail address" in lower_msg:
+            tip = (
+                "👉 The Gmail dot trick requires a Gmail inbox. Provide a Gmail address:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl <url> --auto-signup --base-email username@gmail.com"
+            )
+        elif "course url is required" in lower_msg:
+            tip = (
+                "👉 To download a course or audiobook, provide the URL as the first argument:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl https://learning.oreilly.com/videos/title/...\n\n"
+                f"{Fore.RESET}👉 Or, to set up session credentials standalone without a URL:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl --manual-login\n"
+                f"   {Fore.CYAN}uv run oreilly-dl --auto-signup --base-email username@gmail.com"
+            )
+        elif "unrecognized arguments" in lower_msg:
+            tip = (
+                "👉 You passed an unknown option. Refer to the help manual:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl --help"
+            )
+        elif "invalid int value" in lower_msg or "invalid choice" in lower_msg:
+            tip = (
+                "👉 Check the value you passed for that option. Run help for type details:\n"
+                f"   {Fore.CYAN}uv run oreilly-dl --help"
+            )
+
+        if tip:
+            Logger.print(f"\n{Fore.YELLOW}{tip}\n")
+            
+        sys.exit(2)
 
 
 def main():
@@ -568,91 +316,126 @@ def main():
             pass
     import socket
     socket.setdefaulttimeout(30)
-    parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
-    parser.add_argument("--email", help="Login email")
-    parser.add_argument("--password", help="Login password")
+    
+    parser = CustomArgumentParser(
+        description="O'Reilly Course (Video/Audio) Downloader",
+        usage="oreilly-dl [url] [options]",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    # 1. Target URL (Required/Optional depending on mode)
     parser.add_argument(
+        "url", 
+        nargs="?", 
+        help="URL of the course, audiobook, or book to download.\n[REQUIRED unless --manual-login, --auto-signup, or --on24-vtt is specified]"
+    )
+
+    # 2. Authentication Settings
+    auth_group = parser.add_argument_group("Authentication Settings")
+    auth_group.add_argument(
+        "--email", 
+        help="O'Reilly login email address.\n[REQUIRED for credential login (must be paired with --password)]"
+    )
+    auth_group.add_argument(
+        "--password", 
+        help="O'Reilly login password.\n[REQUIRED for credential login (must be paired with --email)]"
+    )
+    auth_group.add_argument(
         "--manual-login",
         action="store_true",
-        help="Authenticate manually in a visible browser profile",
+        help="Log in manually using a visible browser profile.\n[Optional, saves session for subsequent runs]",
     )
-    parser.add_argument(
+    auth_group.add_argument(
         "--auto-signup",
         action="store_true",
-        help="Automated trial registration using Google dot trick (works for Gmail only)",
+        help="Register a new trial account automatically using Gmail dot trick.\n[Optional, requires --base-email]",
     )
-    parser.add_argument(
+    auth_group.add_argument(
         "--base-email",
-        help="Base Gmail address to use for the Google dot trick",
+        help="Base Gmail address used to generate variations (e.g. 'yourname@gmail.com').\n[REQUIRED when --auto-signup is active]",
     )
-    parser.add_argument(
-        "--no-headless",
-        action="store_true",
-        help="Run scraper browser in non-headless mode",
-    )
-    parser.add_argument(
-        "--browser",
-        choices=["firefox", "chrome", "stealth"],
-        default="stealth",
-        help="Browser type to use for scraping (default: stealth)",
-    )
-    parser.add_argument(
+
+    # 3. Content Options
+    content_group = parser.add_argument_group("Content & Media Format Options")
+    content_group.add_argument(
         "--epub",
         action="store_true",
-        help="Download O'Reilly books as EPUB files.",
+        help="Download O'Reilly books as EPUB files.\n[Optional]",
     )
-    parser.add_argument(
-        "--web-viewer",
-        action="store_true",
-        help="Generate an interactive, responsive local web reader application for offline viewing.",
-    )
-    parser.add_argument(
+    content_group.add_argument(
         "--audiobook",
         action="store_true",
-        help="Download O'Reilly audiobooks (saves files as .m4a and handles audiobook page layout).",
+        help="Download audiobooks / audio courses (saves as .m4a).\n[Optional]",
     )
-    parser.add_argument(
+    content_group.add_argument(
         "--transcripts-only",
         action="store_true",
-        help="Only download text transcripts. Skip media m3u8 downloading.",
+        help="Extract video/audio text transcripts only, bypassing media downloads.\n[Optional]",
     )
-    parser.add_argument(
-        "--output-dir",
-        default="downloads",
-        help="Directory to save downloaded files (default: downloads)",
+    content_group.add_argument(
+        "--web-viewer",
+        action="store_true",
+        help="Generate an interactive, responsive local web reader application for offline viewing.\n[Optional]",
     )
-    parser.add_argument(
+
+    # 4. Download Settings
+    dl_group = parser.add_argument_group("Download & Performance Options")
+    dl_group.add_argument(
         "--workers",
         type=int,
         default=3,
-        help="Max parallel media downloads (default: 3)",
+        help="Max parallel segment/media downloads (default: 3).\n[Optional]",
     )
-    parser.add_argument(
+    dl_group.add_argument(
         "--resolution",
         "-r",
         choices=["best", "1080p", "720p", "480p", "360p"],
         default="best",
-        help="Video download resolution quality selection (default: best)",
+        help="Target video stream resolution (default: best).\n[Optional]",
     )
-    parser.add_argument(
+    dl_group.add_argument(
+        "--output-dir",
+        default="downloads",
+        help="Root directory where downloads are saved (default: downloads).\n[Optional]",
+    )
+
+    # 5. Browser & Run Options
+    run_group = parser.add_argument_group("Browser & Execution Settings")
+    run_group.add_argument(
+        "--no-headless",
+        action="store_true",
+        help="Run browser in non-headless (visible) mode for debugging.\n[Optional]",
+    )
+    run_group.add_argument(
+        "--browser",
+        choices=["firefox", "chrome", "stealth"],
+        default="stealth",
+        help="Underlying browser automation profile (default: stealth).\n[Optional]",
+    )
+    run_group.add_argument(
         "--debug",
         action="store_true",
-        help="Enable file logging to downloader.log",
+        help="Enable full file logging to downloader.log.\n[Optional]",
     )
-    parser.add_argument(
+
+    # 6. ON24 Subtitle Mode
+    vtt_group = parser.add_argument_group("ON24 Live Event Subtitle Options")
+    vtt_group.add_argument(
         "--on24-vtt",
-        help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.",
+        help="Direct URL to an ON24 VTT subtitle file to extract a live-event transcript.\n[Optional]",
     )
-    parser.add_argument(
+    vtt_group.add_argument(
         "--event-name",
         default="ON24_Live_Event",
-        help="Name of the event to save the transcript under (default: ON24_Live_Event).",
+        help="Output folder/file name for the extracted ON24 event transcript.\n[Optional, defaults to 'ON24_Live_Event']",
     )
-    parser.add_argument("url", nargs="?", help="URL of the course or audiobook")
 
     args = parser.parse_args()
 
     _init_logging(args.debug)
+
+    # Draw beautiful product banner
+    Logger.banner()
 
     if args.on24_vtt:
         _handle_on24_vtt(args.on24_vtt, args.event_name, args.output_dir)
@@ -684,6 +467,8 @@ def main():
         resolution=args.resolution,
     )
 
+    if config.url:
+        Logger.config_summary(config)
     process_course(config)
 
 
