@@ -6,6 +6,11 @@ import time
 import threading
 from colorama import init, Fore
 from tqdm import tqdm
+import concurrent.futures
+import json
+from typing import Optional
+from .models import Course, Video
+from .utils import PathManager
 
 init(autoreset=True)
 
@@ -148,15 +153,11 @@ class DownloaderService:
                     reporter = ProgressReporter(base_name, bar_pos)
                     stderr_output = []
 
-                    while True:
-                        line = process.stderr.readline()
-                        if not line and process.poll() is not None:
-                            break
-                        if not line:
-                            continue
+                    for line in process.stderr:
                         stderr_output.append(line)
                         reporter.process_line(line, attempt)
 
+                    process.wait()
                     reporter.close()
 
                     if process.returncode == 0:
@@ -194,3 +195,175 @@ class DownloaderService:
                 f.write(transcript)
         except Exception as e:
             Logger.error(f" Failed to save transcript: {e}")
+
+    def _process_single_item(
+        self,
+        executor: concurrent.futures.ThreadPoolExecutor,
+        video: Video,
+        vid_idx: int,
+        lesson_title: str,
+        less_idx: int,
+        module_title: str,
+        mod_idx: int,
+        course_dir: str,
+        scraper,
+        resolver,
+        config,
+        is_audio_only: bool = False,
+    ) -> Optional[tuple]:
+        """Handles extraction and immediate download of a single video/audio. Returns Tuple if active action taken."""
+        vid_file, txt_file = PathManager.get_video_paths(
+            course_dir, mod_idx, module_title, less_idx, lesson_title, vid_idx, video.title, is_audio_only
+        )
+
+        if is_audio_only:
+            if os.path.exists(vid_file):
+                Logger.warning(f" Skipping {video.title} (audio already exists)")
+                return None
+        else:
+            if config.transcripts_only and os.path.exists(txt_file):
+                Logger.warning(f" Skipping {video.title} (transcript already extracted)")
+                return None
+            elif not config.transcripts_only and os.path.exists(vid_file):
+                # Video is downloaded. Check if the transcript is missing.
+                if not os.path.exists(txt_file):
+                    Logger.warning(f" Video exists but transcript is missing for {video.title}. Extracting transcript...")
+                    video.transcript = scraper.extract_transcript(video.url, resolver)
+                    if video.transcript:
+                        self.save_transcript(video.transcript, txt_file)
+                        Logger.success(f" Transcript extracted.")
+                else:
+                    Logger.warning(f" Skipping {video.title} (video and transcript already exist)")
+                return None
+
+        media_icon = "🎧" if is_audio_only else "🎥"
+        media_type = "Audio" if is_audio_only else "Video"
+        Logger.info(f"{media_icon} Extracting data for {media_type}: {video.title}")
+        Logger.warning(f"Saving to folder: {os.path.basename(os.path.dirname(vid_file))}")
+
+        if config.transcripts_only:
+            if is_audio_only:
+                Logger.error(f" Transcripts-only mode is not applicable for audiobooks.")
+                return ("error", video, "Transcripts not supported for audiobooks")
+            video.transcript = scraper.extract_transcript(video.url, resolver)
+            if video.transcript:
+                self.save_transcript(video.transcript, txt_file)
+                Logger.success(f" Transcript extracted.")
+                return None
+            else:
+                Logger.error(f" No transcript available.")
+                return ("error", video, "No transcript available")
+        else:
+            # Extracting the m3u8 url using our decoupled resolver (tries API first, then falls back to sniffer)
+            m3u8 = resolver.resolve_m3u8_url(video.url, resolution=config.resolution)
+            if m3u8:
+                video.m3u8_url = m3u8
+                if not is_audio_only:
+                    video.transcript = scraper.extract_transcript(video.url, resolver)
+                    if video.transcript:
+                        self.save_transcript(video.transcript, txt_file)
+
+                Logger.success(f" M3U8 Fetched. Queuing {video.title} for background download...")
+                future = executor.submit(self.download_video, m3u8, vid_file)
+                return (future, video, vid_file)
+            else:
+                Logger.error(f" No m3u8 found.")
+                return ("error", video, "Could not resolve M3U8 stream URL")
+
+    def download_course(
+        self,
+        course: Course,
+        scraper,
+        resolver,
+        config,
+        course_dir: str,
+        is_audio_only: bool = False,
+    ):
+        """Iterates through the course structure and dispatches video processing with a bounded queue."""
+        if not is_audio_only and config.resolution != "best":
+            Logger.info(f"Target video resolution: {config.resolution}")
+
+        max_workers = config.max_workers
+        running_futures = set()
+        future_to_video = {}
+        failed_items = []
+
+        def process_done_futures(done_set):
+            for f in done_set:
+                if f in future_to_video:
+                    video, vid_file = future_to_video.pop(f)
+                    try:
+                        success = f.result()
+                        if not success:
+                            failed_items.append({
+                                "title": video.title,
+                                "url": video.url,
+                                "path": vid_file,
+                                "error": "ffmpeg download failed"
+                            })
+                    except Exception as e:
+                        failed_items.append({
+                            "title": video.title,
+                            "url": video.url,
+                            "path": vid_file,
+                            "error": f"Exception: {str(e)}"
+                        })
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for mod_idx, module in enumerate(course.modules, 1):
+                for less_idx, lesson in enumerate(module.lessons, 1):
+                    for vid_idx, video in enumerate(lesson.videos, 1):
+
+                        # Bounding the queue: Wait if we already have max_workers active downloads
+                        while len(running_futures) >= max_workers:
+                            done, running_futures = concurrent.futures.wait(
+                                running_futures,
+                                return_when=concurrent.futures.FIRST_COMPLETED,
+                            )
+                            process_done_futures(done)
+
+                        res = self._process_single_item(
+                            executor=executor,
+                            video=video,
+                            vid_idx=vid_idx,
+                            lesson_title=lesson.title,
+                            less_idx=less_idx,
+                            module_title=module.title,
+                            mod_idx=mod_idx,
+                            course_dir=course_dir,
+                            scraper=scraper,
+                            resolver=resolver,
+                            config=config,
+                            is_audio_only=is_audio_only,
+                        )
+
+                        if res:
+                            if res[0] == "error":
+                                _, video, err_msg = res
+                                failed_items.append({
+                                    "title": video.title,
+                                    "url": video.url,
+                                    "error": err_msg
+                                })
+                            else:
+                                future, video, vid_file = res
+                                running_futures.add(future)
+                                future_to_video[future] = (video, vid_file)
+
+            if running_futures:
+                done, _ = concurrent.futures.wait(running_futures)
+                process_done_futures(done)
+
+        # Dead Letter Queue (DLQ) Reporting and Exporting
+        if failed_items:
+            dlq_path = os.path.join(course_dir, "failed_downloads.json")
+            try:
+                with open(dlq_path, "w", encoding="utf-8") as f:
+                    json.dump(failed_items, f, indent=2)
+                Logger.warning(f"{len(failed_items)} items failed to process/download.")
+                Logger.warning(f"Dead Letter Queue (DLQ) log exported to: {dlq_path}")
+            except Exception as e:
+                Logger.error(f"{len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
+        else:
+            media_name = "audiobook chapters" if is_audio_only else "course videos"
+            Logger.success(f"All {media_name} processed successfully!")

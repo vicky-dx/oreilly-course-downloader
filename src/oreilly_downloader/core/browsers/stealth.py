@@ -48,7 +48,7 @@ class StealthChromeBrowser(IBrowser):
         if self.clean_session:
             import shutil
             if os.path.exists(prof):
-                Logger.warning("🧹 Cleaning previous browser session profile to ensure a fresh registration...")
+                Logger.warning("Cleaning previous browser session profile to ensure a fresh registration...")
                 # Kill zombie processes first to release file locks
                 self._kill_zombie_chrome_processes(prof)
                 try:
@@ -59,7 +59,7 @@ class StealthChromeBrowser(IBrowser):
         lock_file = os.path.join(prof, "lockfile")
 
         if os.path.exists(lock_file):
-            Logger.warning("🧹 Stale browser profile lock detected. Automatically cleaning up background processes...")
+            Logger.warning("Stale browser profile lock detected. Automatically cleaning up background processes...")
             self._kill_zombie_chrome_processes(prof)
             try:
                 if os.path.exists(lock_file):
@@ -67,10 +67,10 @@ class StealthChromeBrowser(IBrowser):
             except Exception:
                 pass
 
-        Logger.info(f"🚀 Starting True Stealth Chrome (Headless: {self.headless})...")
-
         def handle_lock_error(exception):
             err_msg = str(exception)
+            if "supports chrome version" in err_msg.lower():
+                return exception
             if "cannot connect to chrome" in err_msg.lower() or "chrome not reachable" in err_msg.lower():
                 Logger.error("Browser Profile Lock Detected!")
                 Logger.warning("It looks like background Chrome/Chromedriver processes from a previous run are still active and locking the profile directory:")
@@ -80,6 +80,9 @@ class StealthChromeBrowser(IBrowser):
                 Logger.info("   2. Alternatively, run the script with '--browser chrome' or '--browser firefox'.")
                 return RuntimeError("Chrome profile locked by background processes. Please clean up Task Manager and rerun.")
             return exception
+
+        self._clean_uc_cache()
+        Logger.info(f"Starting True Stealth Chrome (Headless: {self.headless})...")
 
         try:
             raw_driver = uc.Chrome(options=self._get_options(), user_data_dir=prof)
@@ -93,15 +96,16 @@ class StealthChromeBrowser(IBrowser):
                 match = re.search(r"current browser version is (\d+)", err_msg, re.IGNORECASE)
                 if match:
                     ver = int(match.group(1))
-                    Logger.warning(f" Chrome version mismatch. Retrying with driver version {ver}...")
+                    Logger.warning(f"Chrome version mismatch. Retrying with driver version {ver}...")
                     
                     # Kill background processes and remove lockfile before retrying
                     # to release the profile directory lock
-                    Logger.info("🧹 Terminating zombie Chrome processes from failed attempt to release profile lock...")
+                    Logger.info("Terminating zombie Chrome processes from failed attempt to release profile lock...")
                     self._kill_zombie_chrome_processes(prof)
+                    self._clean_uc_cache()
                     try:
                         if os.path.exists(lock_file):
-                            Logger.info("🧹 Removing profile lockfile...")
+                            Logger.info("Removing profile lockfile...")
                             os.remove(lock_file)
                     except Exception as le:
                         Logger.debug(f"Failed to remove lockfile: {le}")
@@ -130,4 +134,25 @@ class StealthChromeBrowser(IBrowser):
     def stop(self):
         if hasattr(self, 'raw_driver') and self.raw_driver:
             self.raw_driver.quit()
+
+    def _clean_uc_cache(self):
+        """Cleans up undetected_chromedriver's binary cache to avoid FileExistsErrors on Windows."""
+        try:
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                uc_cache_dir = os.path.join(appdata, "undetected_chromedriver")
+                if os.path.exists(uc_cache_dir):
+                    # Forcefully kill any running drivers locking the files on Windows
+                    if os.name == "nt":
+                        import subprocess
+                        subprocess.run("taskkill /F /IM chromedriver.exe", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        subprocess.run("taskkill /F /IM undetected_chromedriver.exe", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    
+                    import shutil
+                    try:
+                        shutil.rmtree(uc_cache_dir, ignore_errors=True)
+                    except Exception as e:
+                        Logger.debug(f"Failed to remove uc cache directory: {e}")
+        except Exception as e:
+            Logger.debug(f"Failed to clean undetected_chromedriver cache: {e}")
 
