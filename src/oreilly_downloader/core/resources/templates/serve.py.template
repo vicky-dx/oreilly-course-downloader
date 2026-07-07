@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     if existing_port:
         url = f"http://127.0.0.1:{existing_port}/book/index.html"
-        Logger.info(f"ℹ️ Book reader server is already running for this book on port {existing_port}.")
+        Logger.info(f"Book reader server is already running for this book on port {existing_port}.")
         Logger.info("🔗 Opening reader page in browser...")
         webbrowser.open(url)
         sys.exit(0)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     httpd = OReillyHTTPServer(server_address, OReillyRequestHandler)
     
     url = f"http://127.0.0.1:{port}/book/index.html"
-    Logger.info(f"🚀 Starting O'Reilly Offline Reader Server on {url}")
+    Logger.info(f"Starting O'Reilly Offline Reader Server on {url}")
     Logger.info("Press Ctrl+C inside this window to stop the server.")
 
     # Auto-open browser tab

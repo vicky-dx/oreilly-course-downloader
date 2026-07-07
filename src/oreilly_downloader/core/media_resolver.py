@@ -192,7 +192,7 @@ class MediaUrlResolver:
             """
             urls = set()
             start_time = time.time()
-            Logger.info("🔍 Sniffing browser network traffic for .m3u8 stream...")
+            Logger.info("Sniffing browser network traffic for .m3u8 stream...")
             last_status_time = start_time
             while time.time() - start_time < timeout:
                 current_time = time.time()
@@ -277,16 +277,16 @@ class MediaUrlResolver:
                     break
 
             if best_match:
-                Logger.info(f"🎯 Selected matching stream quality: {target_resolution}")
+                Logger.info(f"Selected matching stream quality: {target_resolution}")
                 return best_match
 
             # Fallback to nearest resolution if exact match not found
             closest_stream = min(streams, key=lambda s: abs(s[0] - target_height))
-            Logger.warning(f"⚠️ Requested resolution {target_resolution} not found. Falling back to nearest: {closest_stream[0]}p")
+            Logger.warning(f"Requested resolution {target_resolution} not found. Falling back to nearest: {closest_stream[0]}p")
             return closest_stream[1]
 
         except Exception as e:
-            Logger.warning(f"⚠️ Resolution selection failed, falling back to master stream: {e}")
+            Logger.warning(f"Resolution selection failed, falling back to master stream: {e}")
             return master_url
 
     def resolve_m3u8_url(self, video_url: str, timeout: int = 45, resolution: str = "best") -> Optional[str]:
@@ -294,7 +294,7 @@ class MediaUrlResolver:
         video_id = self._extract_video_id(video_url)
         m3u8_url = None
         if video_id and self.ks:
-            Logger.info(f"⚡ Attempting fast API-based stream resolution for {video_id}...")
+            Logger.info(f"Attempting fast API-based stream resolution for {video_id}...")
             m3u8_url = self._resolve_via_api(video_id)
             if m3u8_url:
                 Logger.success(f" Stream resolved via API!")

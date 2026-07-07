@@ -32,7 +32,7 @@ class CourseStructureScraper:
         if video_url and self.driver:
             try:
                 if video_url not in self.driver.navigation.url:
-                    Logger.info("  ⏳ Navigating to video page for DOM transcript fallback...")
+                    Logger.info("Navigating to video page for DOM transcript fallback...")
                     self.driver.navigation.to(video_url)
             except Exception:
                 pass
@@ -237,7 +237,7 @@ class CourseStructureScraper:
         """
 
         try:
-            Logger.info("🔍 Scanning course structure (handling lazy-loaded accordions)...")
+            Logger.info("Scanning course structure (handling lazy-loaded accordions)...")
             self.driver.actions.set_script_timeout(60) # Set script timeout high enough for accordion expansion
             structure = self.driver.actions.execute_async_js(accordion_script, is_audiobook)
             if structure and "error" not in structure:
@@ -249,7 +249,7 @@ class CourseStructureScraper:
             Logger.warning(f" Modern scraper failed: {e}. Falling back to legacy scraper.")
 
         # 2. Fallback to legacy scraper (expects static list)
-        Logger.info("🔍 Scanning course structure using legacy fallback...")
+        Logger.info("Scanning course structure using legacy fallback...")
         legacy_script = r"""
         const isAudiobook = arguments[0] === true;
         function cleanName(text) {

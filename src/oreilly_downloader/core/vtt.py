@@ -20,7 +20,7 @@ class VttProcessor:
 
     @staticmethod
     def parse_vtt(vtt_content: str) -> List[Dict[str, str]]:
-        Logger.info("📝 Parsing VTT file...")
+        Logger.info("Parsing VTT file...")
         lines = vtt_content.split("\n")
         captions = []
 
@@ -62,7 +62,7 @@ class VttProcessor:
 
     @staticmethod
     def format_transcript(captions: List[Dict[str, str]], event_name: str) -> str:
-        Logger.info("📄 Formatting transcript...")
+        Logger.info("Formatting transcript...")
 
         transcript = f"{event_name}\n"
         transcript += "O'Reilly Live Event - Video Transcript\n"
