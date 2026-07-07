@@ -270,6 +270,9 @@ def _download_videos_concurrently(
 ):
     """Iterates through the course structure and dispatches video processing with a bounded queue to avoid M3U8 expiration."""
 
+    if not is_audio_only and config.resolution != "best":
+        Logger.info(f"🎥 Target video resolution: {config.resolution}")
+
     max_workers = config.max_workers
     running_futures = set()
     future_to_video = {}
