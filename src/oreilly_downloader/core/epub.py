@@ -130,10 +130,10 @@ class BookDownloaderService:
                                 try:
                                     with open(path, "r", encoding="utf-8") as f:
                                         content = f.read()
-                                    Logger.success(f"🎨 Found and applied custom CSS override from: {path}")
+                                    Logger.success(f"Found and applied custom CSS override from: {path}")
                                     break
                                 except Exception as ce:
-                                    Logger.warning(f" Failed to read CSS override file {path}: {ce}")
+                                    Logger.warning(f"Failed to read CSS override file {path}: {ce}")
                         
                         content = FONT_FACES_TEMPLATE + content + FORMATTING_OVERRIDES
                         with open(dest_path, "w", encoding="utf-8") as f:
@@ -168,11 +168,11 @@ class BookDownloaderService:
             Logger.error(f" Could not extract a valid ISBN/Book ID from URL: {config.url}")
             return False
 
-        Logger.info(f"📖 Detected Book ID (ISBN): {isbn}")
+        Logger.info(f"Detected Book ID (ISBN): {isbn}")
         
         # 1. Fetch book metadata
         meta_url = f"https://learning.oreilly.com/api/v2/epubs/urn:orm:book:{isbn}/"
-        Logger.info(f"⚡ Fetching book metadata...")
+        Logger.info(f"Fetching book metadata...")
         try:
             meta_resp = session.get(meta_url, timeout=15)
             if meta_resp.status_code != 200:
@@ -189,7 +189,7 @@ class BookDownloaderService:
         book_title = re.sub(r'\s*\[book\]\s*$', "", raw_title, flags=re.IGNORECASE).strip()
         sanitized_title = SanityUtils.sanitize_filename(book_title)
         
-        Logger.success(f"📖 Title: {book_title}")
+        Logger.success(f"Title: {book_title}")
 
         # Check if the book is already fully downloaded and packaged
         book_root_dir = os.path.join(self.output_dir, "books", "data", sanitized_title)
@@ -210,7 +210,7 @@ class BookDownloaderService:
         
         # 2. Fetch files list
         files_url = f"https://learning.oreilly.com/api/v2/epubs/urn:orm:book:{isbn}/files/?limit=1000"
-        Logger.info(f"⚡ Fetching book file structure...")
+        Logger.info(f"Fetching book file structure...")
         try:
             files_resp = session.get(files_url, timeout=15)
             if files_resp.status_code != 200:
@@ -238,7 +238,7 @@ class BookDownloaderService:
         
         # 3. Concurrently download all files
         max_workers = config.max_workers
-        Logger.info(f"📥 Downloading book assets concurrently (using {max_workers} workers)...")
+        Logger.info(f"Downloading book assets concurrently (using {max_workers} workers)...")
 
         def _download_task(asset: Dict[str, Any]) -> Dict[str, Any]:
             full_path = asset.get("full_path")
@@ -281,7 +281,7 @@ class BookDownloaderService:
 
         epub_filename = f"{sanitized_title}.epub"
         epub_path = os.path.join(book_root_dir, epub_filename)
-        Logger.info(f"📦 Packaging EPUB file: {epub_path}...")
+        Logger.info(f"Packaging EPUB file: {epub_path}...")
         
         try:
             with zipfile.ZipFile(epub_path, "w", zipfile.ZIP_DEFLATED) as epub:
@@ -318,7 +318,7 @@ class BookDownloaderService:
                         
                         epub.write(full_path, rel_zip_path)
             
-            Logger.success(f"🎉 Successfully created EPUB: {epub_path}")
+            Logger.success(f"Successfully created EPUB: {epub_path}")
 
             # 5. If web_viewer configuration is enabled, copy the temp directory to output interactive folder
             if getattr(config, "web_viewer", False):
@@ -418,12 +418,12 @@ class BookDownloaderService:
                     except Exception:
                         pass
 
-                    Logger.success(f"🎉 Successfully created interactive web viewer assets under: {book_assets_dir}")
-                    Logger.success(f"📚 Unified Library Dashboard created/updated at: {library_dir}")
-                    Logger.success(f"👉 Run '{os.path.join(library_dir, 'start_library.bat')}' (Windows) or './start_library.sh' (Mac/Linux) to view all your books!")
+                    Logger.success(f"Successfully created interactive web viewer assets under: {book_assets_dir}")
+                    Logger.success(f"Unified Library Dashboard created/updated at: {library_dir}")
+                    Logger.success(f"Run '{os.path.join(library_dir, 'start_library.bat')}' (Windows) or './start_library.sh' (Mac/Linux) to view all your books!")
                 except Exception as wve:
-                    Logger.warning(f" Warning: Could not update interactive web viewer folder: {wve}")
-                    Logger.warning("👉 Please close any open start_viewer.bat console window and try again.")
+                    Logger.warning(f"Warning: Could not update interactive web viewer folder: {wve}")
+                    Logger.warning("Please close any open start_viewer.bat console window and try again.")
 
             return True
         except Exception as e:
