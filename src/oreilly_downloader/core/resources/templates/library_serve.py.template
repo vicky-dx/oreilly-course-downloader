@@ -64,7 +64,11 @@ class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
                             category = "Tech"
                             
                             # Parse content.opf primarily
-                            opf_path = os.path.join(folder_path, "book", "content.opf")
+                            book_dir = os.path.join(folder_path, "book")
+                            opf_files = [f for f in os.listdir(book_dir) if f.endswith('.opf')] if os.path.exists(book_dir) else []
+                            opf_filename = opf_files[0] if opf_files else 'content.opf'
+                            opf_path = os.path.join(book_dir, opf_filename)
+                            
                             if os.path.exists(opf_path):
                                 try:
                                     with open(opf_path, "r", encoding="utf-8") as f:
@@ -98,12 +102,18 @@ class OReillyLibraryRequestHandler(http.server.SimpleHTTPRequestHandler):
                                     subject_match = re.search(r'<dc:subject[^>]*>(.*?)</dc:subject>', opf_str, re.DOTALL)
                                     if subject_match:
                                         category = subject_match.group(1).strip()
+                                    
+                                    # Try to clean up title and description if they are double-encoded
+                                    # Since metadata is parsed in Python, we can do a simple mojibake fix here
+                                    # but the downloader already fixes metadata files, so it's usually clean
                                 except Exception:
                                     pass
                             
                             # Fallback to toc.ncx if OPF title/creator parsing failed
                             if title == folder or author == "Unknown":
-                                toc_path = os.path.join(folder_path, "book", "toc.ncx")
+                                ncx_files = [f for f in os.listdir(book_dir) if f.endswith('.ncx')] if os.path.exists(book_dir) else []
+                                ncx_filename = ncx_files[0] if ncx_files else 'toc.ncx'
+                                toc_path = os.path.join(book_dir, ncx_filename)
                                 if os.path.exists(toc_path):
                                     try:
                                         with open(toc_path, "r", encoding="utf-8") as f:

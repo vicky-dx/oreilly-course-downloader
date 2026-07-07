@@ -1066,6 +1066,17 @@
   </div>
 
   <script>
+    let opfFile = '__OPF_FILE_PLACEHOLDER__';
+    let ncxFile = '__NCX_FILE_PLACEHOLDER__';
+    
+    // Backwards compatibility fallback if placeholders are not replaced
+    if (opfFile.startsWith('__OPF_')) {
+      opfFile = 'content.opf';
+    }
+    if (ncxFile.startsWith('__NCX_')) {
+      ncxFile = 'toc.ncx';
+    }
+
     let currentChapter = "";
     let flatChapters = [];
     let currentChapterIndex = -1;
@@ -1918,59 +1929,213 @@
       });
     }
 
-    // Load table of contents
-    fetch('toc.ncx')
-      .then(response => response.text())
-      .then(xmlStr => {
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(xmlStr, "text/xml");
-        const navMap = xml.getElementsByTagName("navMap")[0];
-        const tocList = document.getElementById('toc-list');
+    // Recursive Nav HTML Parser with chevron accordions for EPUB 3 Navigation Document
+    function parseNavHtml(navNode, container, level = 1) {
+      const ol = navNode.querySelector("ol") || navNode.querySelector("ul");
+      if (!ol) return;
+      
+      const ul = document.createElement('ul');
+      ul.classList.add(`level-${level}`);
+      
+      const children = Array.from(ol.childNodes).filter(n => n.nodeName === 'LI' || n.tagName === 'LI');
+      
+      children.forEach(child => {
+        const anchor = child.querySelector('a');
+        if (!anchor) return;
         
-        // Fetch book title and author
-        const titleEl = xml.getElementsByTagName("docTitle")[0];
-        if (titleEl) {
-          const textEl = titleEl.getElementsByTagName("text")[0];
-          if (textEl) {
-            document.getElementById('sidebar-book-title').innerText = textEl.textContent;
-            document.title = textEl.textContent + " - O'Reilly Offline Reader";
-          }
-        }
+        const label = anchor.textContent.trim();
+        const src = anchor.getAttribute('href');
         
-        const authorEl = xml.getElementsByTagName("docAuthor")[0];
-        if (authorEl) {
-          const textEl = authorEl.getElementsByTagName("text")[0];
-          if (textEl) document.getElementById('sidebar-book-author').innerText = "By " + textEl.textContent;
-        }
-
-        // Parse recursively
-        parseNode(navMap, tocList);
-
-        // Auto-load target chapter, last read chapter, or first chapter
-        const urlParams = new URLSearchParams(window.location.search);
-        let startCh = urlParams.get('ch');
-        if (!startCh) {
-          startCh = localStorage.getItem('last-read-chapter-' + getBookIsbn());
-        }
-        if (!startCh) {
-          startCh = (flatChapters.length > 0 ? flatChapters[0].src : null);
-        }
+        const li = document.createElement('li');
+        li.setAttribute('data-src', src);
+        li.classList.add(`item-level-${level}`);
         
-        // Sync local storage / server notes database
-        loadNotesFromServer()
-          .catch(err => console.error("Error loading notes database:", err))
-          .finally(() => {
-            if (startCh) {
-              const baseCh = startCh.split('#')[0];
-              const li = document.querySelector(`li[data-src="${startCh}"]`) || 
-                         document.querySelector(`li[data-src^="${baseCh}"]`);
-              loadChapter(startCh, li);
+        const itemWrapper = document.createElement('div');
+        itemWrapper.classList.add('item-wrapper');
+        
+        const span = document.createElement('span');
+        span.textContent = label;
+        itemWrapper.appendChild(span);
+        
+        const hasChildren = child.querySelector('ol') || child.querySelector('ul');
+        if (hasChildren) {
+          li.classList.add('collapsible');
+          const chevron = document.createElement('span');
+          chevron.className = 'chevron';
+          chevron.innerHTML = '▼';
+          
+          chevron.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const subUl = Array.from(li.childNodes).find(n => n.nodeName === 'UL' || n.tagName === 'UL');
+            if (subUl) {
+              const isCollapsed = subUl.style.display === 'none' || subUl.style.display === '';
+              if (isCollapsed) {
+                subUl.style.display = 'block';
+                chevron.innerHTML = '▲';
+                chevron.classList.add('expanded');
+              } else {
+                subUl.style.display = 'none';
+                chevron.innerHTML = '▼';
+                chevron.classList.remove('expanded');
+              }
             }
           });
-      })
-      .catch(err => {
-        console.error("Failed to load table of contents:", err);
+          
+          itemWrapper.appendChild(chevron);
+        }
+        
+        li.appendChild(itemWrapper);
+        ul.appendChild(li);
+        
+        flatChapters.push({ label, src });
+        
+        if (hasChildren) {
+          parseNavHtml(child, li, level + 1);
+        }
+        
+        // Event listener for navigation
+        itemWrapper.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navigateTo(src);
+        });
       });
+      
+      container.appendChild(ul);
+    }
+
+    function parseNcxToc(xmlStr) {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlStr, "text/xml");
+      const navMap = xml.getElementsByTagName("navMap")[0] || xml.querySelector("navMap");
+      if (!navMap) throw new Error("No navMap found in NCX");
+      const tocList = document.getElementById('toc-list');
+      
+      const titleEl = xml.getElementsByTagName("docTitle")[0] || xml.querySelector("docTitle");
+      if (titleEl) {
+        const textEl = titleEl.getElementsByTagName("text")[0] || titleEl.querySelector("text");
+        if (textEl) {
+          document.getElementById('sidebar-book-title').innerText = textEl.textContent;
+          document.title = textEl.textContent + " - O'Reilly Offline Reader";
+        }
+      }
+      
+      const authorEl = xml.getElementsByTagName("docAuthor")[0] || xml.querySelector("docAuthor");
+      if (authorEl) {
+        const textEl = authorEl.getElementsByTagName("text")[0] || authorEl.querySelector("text");
+        if (textEl) document.getElementById('sidebar-book-author').innerText = "By " + textEl.textContent;
+      }
+
+      parseNode(navMap, tocList);
+      finishLoading();
+    }
+
+    function loadOpfAndNav() {
+      return fetch(opfFile)
+        .then(response => {
+          if (!response.ok) throw new Error("OPF fetch failed");
+          return response.text();
+        })
+        .then(xmlStr => {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlStr, "text/xml");
+          
+          let title = "";
+          let author = "";
+          
+          const titleEl = xml.querySelector("title") || xml.getElementsByTagName("dc:title")[0];
+          if (titleEl) {
+            title = titleEl.textContent.trim();
+            document.getElementById('sidebar-book-title').innerText = title;
+            document.title = title + " - O'Reilly Offline Reader";
+          }
+          
+          const creatorEl = xml.querySelector("creator") || xml.getElementsByTagName("dc:creator")[0];
+          if (creatorEl) {
+            author = creatorEl.textContent.trim();
+            document.getElementById('sidebar-book-author').innerText = "By " + author;
+          }
+
+          const items = Array.from(xml.querySelectorAll("item") || xml.getElementsByTagName("item"));
+          const navItem = items.find(item => {
+            const props = item.getAttribute("properties") || "";
+            return props.split(" ").includes("nav");
+          }) || items.find(item => {
+            const href = item.getAttribute("href") || "";
+            return href.includes("-toc.xhtml") || href.includes("toc.xhtml") || href.includes("nav.xhtml");
+          });
+          
+          if (!navItem) throw new Error("No navigation/TOC document found in OPF manifest");
+          const navHref = navItem.getAttribute("href");
+          
+          return fetch(navHref)
+            .then(res => {
+              if (!res.ok) throw new Error("Nav document fetch failed: " + navHref);
+              return res.text();
+            })
+            .then(htmlStr => {
+              const htmlDoc = parser.parseFromString(htmlStr, "text/html");
+              const navEl = htmlDoc.querySelector("nav[epub\\:type='toc']") || htmlDoc.querySelector("nav") || htmlDoc.getElementById("toc");
+              if (!navEl) throw new Error("No <nav> element found in navigation document");
+              
+              const tocList = document.getElementById('toc-list');
+              parseNavHtml(navEl, tocList);
+              finishLoading();
+            });
+        });
+    }
+
+    function finishLoading() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let startCh = urlParams.get('ch');
+      if (!startCh) {
+        startCh = localStorage.getItem('last-read-chapter-' + getBookIsbn());
+      }
+      if (!startCh) {
+        startCh = (flatChapters.length > 0 ? flatChapters[0].src : null);
+      }
+      
+      loadNotesFromServer()
+        .catch(err => console.error("Error loading notes database:", err))
+        .finally(() => {
+          if (startCh) {
+            const baseCh = startCh.split('#')[0];
+            const li = document.querySelector(`li[data-src="${startCh}"]`) || 
+                       document.querySelector(`li[data-src^="${baseCh}"]`);
+            loadChapter(startCh, li);
+          }
+        });
+    }
+
+    function loadTableOfContents() {
+      if (ncxFile) {
+        return fetch(ncxFile)
+          .then(response => {
+            if (!response.ok) throw new Error("NCX fetch failed");
+            return response.text();
+          })
+          .then(xmlStr => parseNcxToc(xmlStr))
+          .catch(err => {
+            console.warn("Failed to load NCX TOC, falling back to OPF/Nav:", err);
+            return loadOpfAndNav().catch(e => {
+              console.error("Failed to load table of contents from any source:", e);
+              const wrapper = document.getElementById('book-content');
+              if (wrapper) {
+                wrapper.innerHTML = `<div style='text-align:center; color:red; padding-top: 150px;'><h3>Failed to load table of contents</h3><p>${e.message}</p></div>`;
+              }
+            });
+          });
+      } else {
+        return loadOpfAndNav().catch(e => {
+          console.error("Failed to load table of contents from OPF/Nav:", e);
+          const wrapper = document.getElementById('book-content');
+          if (wrapper) {
+            wrapper.innerHTML = `<div style='text-align:center; color:red; padding-top: 150px;'><h3>Failed to load table of contents</h3><p>${e.message}</p></div>`;
+          }
+        });
+      }
+    }
+
+    loadTableOfContents();
 
     // Update bottom pagination buttons
     function updateNavigation() {

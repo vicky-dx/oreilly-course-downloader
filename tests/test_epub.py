@@ -208,7 +208,7 @@ def test_download_book_with_web_viewer(tmp_path):
         html_viewer = f.read()
         assert "Offline Book Reader" in html_viewer
         assert "toc-list" in html_viewer
-        assert "fetch('toc.ncx')" in html_viewer
+        assert "loadTableOfContents()" in html_viewer
 
 def test_serve_py_template_syntax():
     from oreilly_downloader.core.templates import SERVE_PY_TEMPLATE

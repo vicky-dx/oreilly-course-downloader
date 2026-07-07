@@ -44,23 +44,60 @@ class BookDownloaderService:
             return match.group(0)
         return None
 
+    def fix_mojibake(self, text: str) -> str:
+        """Fixes common double-encoded UTF-8 (mojibake) sequences."""
+        if not text:
+            return text
+        replacements = {
+            "â": "“",
+            "â": "”",
+            "â": "’",
+            "â": "‘",
+            "â": "‐",
+            "â": "–",
+            "â": "—",
+            "â¯": " ",  # narrow no-break space -> normal space
+            "â€": " ",
+            "â¢": "•",
+            "â¦": "…",
+            "â¢": "™",
+            "â": "−",
+            "â ": "†",
+            "â¡": "‡",
+            "Ã¢â‚¬Å“": "“",
+            "Ã¢â‚¬Â": "”",
+            "Ã¢â‚¬â„¢": "’",
+        }
+        for bad, good in replacements.items():
+            text = text.replace(bad, good)
+        return text
+
     def _download_file(self, session: requests.Session, url: str, dest_path: str, isbn: str) -> bool:
         """Downloads a single file, handles relative path rewriting/XHTML wrapping for HTML files, and saves it locally."""
         try:
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             
-            # For HTML files: download, rewrite urls, wrap in XHTML skeleton, and save as text
-            if dest_path.endswith('.html') or dest_path.endswith('.xhtml'):
+            # Identify text files to clean up double encoding
+            is_text = False
+            for ext in ['.html', '.xhtml', '.css', '.ncx', '.opf']:
+                if dest_path.endswith(ext):
+                    is_text = True
+                    break
+
+            if is_text:
                 response = session.get(url, timeout=20)
                 if response.status_code == 200:
+                    response.encoding = 'utf-8'
                     content = response.text
                     
-                    # Rewrite O'Reilly absolute API paths to relative paths
-                    content = content.replace(f"/api/v2/epubs/urn:orm:book:{isbn}/files/", "")
-                    
-                    # Check if already wrapped, if not wrap it in a proper XHTML skeleton with book-content container
-                    if "<html>" not in content.lower():
-                        wrapped_content = f"""<?xml version="1.0" encoding="utf-8"?>
+                    # Fix any double-encoded UTF-8 (mojibake)
+                    content = self.fix_mojibake(content)
+
+                    # For HTML files: rewrite urls and wrap in XHTML if needed
+                    if dest_path.endswith('.html') or dest_path.endswith('.xhtml'):
+                        content = content.replace(f"/api/v2/epubs/urn:orm:book:{isbn}/files/", "")
+                        if "<html>" not in content.lower():
+                            wrapped_content = f"""<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
 <head>
@@ -74,42 +111,40 @@ class BookDownloaderService:
   </div>
 </body>
 </html>"""
-                        content = wrapped_content
-                    
-                    with open(dest_path, "w", encoding="utf-8") as f:
-                        f.write(content)
-                    return True
-                else:
-                    return False
+                            content = wrapped_content
+                        
+                        with open(dest_path, "w", encoding="utf-8") as f:
+                            f.write(content)
+                        return True
 
-            # For CSS files: download, prepend font face declarations, and save
-            if dest_path.endswith('.css'):
-                response = session.get(url, timeout=20)
-                if response.status_code == 200:
-                    css_content = response.text
-                    
-                    # Try to load custom override_v1.css from workspace
-                    override_paths = [
-                        os.path.join(os.getcwd(), "..", "override_v1.css"),
-                        os.path.join(os.getcwd(), "override_v1.css"),
-                        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "override_v1.css")
-                    ]
-                    found_override = False
-                    for path in override_paths:
-                        if os.path.exists(path):
-                            try:
-                                with open(path, "r", encoding="utf-8") as f:
-                                    css_content = f.read()
-                                Logger.success(f"🎨 Found and applied custom CSS override from: {path}")
-                                found_override = True
-                                break
-                            except Exception as ce:
-                                Logger.warning(f" Failed to read CSS override file {path}: {ce}")
-                    
-                    css_content = FONT_FACES_TEMPLATE + css_content + FORMATTING_OVERRIDES
-                    with open(dest_path, "w", encoding="utf-8") as f:
-                        f.write(css_content)
-                    return True
+                    # For CSS files: prepend fonts/formatting
+                    elif dest_path.endswith('.css'):
+                        # Try to load custom override_v1.css from workspace
+                        override_paths = [
+                            os.path.join(os.getcwd(), "..", "override_v1.css"),
+                            os.path.join(os.getcwd(), "override_v1.css"),
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "override_v1.css")
+                        ]
+                        for path in override_paths:
+                            if os.path.exists(path):
+                                try:
+                                    with open(path, "r", encoding="utf-8") as f:
+                                        content = f.read()
+                                    Logger.success(f"🎨 Found and applied custom CSS override from: {path}")
+                                    break
+                                except Exception as ce:
+                                    Logger.warning(f" Failed to read CSS override file {path}: {ce}")
+                        
+                        content = FONT_FACES_TEMPLATE + content + FORMATTING_OVERRIDES
+                        with open(dest_path, "w", encoding="utf-8") as f:
+                            f.write(content)
+                        return True
+
+                    # For metadata/xml files (.ncx, .opf)
+                    else:
+                        with open(dest_path, "w", encoding="utf-8") as f:
+                            f.write(content)
+                        return True
                 else:
                     return False
             
@@ -255,11 +290,15 @@ class BookDownloaderService:
                 mimetype_info.compress_type = zipfile.ZIP_STORED
                 epub.writestr(mimetype_info, "application/epub+zip")
 
+                # Find the actual OPF filename dynamically
+                opf_files = [f for f in os.listdir(temp_dir) if f.endswith('.opf')]
+                opf_file = opf_files[0] if opf_files else 'content.opf'
+
                 # EPUB Spec requirement: Write 'META-INF/container.xml'
-                container_xml = """<?xml version="1.0" encoding="UTF-8"?>
+                container_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
-    <rootfile full-path="content.opf" media-type="application/oebps-package+xml"/>
+    <rootfile full-path="{opf_file}" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>
 """
@@ -293,8 +332,20 @@ class BookDownloaderService:
                     
                     # Write local index.html viewer file
                     index_html_path = os.path.join(book_assets_dir, "index.html")
+                    
+                    # Find OPF and NCX files in temp_dir
+                    opf_files = [f for f in os.listdir(temp_dir) if f.endswith('.opf')]
+                    opf_file = opf_files[0] if opf_files else 'content.opf'
+                    
+                    ncx_files = [f for f in os.listdir(temp_dir) if f.endswith('.ncx')]
+                    ncx_file = ncx_files[0] if ncx_files else ''
+                    
+                    viewer_html = WEB_VIEWER_HTML_TEMPLATE
+                    viewer_html = viewer_html.replace('__OPF_FILE_PLACEHOLDER__', opf_file)
+                    viewer_html = viewer_html.replace('__NCX_FILE_PLACEHOLDER__', ncx_file)
+                    
                     with open(index_html_path, "w", encoding="utf-8") as f:
-                        f.write(WEB_VIEWER_HTML_TEMPLATE)
+                        f.write(viewer_html)
 
                     # Write local orm-icons.css stylesheet
                     orm_icons_path = os.path.join(book_assets_dir, "orm-icons.css")
@@ -313,6 +364,31 @@ class BookDownloaderService:
 
                         with open(override_css_path, "w", encoding="utf-8") as f:
                             f.write(override_css_content)
+
+                    # Ensure local epub.css stylesheet exists to prevent console 404 errors and restore layout styles
+                    epub_css_path = os.path.join(book_assets_dir, "epub.css")
+                    if not os.path.exists(epub_css_path):
+                        # Find other CSS files in the temp_dir to merge into epub.css
+                        other_css_files = []
+                        for root, _, files in os.walk(temp_dir):
+                            for file in files:
+                                if file.endswith('.css') and file not in ['orm-icons.css', 'override_v1.css', 'epub.css']:
+                                    other_css_files.append(os.path.join(root, file))
+                        
+                        if other_css_files:
+                            try:
+                                css_content = ""
+                                for css_file in other_css_files:
+                                    with open(css_file, "r", encoding="utf-8") as f:
+                                        css_content += f"/* Source: {os.path.basename(css_file)} */\n" + f.read() + "\n"
+                                with open(epub_css_path, "w", encoding="utf-8") as f:
+                                    f.write(css_content)
+                            except Exception:
+                                with open(epub_css_path, "w", encoding="utf-8") as f:
+                                    f.write("/* Fallback placeholder stylesheet */\n")
+                        else:
+                            with open(epub_css_path, "w", encoding="utf-8") as f:
+                                f.write("/* Placeholder stylesheet to prevent console 404 errors */\n")
 
                     # Only write book reader assets, no individual viewer servers/launchers required.
 

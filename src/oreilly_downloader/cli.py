@@ -557,6 +557,12 @@ def _validate_arguments(args, parser):
 
 
 def main():
+    if sys.platform.startswith('win'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+            sys.stderr.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
     import socket
     socket.setdefaulttimeout(30)
     parser = argparse.ArgumentParser(description="O'Reilly Course (Video/Audio) Downloader")
@@ -647,7 +653,7 @@ def main():
     active_headless = False if (args.manual_login or args.auto_signup) else not args.no_headless
 
     is_epub = args.epub
-    if args.url and "/library/view/" in args.url:
+    if args.url and "/library/view/" in args.url and not args.audiobook:
         is_epub = True
 
     config = DownloaderConfig(
