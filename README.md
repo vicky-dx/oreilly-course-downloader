@@ -1,3 +1,10 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/vicky-dx/oreilly-course-downloader/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![uv](https://img.shields.io/badge/managed%20with-uv-6e56cf)](https://github.com/astral-sh/uv)
+[![GitHub stars](https://img.shields.io/github/stars/vicky-dx/oreilly-course-downloader)](https://github.com/vicky-dx/oreilly-course-downloader/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/vicky-dx/oreilly-course-downloader)](https://github.com/vicky-dx/oreilly-course-downloader/network/members)
+[![GitHub contributors](https://img.shields.io/github/contributors/vicky-dx/oreilly-course-downloader)](https://github.com/vicky-dx/oreilly-course-downloader/graphs/contributors)
+
 # O'Reilly Offline Downloader & Library
 
 A powerful, high-performance Python CLI for downloading **O'Reilly
