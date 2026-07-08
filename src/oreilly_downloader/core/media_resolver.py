@@ -297,13 +297,13 @@ class MediaUrlResolver:
             Logger.info(f"Attempting fast API-based stream resolution for {video_id}...")
             m3u8_url = self._resolve_via_api(video_id)
             if m3u8_url:
-                Logger.success(f" Stream resolved via API!")
+                Logger.success(f"Stream resolved via API!")
         
         if not m3u8_url:
             if video_id and self.ks:
-                Logger.warning(f" Fast API resolution failed. Falling back to slow browser sniffer...")
+                Logger.warning(f"Fast API resolution failed. Falling back to slow browser sniffer...")
             else:
-                Logger.info(f"⏳ Stream ID not recognized. Initiating browser sniffer (waiting up to {timeout}s)...")
+                Logger.info(f"Stream ID not recognized. Initiating browser sniffer (waiting up to {timeout}s)...")
             m3u8_url = self._resolve_via_sniffer(video_url, timeout)
 
         if m3u8_url:

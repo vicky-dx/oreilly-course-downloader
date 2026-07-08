@@ -140,12 +140,12 @@ def process_course(config: DownloaderConfig):
             # Retrieve Kaltura session token (ks) if we are in normal download mode
             ks = None
             if not config.manual_login:
-                Logger.info("🔑 Extracting active Kaltura Session (ks) token...")
+                Logger.info("Extracting active Kaltura Session (ks) token...")
                 ks = auth.get_ks()
                 if ks:
-                    Logger.success(f" Session acquired: {ks[:20]}...")
+                    Logger.success(f"Session acquired: {ks[:20]}...")
                 else:
-                    Logger.warning(" Failed to acquire Kaltura session (ks). Will rely on sniffer fallback.")
+                    Logger.warning("Failed to acquire Kaltura session (ks). Will rely on sniffer fallback.")
 
             # Pre-flight check for FFmpeg dependency if downloads are required
             ffmpeg_path = "ffmpeg"
@@ -165,7 +165,7 @@ def process_course(config: DownloaderConfig):
             Logger.info("Extracting course structure...")
             structure = scraper.extract_course_structure(config.url, config.audiobook)
             if not structure:
-                Logger.error(" Failed to extract course structure.")
+                Logger.error("Failed to extract course structure.")
                 return
 
             # Dynamically extract course title from driver title
@@ -183,7 +183,7 @@ def process_course(config: DownloaderConfig):
             is_audio_only = config.audiobook
 
             course = build_course(structure, title=course_title)
-            Logger.success(f" Found {len(course.modules)} modules")
+            Logger.success(f"Found {len(course.modules)} modules")
             if is_audio_only:
                 Logger.info("🎧 Audiobook/Audio-only course detected! Saving files with .m4a extension...")
                 base_dir = os.path.join(downloader.output_dir, "audiobooks")

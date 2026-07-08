@@ -218,22 +218,22 @@ class DownloaderService:
 
         if is_audio_only:
             if os.path.exists(vid_file):
-                Logger.warning(f" Skipping {video.title} (audio already exists)")
+                Logger.warning(f"Skipping {video.title} (audio already exists)")
                 return None
         else:
             if config.transcripts_only and os.path.exists(txt_file):
-                Logger.warning(f" Skipping {video.title} (transcript already extracted)")
+                Logger.warning(f"Skipping {video.title} (transcript already extracted)")
                 return None
             elif not config.transcripts_only and os.path.exists(vid_file):
                 # Video is downloaded. Check if the transcript is missing.
                 if not os.path.exists(txt_file):
-                    Logger.warning(f" Video exists but transcript is missing for {video.title}. Extracting transcript...")
+                    Logger.warning(f"Video exists but transcript is missing for {video.title}. Extracting transcript...")
                     video.transcript = scraper.extract_transcript(video.url, resolver)
                     if video.transcript:
                         self.save_transcript(video.transcript, txt_file)
-                        Logger.success(f" Transcript extracted.")
+                        Logger.success(f"Transcript extracted.")
                 else:
-                    Logger.warning(f" Skipping {video.title} (video and transcript already exist)")
+                    Logger.warning(f"Skipping {video.title} (video and transcript already exist)")
                 return None
 
         media_icon = "🎧" if is_audio_only else "🎥"
@@ -243,15 +243,15 @@ class DownloaderService:
 
         if config.transcripts_only:
             if is_audio_only:
-                Logger.error(f" Transcripts-only mode is not applicable for audiobooks.")
+                Logger.error(f"Transcripts-only mode is not applicable for audiobooks.")
                 return ("error", video, "Transcripts not supported for audiobooks")
             video.transcript = scraper.extract_transcript(video.url, resolver)
             if video.transcript:
                 self.save_transcript(video.transcript, txt_file)
-                Logger.success(f" Transcript extracted.")
+                Logger.success(f"Transcript extracted.")
                 return None
             else:
-                Logger.error(f" No transcript available.")
+                Logger.error(f"No transcript available.")
                 return ("error", video, "No transcript available")
         else:
             # Extracting the m3u8 url using our decoupled resolver (tries API first, then falls back to sniffer)
@@ -263,11 +263,11 @@ class DownloaderService:
                     if video.transcript:
                         self.save_transcript(video.transcript, txt_file)
 
-                Logger.success(f" M3U8 Fetched. Queuing {video.title} for background download...")
+                Logger.success(f"M3U8 Fetched. Queuing {video.title} for background download...")
                 future = executor.submit(self.download_video, m3u8, vid_file)
                 return (future, video, vid_file)
             else:
-                Logger.error(f" No m3u8 found.")
+                Logger.error(f"No m3u8 found.")
                 return ("error", video, "Could not resolve M3U8 stream URL")
 
     def download_course(

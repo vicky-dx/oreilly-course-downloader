@@ -77,13 +77,13 @@ class AuthService:
 
             # Check for captchas or errors
             if self.is_logged_in():
-                Logger.success(" Successfully logged in!")
+                Logger.success("Successfully logged in!")
                 return True
-            Logger.error(" Authentication failed or CAPTCHA blocked.")
+            Logger.error("Authentication failed or CAPTCHA blocked.")
             return False
 
         except Exception as e:
-            Logger.error(f" Login failed: {e}")
+            Logger.error(f"Login failed: {e}")
             return False
 
     def get_ks(self) -> Optional[str]:
@@ -311,7 +311,7 @@ def authenticate_session(
         except Exception as e:
             Logger.debug(f"Failed to retrieve active trial details for manual login: {e}")
 
-        _run_manual_login_fallback(auth, "🔑 MANUAL LOGIN MODE ACTIVE", lines)
+        _run_manual_login_fallback(auth, "MANUAL LOGIN MODE ACTIVE", lines)
         Logger.success("Manual setup complete. Please close and run the script normally to download courses.")
         return False
 

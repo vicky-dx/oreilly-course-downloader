@@ -241,12 +241,12 @@ class CourseStructureScraper:
             self.driver.actions.set_script_timeout(60) # Set script timeout high enough for accordion expansion
             structure = self.driver.actions.execute_async_js(accordion_script, is_audiobook)
             if structure and "error" not in structure:
-                Logger.success(f" Successfully scraped {len(structure)} chapters using modern scraper.")
+                Logger.success(f"Successfully scraped {len(structure)} chapters using modern scraper.")
                 return structure
             elif structure and "error" in structure:
-                Logger.error(f" Modern scraper returned error: {structure['error']}. Falling back to legacy scraper.")
+                Logger.error(f"Modern scraper returned error: {structure['error']}. Falling back to legacy scraper.")
         except Exception as e:
-            Logger.warning(f" Modern scraper failed: {e}. Falling back to legacy scraper.")
+            Logger.warning(f"Modern scraper failed: {e}. Falling back to legacy scraper.")
 
         # 2. Fallback to legacy scraper (expects static list)
         Logger.info("Scanning course structure using legacy fallback...")
