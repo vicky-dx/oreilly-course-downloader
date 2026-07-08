@@ -24,8 +24,8 @@ def test_sanitize_filename():
     # Test length truncation (max 80)
     long_name = "A" * 100
     sanitized = SanityUtils.sanitize_filename(long_name)
-    assert len(sanitized) <= 80
-    assert sanitized.endswith("...")
+    assert len(sanitized) == 80
+    assert sanitized == "A" * 80
 
 def test_get_ffmpeg_path_system_path():
     with patch("shutil.which", return_value="/usr/bin/ffmpeg"):

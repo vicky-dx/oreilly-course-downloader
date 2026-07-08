@@ -22,7 +22,7 @@ class SanityUtils:
         
         # Truncate length to prevent deep-nested MAX_PATH issues
         if len(name) > 80:
-            name = name[:77].strip(" .-") + "..."
+            name = name[:80].rstrip(" .-")
             
         return name if name else "unnamed"
 
