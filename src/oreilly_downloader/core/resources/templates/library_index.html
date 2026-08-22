@@ -1295,6 +1295,14 @@
   </div>
 
   <script>
+    // Fallback store stub to prevent ReferenceError if inline event handlers run before store is instantiated
+    window.store = {
+      state: { preferences: { theme: 'dark' }, books: [], readingStates: new Map(), ui: { pagination: {} } },
+      dispatch: function(action) {
+        console.debug("Early dispatch queued:", action);
+      }
+    };
+
     // --- 1. Storage Wrapper Class ---
     class LibraryStorage {
       static get KEY() { return 'library-data-v1'; }
@@ -1688,6 +1696,7 @@
 
     // Global Store Instance
     const store = new LibraryStore();
+    window.store = store;
 
     // --- 4. Event handlers and listeners ---
     let searchDebounceTimer = null;
@@ -1739,6 +1748,12 @@
         payload: { folder, categories: currentCats }
       });
     }
+
+    // Expose helpers globally for HTML inline handlers
+    window.toggleTheme = toggleTheme;
+    window.toggleHelpModal = toggleHelpModal;
+    window.addCustomTag = addCustomTag;
+    window.removeCustomTag = removeCustomTag;
 
     // --- 5. UI Render Components ---
 
