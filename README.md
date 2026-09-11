@@ -124,7 +124,7 @@ uv run oreilly-dl "COURSE_URL" --transcripts-only
 ## Manual Login
 
 ``` bash
-uv run oreilly-dl --manual-login
+uv run oreilly-dl --manual-login --browser stealth
 ```
 
 ------------------------------------------------------------------------
