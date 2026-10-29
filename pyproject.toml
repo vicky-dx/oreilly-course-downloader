@@ -1,7 +1,7 @@
 [project]
 name = "oreilly-downloader"
 version = "0.1.0"
-description = "Add your description here"
+description = "A powerful CLI tool for downloading O'Reilly courses, audiobooks, and books for offline study."
 readme = "README.md"
 authors = [
     { name = "vicky-dx", email = "vicky0x07@gmail.com" }

@@ -19,7 +19,4 @@ class DownloaderConfig:
     auto_signup: bool = False
     base_email: Optional[str] = None
     resolution: str = "best"
-
-
-
-
+    browser_binary: Optional[str] = None

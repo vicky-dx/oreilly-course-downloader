@@ -39,10 +39,44 @@ def test_get_ffmpeg_path_local_paths():
         assert path is not None
         assert mock_exists.called
 
+def test_get_chrome_path_explicit():
+    # Test custom path when file exists
+    with patch("os.path.exists", return_value=True):
+        custom = "/custom/path/to/chrome"
+        resolved = SanityUtils.get_chrome_path(custom)
+        assert resolved == os.path.abspath(custom)
+
+def test_get_chrome_path_env_var():
+    with patch.dict(os.environ, {"OREILLY_BROWSER_BINARY": "/env/path/chrome"}), \
+         patch("os.path.exists", side_effect=lambda p: p == "/env/path/chrome"):
+        resolved = SanityUtils.get_chrome_path()
+        assert resolved == os.path.abspath("/env/path/chrome")
+
+def test_get_chrome_path_shutil_which():
+    with patch.dict(os.environ, {}, clear=True), \
+         patch("os.path.exists", return_value=False), \
+         patch("shutil.which", side_effect=lambda cmd: "/bin/google-chrome" if cmd == "google-chrome" else None):
+        resolved = SanityUtils.get_chrome_path()
+        assert resolved == "/bin/google-chrome"
+
+def test_get_chrome_path_not_found():
+    with patch.dict(os.environ, {}, clear=True), \
+         patch("os.path.exists", return_value=False), \
+         patch("shutil.which", return_value=None):
+        assert SanityUtils.get_chrome_path() is None
+
+def test_get_firefox_path():
+    with patch("shutil.which", side_effect=lambda cmd: "/usr/bin/firefox" if cmd == "firefox" else None):
+        assert SanityUtils.get_firefox_path() == "/usr/bin/firefox"
+
 def test_path_manager_course_dir():
     course_dir = PathManager.get_course_dir("downloads", "Kafka: Event Streaming?")
     expected = os.path.join("downloads", "Kafka- Event Streaming")
     assert course_dir == expected
+
+def test_path_manager_profile_dir():
+    assert PathManager.get_profile_dir("test_prof") == os.path.join(os.getcwd(), "test_prof")
+    assert PathManager.get_profile_dir("test_prof", "custom_base") == os.path.join("custom_base", "test_prof")
 
 def test_path_manager_video_paths_with_videos_lesson():
     # When lesson title is "Videos", it should bypass the lesson folder
@@ -94,4 +128,3 @@ def test_path_manager_video_paths_with_audiobook():
     expected_txt = os.path.join(course_dir, "01 - Creational", "02 - Factory_transcript.txt")
     assert vid_file == expected_vid
     assert txt_file == expected_txt
-

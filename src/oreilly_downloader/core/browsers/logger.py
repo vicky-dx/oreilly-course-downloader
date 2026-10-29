@@ -148,9 +148,12 @@ class Logger:
             f"🔗 URL:        {display_url}",
             f"📁 Output Dir: {config.output_dir}",
             f"🚀 Browser:    {config.browser_type} (Headless: {config.headless})",
+        ]
+        if getattr(config, "browser_binary", None):
+            summary_lines.append(f"🌐 Binary:     {config.browser_binary}")
+        summary_lines.extend([
             f"🎥 Resolution: {config.resolution}",
             f"🧵 Workers:    {config.max_workers}"
-        ]
+        ])
         
         cls.panel("CONFIGURATION SUMMARY", summary_lines, border_color=Fore.CYAN)
-

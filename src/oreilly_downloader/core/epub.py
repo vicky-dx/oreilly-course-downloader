@@ -13,10 +13,7 @@ from .utils import SanityUtils
 from .templates import (
     FONT_FACES_TEMPLATE,
     FORMATTING_OVERRIDES,
-    BAT_LAUNCHER_TEMPLATE,
-    SH_LAUNCHER_TEMPLATE,
-    WEB_VIEWER_HTML_TEMPLATE,
-    SERVE_PY_TEMPLATE
+    WEB_VIEWER_HTML_TEMPLATE
 )
 from .library_templates import (
     ORM_ICONS_CSS_TEMPLATE,

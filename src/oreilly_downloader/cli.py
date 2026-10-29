@@ -93,12 +93,23 @@ def process_course(config: DownloaderConfig):
 
     while True:
         Logger.info("Initializing browser...")
-        bm: IBrowser = BrowserFactory.create(
-            browser_type=config.browser_type,
-            headless=config.headless,
-            clean_session=clean_session
-        )
-        driver = bm.start()
+        try:
+            factory_kwargs = {
+                "browser_type": config.browser_type,
+                "headless": config.headless,
+                "clean_session": clean_session,
+            }
+            if config.browser_binary is not None:
+                factory_kwargs["browser_binary"] = config.browser_binary
+
+            bm: IBrowser = BrowserFactory.create(**factory_kwargs)
+            driver = bm.start()
+        except (RuntimeError, FileNotFoundError) as be:
+            Logger.error(f"Browser initialization failed: {be}")
+            return
+        except Exception as e:
+            Logger.error(f"Unexpected error starting browser: {e}")
+            return
 
         if not driver:
             Logger.error(" Failed to start browser")
@@ -395,8 +406,9 @@ def main():
     )
     dl_group.add_argument(
         "--output-dir",
-        default="downloads",
-        help="Root directory where downloads are saved (default: downloads).\n[Optional]",
+        "-o",
+        default=os.environ.get("OREILLY_OUTPUT_DIR", "downloads"),
+        help="Root directory where downloads are saved (default: 'downloads' or $OREILLY_OUTPUT_DIR).\n[Optional]",
     )
 
     # 5. Browser & Run Options
@@ -411,6 +423,12 @@ def main():
         choices=["firefox", "chrome", "stealth"],
         default="stealth",
         help="Underlying browser automation profile (default: stealth).\n[Optional]",
+    )
+    run_group.add_argument(
+        "--browser-binary",
+        "-b",
+        default=os.environ.get("OREILLY_BROWSER_BINARY"),
+        help="Custom executable path for Chrome/Chromium/Firefox (default: $OREILLY_BROWSER_BINARY).\n[Optional]",
     )
     run_group.add_argument(
         "--debug",
@@ -465,6 +483,7 @@ def main():
         auto_signup=args.auto_signup,
         base_email=args.base_email,
         resolution=args.resolution,
+        browser_binary=args.browser_binary,
     )
 
     if config.url:
