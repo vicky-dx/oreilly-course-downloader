@@ -69,6 +69,25 @@ class BookDownloaderService:
             text = text.replace(bad, good)
         return text
 
+    _VOID_TAG_RE = re.compile(
+        r"<(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)\b"
+        r"((?:[^>\"']|\"[^\"]*\"|'[^']*')*?)\s*/?>",
+        re.IGNORECASE,
+    )
+
+    # Bot-protection snippets the server sometimes injects (root-relative scripts + overlay div).
+    _INJECTED_RE = re.compile(
+        r'<script\b[^>]*\bsrc="/[^"]*"[^>]*>\s*</script>'
+        r'|<div id="sec-overlay"[^>]*>\s*<div id="sec-container"></div>\s*</div>',
+        re.IGNORECASE,
+    )
+
+    @classmethod
+    def close_void_tags(cls, html: str) -> str:
+        """Strips injected scripts and self-closes void elements (<img ...> -> <img .../>) for valid XHTML."""
+        html = cls._INJECTED_RE.sub("", html)
+        return cls._VOID_TAG_RE.sub(lambda m: f"<{m.group(1)}{m.group(2)}/>", html)
+
     def _download_file(self, session: requests.Session, url: str, dest_path: str, isbn: str) -> bool:
         """Downloads a single file, handles relative path rewriting/XHTML wrapping for HTML files, and saves it locally."""
         try:
@@ -93,7 +112,8 @@ class BookDownloaderService:
                     # For HTML files: rewrite urls and wrap in XHTML if needed
                     if dest_path.endswith('.html') or dest_path.endswith('.xhtml'):
                         content = content.replace(f"/api/v2/epubs/urn:orm:book:{isbn}/files/", "")
-                        if "<html>" not in content.lower():
+                        content = self.close_void_tags(content)
+                        if "<html" not in content.lower():
                             wrapped_content = f"""<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
