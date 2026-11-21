@@ -6,6 +6,11 @@ import shutil
 import zipfile
 import requests
 import concurrent.futures
+from html import escape
+from html import unescape
+from html.parser import HTMLParser
+from xml.sax.saxutils import escape as xml_escape
+from xml.etree import ElementTree
 from typing import Optional, Dict, Any, List
 from colorama import Fore, init
 from tqdm import tqdm
@@ -25,12 +30,60 @@ from .library_templates import (
 
 init(autoreset=True)
 
+
+class _XHTMLSerializer(HTMLParser):
+    VOID_ELEMENTS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.parts: List[str] = []
+
+    def handle_starttag(self, tag: str, attrs):
+        rendered_attrs = "".join(
+            f' {name}="{escape(value or "", quote=True)}"'
+            for name, value in attrs
+        )
+        if tag.lower() in self.VOID_ELEMENTS:
+            self.parts.append(f"<{tag}{rendered_attrs}/>")
+        else:
+            self.parts.append(f"<{tag}{rendered_attrs}>")
+
+    def handle_startendtag(self, tag: str, attrs):
+        rendered_attrs = "".join(
+            f' {name}="{escape(value or "", quote=True)}"'
+            for name, value in attrs
+        )
+        self.parts.append(f"<{tag}{rendered_attrs}/>")
+
+    def handle_endtag(self, tag: str):
+        if tag.lower() not in self.VOID_ELEMENTS:
+            self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str):
+        self.parts.append(escape(data, quote=False))
+
+    def handle_entityref(self, name: str):
+        rendered = unescape(f"&{name};")
+        self.parts.append(escape(rendered, quote=False))
+
+    def handle_charref(self, name: str):
+        self.parts.append(escape(unescape(f"&#{name};"), quote=False))
+
+    def handle_comment(self, data: str):
+        self.parts.append(f"<!--{data}-->")
+
+
 class BookDownloaderService:
     def __init__(self, output_dir: str = "downloads"):
         self.output_dir = output_dir
 
     def extract_isbn(self, url: str) -> Optional[str]:
         """Extracts the ISBN (10-13 digits) from the book URL."""
+        if not isinstance(url, str):
+            return None
         # Check standard view pattern: /view/book-title/9781491983638/
         match = re.search(r'/view/[^/]+/(\d{10,13})', url)
         if match:
@@ -69,15 +122,68 @@ class BookDownloaderService:
             text = text.replace(bad, good)
         return text
 
+    def _normalize_xhtml(self, content: str) -> str:
+        """Serialize chapter HTML as XHTML and ensure a valid HTML root element."""
+        content = re.sub(r'^\s*<\?xml[^>]*\?>\s*', "", content, flags=re.IGNORECASE)
+        content = re.sub(r'<!doctype[^>]*>', "", content, flags=re.IGNORECASE)
+
+        serializer = _XHTMLSerializer()
+        serializer.feed(content)
+        serializer.close()
+        normalized = "".join(serializer.parts).strip()
+
+        if not re.search(r"<html(?:\s|>)", normalized, flags=re.IGNORECASE):
+            normalized = f"""<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Chapter</title>
+  <link rel="stylesheet" type="text/css" href="epub.css"/>
+</head>
+<body>
+  <div id="book-content">
+{normalized}
+  </div>
+</body>
+</html>"""
+
+        return '<?xml version="1.0" encoding="utf-8"?>\n' + normalized
+
+    def _get_asset_destination(self, temp_dir: str, full_path: str) -> Optional[str]:
+        """Resolve an API asset path without allowing it to escape temp_dir."""
+        if not isinstance(full_path, str) or not full_path.strip():
+            return None
+        if full_path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", full_path):
+            return None
+
+        normalized = full_path.replace("\\", "/").lstrip("/")
+        if any(part in ("", ".", "..") for part in normalized.split("/")):
+            return None
+
+        temp_dir = os.path.abspath(temp_dir)
+        dest_path = os.path.abspath(os.path.join(temp_dir, *normalized.split("/")))
+        if os.path.commonpath([temp_dir, dest_path]) != temp_dir:
+            return None
+        return dest_path
+
+    def _find_package_file(self, temp_dir: str, extension: str) -> str:
+        """Find an OPF or NCX file recursively and return its EPUB-relative path."""
+        for root, _, files in os.walk(temp_dir):
+            for file in files:
+                if file.lower().endswith(extension.lower()):
+                    rel_path = os.path.relpath(os.path.join(root, file), temp_dir)
+                    return rel_path.replace(os.path.sep, "/")
+        return "content.opf" if extension.lower() == ".opf" else ""
+
     def _download_file(self, session: requests.Session, url: str, dest_path: str, isbn: str) -> bool:
         """Downloads a single file, handles relative path rewriting/XHTML wrapping for HTML files, and saves it locally."""
         try:
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            lower_dest_path = dest_path.lower()
             
             # Identify text files to clean up double encoding
             is_text = False
             for ext in ['.html', '.xhtml', '.css', '.ncx', '.opf']:
-                if dest_path.endswith(ext):
+                if lower_dest_path.endswith(ext):
                     is_text = True
                     break
 
@@ -91,54 +197,44 @@ class BookDownloaderService:
                     content = self.fix_mojibake(content)
 
                     # For HTML files: rewrite urls and wrap in XHTML if needed
-                    if dest_path.endswith('.html') or dest_path.endswith('.xhtml'):
+                    if lower_dest_path.endswith('.html') or lower_dest_path.endswith('.xhtml'):
                         content = content.replace(f"/api/v2/epubs/urn:orm:book:{isbn}/files/", "")
-                        if "<html>" not in content.lower():
-                            wrapped_content = f"""<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <title>Chapter</title>
-  <link rel="stylesheet" type="text/css" href="epub.css"/>
-</head>
-<body>
-  <div id="book-content">
-{content}
-  </div>
-</body>
-</html>"""
-                            content = wrapped_content
+                        content = self._normalize_xhtml(content)
                         
                         with open(dest_path, "w", encoding="utf-8") as f:
                             f.write(content)
                         return True
 
                     # For CSS files: prepend fonts/formatting
-                    elif dest_path.endswith('.css'):
+                    elif lower_dest_path.endswith('.css'):
                         # Try to load custom override_v1.css from workspace
                         override_paths = [
                             os.path.join(os.getcwd(), "..", "override_v1.css"),
                             os.path.join(os.getcwd(), "override_v1.css"),
                             os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "override_v1.css")
                         ]
+                        override_content = ""
                         for path in override_paths:
                             if os.path.exists(path):
                                 try:
                                     with open(path, "r", encoding="utf-8") as f:
-                                        content = f.read()
+                                        override_content = f.read()
                                     Logger.success(f"Found and applied custom CSS override from: {path}")
                                     break
                                 except Exception as ce:
                                     Logger.warning(f"Failed to read CSS override file {path}: {ce}")
                         
-                        content = FONT_FACES_TEMPLATE + content + FORMATTING_OVERRIDES
+                        content = FONT_FACES_TEMPLATE + content + "\n" + override_content + "\n" + FORMATTING_OVERRIDES
                         with open(dest_path, "w", encoding="utf-8") as f:
                             f.write(content)
                         return True
 
                     # For metadata/xml files (.ncx, .opf)
                     else:
+                        try:
+                            ElementTree.fromstring(content)
+                        except ElementTree.ParseError:
+                            return False
                         with open(dest_path, "w", encoding="utf-8") as f:
                             f.write(content)
                         return True
@@ -181,7 +277,9 @@ class BookDownloaderService:
             return False
 
         # Extract title and sanitize it
-        raw_title = meta_data.get("title", f"OReilly_Book_{isbn}")
+        raw_title = meta_data.get("title")
+        if not isinstance(raw_title, str) or not raw_title.strip():
+            raw_title = f"OReilly_Book_{isbn}"
         # Clean title suffix patterns
         book_title = re.sub(r'\s*\[book\]\s*$', "", raw_title, flags=re.IGNORECASE).strip()
         sanitized_title = SanityUtils.sanitize_filename(book_title)
@@ -194,7 +292,7 @@ class BookDownloaderService:
         epub_path = os.path.join(book_root_dir, epub_filename)
         book_assets_dir = os.path.join(book_root_dir, "book")
         
-        epub_exists = os.path.exists(epub_path)
+        epub_exists = os.path.isfile(epub_path) and os.path.getsize(epub_path) > 0
         viewer_needed = getattr(config, "web_viewer", False)
         viewer_exists = os.path.exists(book_assets_dir)
         
@@ -240,7 +338,9 @@ class BookDownloaderService:
         def _download_task(asset: Dict[str, Any]) -> Dict[str, Any]:
             full_path = asset.get("full_path")
             download_url = asset.get("url")
-            dest_path = os.path.join(temp_dir, full_path)
+            dest_path = self._get_asset_destination(temp_dir, full_path)
+            if not dest_path or not download_url:
+                return {"asset": asset, "success": False}
             
             success = self._download_file(session, download_url, dest_path, isbn)
             return {"asset": asset, "success": success}
@@ -263,7 +363,10 @@ class BookDownloaderService:
         if failed_assets:
             Logger.warning(f" Failed to download {len(failed_assets)} asset(s).")
             # If critical metadata files (OPF or NCX) failed, abort
-            critical_failures = [f for f in failed_assets if f.get("full_path") in ["content.opf", "toc.ncx"]]
+            critical_failures = [
+                f for f in failed_assets
+                if str(f.get("full_path", "")).lower().endswith((".opf", ".ncx"))
+            ]
             if critical_failures:
                 Logger.error(f" Critical metadata asset(s) { [f.get('full_path') for f in critical_failures] } failed. Aborting EPUB creation.")
                 shutil.rmtree(temp_dir)
@@ -288,14 +391,13 @@ class BookDownloaderService:
                 epub.writestr(mimetype_info, "application/epub+zip")
 
                 # Find the actual OPF filename dynamically
-                opf_files = [f for f in os.listdir(temp_dir) if f.endswith('.opf')]
-                opf_file = opf_files[0] if opf_files else 'content.opf'
+                opf_file = self._find_package_file(temp_dir, ".opf")
 
                 # EPUB Spec requirement: Write 'META-INF/container.xml'
                 container_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
-    <rootfile full-path="{opf_file}" media-type="application/oebps-package+xml"/>
+    <rootfile full-path="{xml_escape(opf_file)}" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>
 """
@@ -331,11 +433,9 @@ class BookDownloaderService:
                     index_html_path = os.path.join(book_assets_dir, "index.html")
                     
                     # Find OPF and NCX files in temp_dir
-                    opf_files = [f for f in os.listdir(temp_dir) if f.endswith('.opf')]
-                    opf_file = opf_files[0] if opf_files else 'content.opf'
+                    opf_file = self._find_package_file(temp_dir, ".opf")
                     
-                    ncx_files = [f for f in os.listdir(temp_dir) if f.endswith('.ncx')]
-                    ncx_file = ncx_files[0] if ncx_files else ''
+                    ncx_file = self._find_package_file(temp_dir, ".ncx")
                     
                     viewer_html = WEB_VIEWER_HTML_TEMPLATE
                     viewer_html = viewer_html.replace('__OPF_FILE_PLACEHOLDER__', opf_file)

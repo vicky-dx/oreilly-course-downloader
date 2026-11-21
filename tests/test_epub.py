@@ -2,6 +2,7 @@ import os
 import shutil
 import zipfile
 import pytest
+from xml.etree import ElementTree
 from unittest.mock import MagicMock, patch
 from oreilly_downloader.core.config import DownloaderConfig
 from oreilly_downloader.core.epub import BookDownloaderService
@@ -119,6 +120,7 @@ def test_download_book_success(tmp_path):
         
         # Verify container.xml contents
         container_content = epub.read("META-INF/container.xml").decode("utf-8")
+        ElementTree.fromstring(container_content)
         assert 'full-path="content.opf"' in container_content
         
         # Verify downloaded files
@@ -264,5 +266,54 @@ def test_download_book_skip_if_exists(tmp_path):
     # Check that first call was indeed to the metadata url
     expected_meta_url = "https://learning.oreilly.com/api/v2/epubs/urn:orm:book:9781491958698/"
     mock_session.get.assert_called_once_with(expected_meta_url, timeout=15)
+
+
+def test_asset_destination_rejects_path_traversal(tmp_path):
+    service = BookDownloaderService(output_dir=str(tmp_path))
+    temp_dir = os.path.join(str(tmp_path), ".temp_test")
+    os.makedirs(temp_dir)
+
+    assert service._get_asset_destination(temp_dir, "../outside.html") is None
+    assert service._get_asset_destination(temp_dir, "/tmp/outside.html") is None
+    assert service._get_asset_destination(temp_dir, "OEBPS/chapter1.html") == os.path.join(temp_dir, "OEBPS", "chapter1.html")
+
+
+def test_nested_package_files_are_reported_in_epub(tmp_path):
+    service = BookDownloaderService(output_dir=str(tmp_path))
+    temp_dir = os.path.join(str(tmp_path), ".temp_test")
+    os.makedirs(os.path.join(temp_dir, "OEBPS"))
+
+    opf_path = os.path.join(temp_dir, "OEBPS", "content.opf")
+    ncx_path = os.path.join(temp_dir, "OEBPS", "toc.ncx")
+    with open(opf_path, "w", encoding="utf-8") as f:
+        f.write("<package/>")
+    with open(ncx_path, "w", encoding="utf-8") as f:
+        f.write("<ncx/>")
+
+    assert service._find_package_file(temp_dir, ".opf") == "OEBPS/content.opf"
+    assert service._find_package_file(temp_dir, ".ncx") == "OEBPS/toc.ncx"
+
+
+def test_chapter_html_is_valid_xhtml(tmp_path):
+    service = BookDownloaderService(output_dir=str(tmp_path))
+    chapter = service._normalize_xhtml(
+        '<div class="intro">Tom & Jerry<br><img src="cover.png"></div>'
+    )
+
+    root = ElementTree.fromstring(chapter)
+    assert root.tag.endswith("html")
+    assert '<br' in chapter
+    assert '<img' in chapter
+    assert "Tom &amp; Jerry" in chapter
+
+
+def test_existing_html_root_is_not_double_wrapped(tmp_path):
+    service = BookDownloaderService(output_dir=str(tmp_path))
+    chapter = service._normalize_xhtml(
+        '<html lang="en"><head><title>A &amp; B</title></head><body><p>Hello</p></body></html>'
+    )
+
+    assert chapter.count("<html") == 1
+    ElementTree.fromstring(chapter)
 
 
