@@ -317,3 +317,52 @@ def test_existing_html_root_is_not_double_wrapped(tmp_path):
     ElementTree.fromstring(chapter)
 
 
+def test_download_book_with_raw_url_string(tmp_path):
+    output_dir = os.path.join(tmp_path, "downloads")
+    os.makedirs(output_dir, exist_ok=True)
+
+    url = "https://learning.oreilly.com/library/view/test-book/9781491958698/"
+
+    # Mock responses
+    mock_session = MagicMock()
+    mock_meta_response = MagicMock()
+    mock_meta_response.status_code = 200
+    mock_meta_response.json.return_value = {
+        "title": "Raw String Book",
+        "isbn": "9781491958698"
+    }
+    mock_files_response = MagicMock()
+    mock_files_response.status_code = 200
+    mock_files_response.json.return_value = {
+        "count": 1,
+        "results": [
+            {
+                "full_path": "content.opf",
+                "url": "https://learning.oreilly.com/files/content.opf",
+                "media_type": "application/oebps-package+xml"
+            }
+        ]
+    }
+    mock_file_download_response = MagicMock()
+    mock_file_download_response.status_code = 200
+    mock_file_download_response.iter_content.return_value = [b"<package/>"]
+    mock_file_download_response.text = "<package/>"
+
+    def get_side_effect(req_url, *args, **kwargs):
+        if "files/?limit=" in req_url:
+            return mock_files_response
+        elif "/files/" in req_url:
+            return mock_file_download_response
+        return mock_meta_response
+
+    mock_session.get.side_effect = get_side_effect
+
+    service = BookDownloaderService(output_dir=output_dir)
+    # ISP: Pass raw URL string directly without constructing DownloaderConfig!
+    success = service.download_book(url, mock_session)
+    assert success is True
+    book_epub = os.path.join(output_dir, "books", "data", "Raw String Book", "Raw String Book.epub")
+    assert os.path.exists(book_epub)
+
+
+

@@ -132,11 +132,13 @@ class Logger:
     @classmethod
     def config_summary(cls, config):
         """Prints a beautiful config dashboard."""
-        target_mode = "Course (Video)"
+        target_mode = "Auto-Detect"
         if config.audiobook:
             target_mode = "Audiobook"
         elif config.epub:
             target_mode = "EPUB Book"
+        elif config.url and "/course/" in config.url.lower():
+            target_mode = "Course (Video)"
             
         display_url = config.url or 'N/A'
         # Prevent very long URLs from blowing up the console dashboard width (caps at ~55 visual chars)

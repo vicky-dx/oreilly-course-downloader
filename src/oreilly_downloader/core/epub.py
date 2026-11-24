@@ -254,11 +254,26 @@ class BookDownloaderService:
         except Exception:
             return False
 
-    def download_book(self, config: Any, session: requests.Session) -> bool:
-        """Downloads the complete O'Reilly book assets and packages them into an EPUB file."""
-        isbn = self.extract_isbn(config.url)
+    def download_book(
+        self,
+        config_or_url: Any,
+        session: requests.Session,
+        output_dir: Optional[str] = None,
+    ) -> bool:
+        """Downloads the complete O'Reilly book assets and packages them into an EPUB file (ISP compatible)."""
+        if isinstance(config_or_url, str):
+            url = config_or_url
+            config = None
+        else:
+            url = getattr(config_or_url, "url", str(config_or_url))
+            config = config_or_url
+
+        if output_dir:
+            self.output_dir = output_dir
+
+        isbn = self.extract_isbn(url)
         if not isbn:
-            Logger.error(f" Could not extract a valid ISBN/Book ID from URL: {config.url}")
+            Logger.error(f" Could not extract a valid ISBN/Book ID from URL: {url}")
             return False
 
         Logger.info(f"Detected Book ID (ISBN): {isbn}")
@@ -332,7 +347,7 @@ class BookDownloaderService:
         failed_assets = []
         
         # 3. Concurrently download all files
-        max_workers = config.max_workers
+        max_workers = getattr(config, "max_workers", 5)
         Logger.info(f"Downloading book assets concurrently (using {max_workers} workers)...")
 
         def _download_task(asset: Dict[str, Any]) -> Dict[str, Any]:

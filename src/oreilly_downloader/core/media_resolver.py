@@ -11,11 +11,9 @@ init(autoreset=True)
 
 class MediaUrlResolver:
     def __init__(self, browser, ks: Optional[str] = None):
-        if hasattr(browser, "driver") and browser.driver is not None:
-            self.browser = browser.driver
-        else:
-            self.browser = browser
-        self.driver = self.browser
+        from .utils import resolve_browser_driver
+        self.driver = resolve_browser_driver(browser)
+        self.browser = self.driver
         self.ks = ks
         self.cached_transcripts = {}
         self.session = requests.Session()
@@ -37,12 +35,8 @@ class MediaUrlResolver:
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
 
-        if self.driver:
-            try:
-                for cookie in self.driver.cookies.get_all():
-                    self.session.cookies.set(cookie['name'], cookie['value'])
-            except Exception as e:
-                Logger.warning(f" Warning: Could not initialize resolver session cookies: {e}")
+        from .utils import sync_browser_cookies
+        sync_browser_cookies(self.driver, self.session)
 
     def _extract_video_id(self, video_url: str) -> Optional[str]:
         """Extracts the unique O'Reilly videoclip ID from the URL (e.g. 9781663754035-a00004)."""

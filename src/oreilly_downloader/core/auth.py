@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from .browsers import Logger
 import os
 import time
@@ -7,13 +8,34 @@ init(autoreset=True)
 from .selectors import LoginSelectors, RegistrationSelectors
 
 
+class IOtpHandler(ABC):
+    """Abstract interface for user verification inputs (SRP & DIP)."""
+    @abstractmethod
+    def prompt_otp(self) -> str:
+        """Prompts the user for the 6-digit OTP verification code."""
+        pass
+
+    @abstractmethod
+    def prompt_manual_login(self) -> None:
+        """Prompts the user to press Enter after completing manual login in browser."""
+        pass
+
+
+class ConsoleOtpHandler(IOtpHandler):
+    """Default terminal-based OTP and manual login prompt handler."""
+    def prompt_otp(self) -> str:
+        return input("👉 Please check your email inbox and enter the 6-digit verification code: ").strip()
+
+    def prompt_manual_login(self) -> None:
+        input()
+
+
 class AuthService:
-    def __init__(self, browser):
-        if hasattr(browser, "driver") and browser.driver is not None:
-            self.browser = browser.driver
-        else:
-            self.browser = browser
-        self.driver = self.browser
+    def __init__(self, browser, otp_handler: Optional[IOtpHandler] = None):
+        from .utils import resolve_browser_driver
+        self.driver = resolve_browser_driver(browser)
+        self.browser = self.driver
+        self.otp_handler = otp_handler or ConsoleOtpHandler()
 
     def is_logged_in(self) -> bool:
         try:
@@ -172,7 +194,7 @@ class AuthService:
             self.driver.wait.for_present(self.driver.find_element(RegistrationSelectors.OTP_INPUTS), 30)
             
             Logger.success("📬 Verification email sent!")
-            code = input("👉 Please check your email inbox and enter the 6-digit verification code: ").strip()
+            code = self.otp_handler.prompt_otp()
             
             if len(code) != 6 or not code.isalnum():
                 Logger.error(" Invalid code format. Must be exactly 6 alphanumeric characters.")
@@ -215,6 +237,37 @@ from .config import DownloaderConfig
 import random
 import string
 
+class IdentityGenerator:
+    """Generates realistic user names and strong passwords (Single Responsibility Principle)."""
+    FIRST_NAMES = [
+        "John", "Jane", "Robert", "Emily", "Michael", "Sarah", "David",
+        "Jessica", "James", "Karen", "Thomas", "Lisa", "Charles", "Sandra"
+    ]
+    LAST_NAMES = [
+        "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller",
+        "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson"
+    ]
+
+    @classmethod
+    def generate_name(cls) -> tuple[str, str]:
+        return random.choice(cls.FIRST_NAMES), random.choice(cls.LAST_NAMES)
+
+    @classmethod
+    def generate_password(cls, length: int = 16) -> str:
+        specials = "!@#$%^&*"
+        required = [
+            random.choice(string.ascii_uppercase),
+            random.choice(string.ascii_lowercase),
+            random.choice(string.digits),
+            random.choice(specials),
+        ]
+        all_chars = string.ascii_letters + string.digits + specials
+        remaining = [random.choice(all_chars) for _ in range(max(0, length - len(required)))]
+        pwd_chars = required + remaining
+        random.shuffle(pwd_chars)
+        return "".join(pwd_chars)
+
+
 def authenticate_session(
     auth: AuthService,
     config: DownloaderConfig,
@@ -253,14 +306,8 @@ def authenticate_session(
         index = state.get_unused_random_index()
         email_variant = get_dot_variation(base_email, index)
 
-        first_names = ["John", "Jane", "Robert", "Emily", "Michael", "Sarah", "David", "Jessica", "James", "Karen", "Thomas", "Lisa", "Charles", "Sandra"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson"]
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
-
-        # Generate a strong 16-character password
-        chars = string.ascii_letters + string.digits + "!@#$%^&*"
-        password = "".join(random.choice(chars) for _ in range(16))
+        first_name, last_name = IdentityGenerator.generate_name()
+        password = IdentityGenerator.generate_password()
 
         # Show beautiful registration summary panel
         Logger.panel("🆕 AUTOMATIC SIGN UP ACTIVE", [
@@ -377,7 +424,7 @@ def _run_manual_login_fallback(auth: AuthService, panel_title: str, panel_lines:
     """Helper method to run a guided manual login fallback flow (follows DRY principle)."""
     Logger.panel(panel_title, panel_lines, border_color=Fore.YELLOW)
     auth.driver.navigation.to("https://learning.oreilly.com/accounts/login/")
-    input()
+    auth.otp_handler.prompt_manual_login()
     if auth.is_logged_in():
         Logger.success(" Confirmed logged in manually. Profile saved!")
         return True

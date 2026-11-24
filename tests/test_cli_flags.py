@@ -34,3 +34,25 @@ def test_stealth_chrome_browser_custom_binary_not_found_raises():
         with pytest.raises(FileNotFoundError):
             browser.start()
 
+
+def test_browser_factory_registry_extension():
+    from oreilly_downloader.core.browsers.base import IBrowser
+
+    class CustomMockBrowser(IBrowser):
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        def start(self):
+            return "started"
+
+        def stop(self):
+            pass
+
+    BrowserFactory.register("custom-engine", CustomMockBrowser)
+    try:
+        assert "custom-engine" in BrowserFactory.get_registered_types()
+        instance = BrowserFactory.create("custom-engine", headless=True)
+        assert isinstance(instance, CustomMockBrowser)
+    finally:
+        BrowserFactory.unregister("custom-engine")
+

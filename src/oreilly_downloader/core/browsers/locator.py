@@ -35,6 +35,14 @@ class Locator:
     def first(self) -> "Locator":
         return self.nth(0)
 
+    @property
+    def value(self) -> str:
+        return self._steps[-1][1] if self._steps else ""
+
+    @property
+    def strategy(self) -> str:
+        return self._steps[-1][0] if self._steps else ""
+
     def __eq__(self, other):
         if not isinstance(other, Locator):
             return False

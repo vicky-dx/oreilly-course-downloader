@@ -1,6 +1,13 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from oreilly_downloader.core.auth import authenticate_session, HeadlessAutoLoginFailed, AuthService
+from oreilly_downloader.core.auth import (
+    authenticate_session,
+    HeadlessAutoLoginFailed,
+    AuthService,
+    IdentityGenerator,
+    IOtpHandler,
+    ConsoleOtpHandler,
+)
 from oreilly_downloader.core.config import DownloaderConfig
 
 @pytest.fixture
@@ -63,3 +70,33 @@ def test_authenticate_session_manual_login(mock_fallback, mock_auth, tmp_path):
     
     assert authenticate_session(mock_auth, config) is False
     mock_fallback.assert_called_once()
+
+
+def test_identity_generator():
+    first, last = IdentityGenerator.generate_name()
+    assert len(first) >= 2
+    assert len(last) >= 2
+    pwd = IdentityGenerator.generate_password()
+    assert len(pwd) >= 12
+    assert any(c.isupper() for c in pwd)
+    assert any(c.islower() for c in pwd)
+    assert any(c.isdigit() for c in pwd)
+    assert any(c in "!@#$%^&*" for c in pwd)
+
+
+def test_console_otp_handler_prompts():
+    handler = ConsoleOtpHandler()
+    with patch("builtins.input", return_value="123456"):
+        assert handler.prompt_otp() == "123456"
+
+    with patch("builtins.input", return_value=""):
+        handler.prompt_manual_login()
+
+
+def test_auth_service_custom_otp_handler():
+    mock_driver = MagicMock()
+    custom_handler = MagicMock(spec=IOtpHandler)
+    service = AuthService(mock_driver, otp_handler=custom_handler)
+    assert service.otp_handler == custom_handler
+
+

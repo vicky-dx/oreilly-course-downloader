@@ -31,3 +31,18 @@ class Course:
         self.title: str = title
         self.modules: List["Module"] = modules or []
         self.structure: Dict[str, Any] = structure or {}
+
+
+def build_course(structure: dict, title: str = "OReilly Extracted Course") -> Course:
+    """Builds a Course object from the scraped structure dict."""
+    course = Course(title=title, modules=[], structure=structure)
+    for mod_name, lessons_dict in structure.items():
+        module = Module(title=mod_name, lessons=[])
+        for lesson_name, videos_list in lessons_dict.items():
+            lesson = Lesson(title=lesson_name, videos=[])
+            for v_data in videos_list:
+                video = Video(title=v_data["title"], url=v_data["url"])
+                lesson.videos.append(video)
+            module.lessons.append(lesson)
+        course.modules.append(module)
+    return course

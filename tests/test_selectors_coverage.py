@@ -1,7 +1,15 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from oreilly_downloader.core.auth import AuthService
-from oreilly_downloader.core.selectors import LoginSelectors, RegistrationSelectors
+from oreilly_downloader.core.selectors import LoginSelectors, RegistrationSelectors, AudiobookSelectors
+
+
+def test_audiobook_selectors_attributes():
+    assert AudiobookSelectors.CONTENT_ICON is not None
+    assert AudiobookSelectors.AUDIOBOOK_ICON is not None
+    assert AudiobookSelectors.ICON_LABEL is not None
+    assert AudiobookSelectors.TITLE_HEADER is not None
+    assert "orm-icon-audio-book" in AudiobookSelectors.AUDIOBOOK_ICON.value
 
 def test_auth_service_is_logged_in_uses_selectors():
     browser = MagicMock()

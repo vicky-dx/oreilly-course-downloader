@@ -2,8 +2,8 @@ import os
 import json
 import pytest
 from unittest.mock import MagicMock, patch
-from oreilly_downloader.core.downloader import DownloaderService
-from oreilly_downloader.core.config import DownloaderConfig
+from oreilly_downloader.core.downloader import DownloaderService, DlqReporter, TranscriptSaver
+from oreilly_downloader.core.config import DownloaderConfig, DownloadOptions
 from oreilly_downloader.core.models import Course, Module, Lesson, Video
 
 def test_download_course_success(tmp_path):
@@ -185,3 +185,55 @@ def test_download_course_failure_writes_dlq(tmp_path):
     assert failed_items[0]["title"] == "Intro Video"
     assert failed_items[0]["url"] == "https://learning.oreilly.com/video/1"
     assert failed_items[0]["error"] == "Could not resolve M3U8 stream URL"
+
+
+def test_dlq_reporter_standalone(tmp_path):
+    course_dir = tmp_path / "course"
+    os.makedirs(course_dir, exist_ok=True)
+    failed = [{"title": "Test 1", "url": "https://url1", "error": "timeout"}]
+    DlqReporter.write_report(failed, str(course_dir))
+
+    dlq_file = course_dir / "failed_downloads.json"
+    assert dlq_file.exists()
+    with open(dlq_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    assert len(data) == 1
+    assert data[0]["title"] == "Test 1"
+
+
+def test_transcript_saver_standalone(tmp_path):
+    out_file = tmp_path / "transcripts" / "test.txt"
+    TranscriptSaver.save("Hello transcript", str(out_file))
+    assert out_file.exists()
+    assert out_file.read_text(encoding="utf-8") == "Hello transcript"
+
+
+def test_download_course_with_download_options_only(tmp_path):
+    output_dir = tmp_path / "downloads"
+    course_dir = output_dir / "Test_Course"
+    os.makedirs(course_dir, exist_ok=True)
+
+    options = DownloadOptions(max_workers=1, resolution="best", transcripts_only=False)
+    video = Video(title="V1", url="https://learning.oreilly.com/video/1")
+    lesson = Lesson(title="L1", videos=[video])
+    module = Module(title="M1", lessons=[lesson])
+    course = Course(title="C1", modules=[module])
+
+    mock_scraper = MagicMock()
+    mock_scraper.extract_transcript.return_value = "Transcript text"
+    mock_resolver = MagicMock()
+    mock_resolver.resolve_m3u8_url.return_value = "https://stream.m3u8"
+
+    downloader = DownloaderService(output_dir=str(output_dir), ffmpeg_path="ffmpeg")
+    downloader.download_video = MagicMock(return_value=True)
+
+    downloader.download_course(
+        course=course,
+        scraper=mock_scraper,
+        resolver=mock_resolver,
+        options=options,
+        course_dir=str(course_dir),
+    )
+
+    downloader.download_video.assert_called_once()
+

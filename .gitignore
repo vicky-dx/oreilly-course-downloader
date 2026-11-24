@@ -65,3 +65,7 @@ downloader.log
 
 # temp folder
 /temp
+# Batch files
+download-me.txt
+download_me.txt
+urls.txt

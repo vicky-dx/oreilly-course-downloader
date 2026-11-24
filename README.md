@@ -168,6 +168,32 @@ Books downloaded using `--web-viewer` are automatically indexed inside the Offli
 uv run oreilly-dl "AUDIOBOOK_URL" --audiobook
 ```
 
+## Bulk / Batch Download (Mixed URLs & Format Autodetection)
+
+Download multiple books, audiobooks, and video courses at once in a **single browser session**:
+
+```bash
+# Pass a text file directly (automatically detected):
+uv run oreilly-dl download_me.txt
+
+# Or use the --batch flag with a custom cooling period (default: 30s):
+uv run oreilly-dl --batch download_me.txt --cooling-period 60
+```
+
+`download_me.txt` example:
+```text
+# Ebooks, Audiobooks, and Video Courses can be mixed together
+https://learning.oreilly.com/library/view/ai-engineering/9781098166298/
+https://learning.oreilly.com/videos/ai-engineering/9781663753052/
+https://learning.oreilly.com/course/agentic-ai-architectures/9781807785192/
+```
+
+- **Smart Format Autodetection:** Automatically identifies whether each URL is an eBook, Audiobook, or Video Course.
+- **Single Browser Session:** Browser opens once and reuses authenticated session tokens across all downloads.
+- **Cooling Period:** Configurable pause between downloads (default 30 seconds) to avoid rate limits and bot detections.
+- **Fault-Tolerant:** If one item fails, the remaining downloads continue and a summary report is printed at the end.
+
+
 ## Transcripts Only
 
 ```bash
@@ -285,7 +311,10 @@ usage: oreilly-dl [url] [options]
 | `--browser` | | `stealth` | Browser automation engine: `stealth`, `chrome`, or `firefox`. |
 | `--resolution` | `-r` | `best` | Target stream resolution: `best`, `1080p`, `720p`, `480p`, `360p`. |
 | `--workers` | | `3` | Maximum concurrent segment and asset downloads. |
-| `--no-headless` | | `False` | Run browser in non-headless (visible) window for debugging. |
+| `--batch` | `-f` | `None` | Path to text file containing URLs for batch download. |
+| `--cooling-period` | `--delay` | `30` | Seconds to wait between batch downloads to prevent rate-limits. |
+| `--headless` | | `False` | Run browser in hidden/background mode (default is visible). |
+| `--no-headless` | | `False` | Run browser in visible window (default). |
 | `--debug` | | `False` | Enable verbose disk logging to `downloader.log`. |
 | `--epub` | | `False` | Download book as an EPUB file. |
 | `--web-viewer` | | `False` | Generate offline interactive web reader & register in Unified Library. |

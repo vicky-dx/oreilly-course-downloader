@@ -203,3 +203,30 @@ class PathManager:
             )
         ext = ".m4a" if is_audio_only else ".mp4"
         return f"{vid_base_dir}{ext}", f"{vid_base_dir}_transcript.txt"
+
+
+def sync_browser_cookies(driver, session) -> None:
+    """Safely copies cookies from browser driver to requests.Session."""
+    if not driver or session is None:
+        return
+    try:
+        cookie_source = getattr(driver, "cookies", driver)
+        if hasattr(cookie_source, "get_all"):
+            cookies = cookie_source.get_all()
+        elif hasattr(cookie_source, "get_cookies"):
+            cookies = cookie_source.get_cookies()
+        else:
+            cookies = []
+
+        for cookie in cookies:
+            session.cookies.set(cookie["name"], cookie["value"])
+    except Exception as ce:
+        from .browsers import Logger
+        Logger.warning(f"Failed to copy cookies from browser: {ce}")
+
+
+def resolve_browser_driver(browser_or_driver):
+    """Resolves the active Browser driver from either an IBrowser instance or a Browser instance."""
+    if hasattr(browser_or_driver, "driver") and browser_or_driver.driver is not None:
+        return browser_or_driver.driver
+    return browser_or_driver

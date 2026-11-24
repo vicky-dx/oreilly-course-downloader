@@ -59,6 +59,31 @@ def test_headless_to_headed_retry_on_login_failure():
         assert config.headless is False
 
 
+def test_course_orchestrator_direct_execution():
+    from oreilly_downloader.core.orchestrator import CourseOrchestrator
+    config = DownloaderConfig(
+        url="https://learning.oreilly.com/course/test-course/123/",
+        headless=True,
+    )
+    mock_bm = MagicMock()
+    mock_driver = MagicMock()
+    mock_bm.start.return_value = mock_driver
+
+    mock_create = MagicMock(return_value=mock_bm)
+    mock_auth_handler = MagicMock(return_value=False)
+
+    orchestrator = CourseOrchestrator(
+        config=config,
+        browser_factory_create=mock_create,
+        auth_handler=mock_auth_handler,
+    )
+    result = orchestrator.execute()
+    assert result is False
+    mock_bm.start.assert_called_once()
+    mock_bm.stop.assert_called_once()
+
+
+
 from oreilly_downloader.core.downloader import DownloaderService
 import os
 

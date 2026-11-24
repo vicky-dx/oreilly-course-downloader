@@ -36,3 +36,11 @@ class ExtractorSelectors:
     ACCORDION_SUMMARY = Locator.css("button.MuiAccordionSummary-root")
     VIDEO_ANCHORS = Locator.css("a[href*='/videos/']")
     BUTTON_GENERIC = Locator.css("button")
+
+class AudiobookSelectors:
+    HEADER = Locator.css("header[class*='_header_']")
+    CONTENT_ICON = Locator.css("div[data-testid='contentIcon']")
+    AUDIOBOOK_ICON = Locator.css("div[data-testid='contentIcon'] span.orm-icon-audio-book, span.orm-icon-audio-book")
+    ICON_LABEL = Locator.css("div[data-testid='contentIcon'] span.orm-IconLabel-label")
+    ICON_TITLE = Locator.css("div[data-testid='contentIcon'] span.orm-Icon-title")
+    TITLE_HEADER = Locator.css("h1[data-datadog-id='ucv-title-header']")

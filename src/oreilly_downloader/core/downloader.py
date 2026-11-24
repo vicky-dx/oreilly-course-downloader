@@ -6,16 +6,28 @@ import time
 import threading
 from colorama import init, Fore
 from tqdm import tqdm
+from abc import ABC, abstractmethod
+from typing import Optional, List, Dict, Any, Union
 import concurrent.futures
 import json
-from typing import Optional
 from .models import Course, Video
 from .utils import PathManager
 
 init(autoreset=True)
 
 
-class FFmpegRunner:
+class IFFmpegRunner(ABC):
+    """Abstract interface for FFmpeg command execution (Dependency Inversion Principle)."""
+    @abstractmethod
+    def build_cmd(self, m3u8_url: str, temp_output_path: str, is_audio: bool) -> list:
+        pass
+
+    @abstractmethod
+    def start_process(self, cmd: list) -> subprocess.Popen:
+        pass
+
+
+class FFmpegRunner(IFFmpegRunner):
     def __init__(self, ffmpeg_path: str = "ffmpeg"):
         self.ffmpeg_path = ffmpeg_path
 
@@ -111,13 +123,50 @@ class RetryPolicy:
             time.sleep(3 * attempt)
 
 
+class TranscriptSaver:
+    """Handles local disk writing of textual transcripts (SRP)."""
+    @staticmethod
+    def save(transcript: str, filepath: str) -> None:
+        if not transcript:
+            return
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(transcript)
+        except Exception as e:
+            Logger.error(f" Failed to save transcript: {e}")
+
+
+class DlqReporter:
+    """Encapsulates Dead Letter Queue serialization and reporting (SRP)."""
+    @staticmethod
+    def write_report(failed_items: List[Dict[str, Any]], course_dir: str, is_audio_only: bool = False) -> None:
+        if failed_items:
+            dlq_path = os.path.join(course_dir, "failed_downloads.json")
+            try:
+                with open(dlq_path, "w", encoding="utf-8") as f:
+                    json.dump(failed_items, f, indent=2)
+                Logger.warning(f"{len(failed_items)} items failed to process/download.")
+                Logger.warning(f"Dead Letter Queue (DLQ) log exported to: {dlq_path}")
+            except Exception as e:
+                Logger.error(f"{len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
+        else:
+            media_name = "audiobook chapters" if is_audio_only else "course videos"
+            Logger.success(f"All {media_name} processed successfully!")
+
+
 class DownloaderService:
-    def __init__(self, output_dir: str = "downloads", ffmpeg_path: str = "ffmpeg"):
+    def __init__(
+        self,
+        output_dir: str = "downloads",
+        ffmpeg_path: str = "ffmpeg",
+        ffmpeg_runner: Optional[IFFmpegRunner] = None,
+    ):
         self.output_dir = output_dir
         self.ffmpeg_path = ffmpeg_path
         self._pos_lock = threading.Lock()
         self._active_positions = set()
-        self.ffmpeg_runner = FFmpegRunner(ffmpeg_path)
+        self.ffmpeg_runner = ffmpeg_runner or FFmpegRunner(ffmpeg_path)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -185,16 +234,8 @@ class DownloaderService:
             self._release_progress_position(bar_pos)
 
     def save_transcript(self, transcript: str, filepath: str):
-        """Saves a string transcript locally."""
-        if not transcript:
-            return
-
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        try:
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(transcript)
-        except Exception as e:
-            Logger.error(f" Failed to save transcript: {e}")
+        """Saves a string transcript locally (delegates to TranscriptSaver for SRP)."""
+        TranscriptSaver.save(transcript, filepath)
 
     def _process_single_item(
         self,
@@ -275,15 +316,23 @@ class DownloaderService:
         course: Course,
         scraper,
         resolver,
-        config,
-        course_dir: str,
+        config: Optional[Any] = None,
+        course_dir: str = "",
         is_audio_only: bool = False,
+        options: Optional[Any] = None,
     ):
         """Iterates through the course structure and dispatches video processing with a bounded queue."""
-        if not is_audio_only and config.resolution != "best":
-            Logger.info(f"Target video resolution: {config.resolution}")
+        download_opts = options or config
+        if download_opts is None:
+            from .config import DownloadOptions
+            download_opts = DownloadOptions()
 
-        max_workers = config.max_workers
+        resolution = getattr(download_opts, "resolution", "best")
+        max_workers = getattr(download_opts, "max_workers", 5)
+
+        if not is_audio_only and resolution != "best":
+            Logger.info(f"Target video resolution: {resolution}")
+
         running_futures = set()
         future_to_video = {}
         failed_items = []
@@ -333,7 +382,7 @@ class DownloaderService:
                             course_dir=course_dir,
                             scraper=scraper,
                             resolver=resolver,
-                            config=config,
+                            config=download_opts,
                             is_audio_only=is_audio_only,
                         )
 
@@ -354,16 +403,5 @@ class DownloaderService:
                 done, _ = concurrent.futures.wait(running_futures)
                 process_done_futures(done)
 
-        # Dead Letter Queue (DLQ) Reporting and Exporting
-        if failed_items:
-            dlq_path = os.path.join(course_dir, "failed_downloads.json")
-            try:
-                with open(dlq_path, "w", encoding="utf-8") as f:
-                    json.dump(failed_items, f, indent=2)
-                Logger.warning(f"{len(failed_items)} items failed to process/download.")
-                Logger.warning(f"Dead Letter Queue (DLQ) log exported to: {dlq_path}")
-            except Exception as e:
-                Logger.error(f"{len(failed_items)} items failed to process/download (Failed to write DLQ log: {e})")
-        else:
-            media_name = "audiobook chapters" if is_audio_only else "course videos"
-            Logger.success(f"All {media_name} processed successfully!")
+        # Dead Letter Queue (DLQ) Reporting and Exporting (SRP delegated to DlqReporter)
+        DlqReporter.write_report(failed_items, course_dir, is_audio_only=is_audio_only)

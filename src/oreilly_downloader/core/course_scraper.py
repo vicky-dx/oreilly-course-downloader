@@ -7,11 +7,9 @@ from .media_resolver import MediaUrlResolver
 
 class CourseStructureScraper:
     def __init__(self, browser):
-        if hasattr(browser, "driver") and browser.driver is not None:
-            self.browser = browser.driver
-        else:
-            self.browser = browser
-        self.driver = self.browser
+        from .utils import resolve_browser_driver
+        self.driver = resolve_browser_driver(browser)
+        self.browser = self.driver
 
     def extract_transcript(self, video_url: Optional[str] = None, resolver: Optional[MediaUrlResolver] = None) -> Optional[str]:
         if video_url and resolver:
@@ -143,6 +141,9 @@ class CourseStructureScraper:
         except Exception:
             pass
 
+        # Capture landing page title BEFORE any player navigation
+        self.course_title = getattr(getattr(self.driver, "navigation", None), "title", "") or ""
+
         # Scroll to bottom to ensure everything has loaded
         self.driver.actions.execute_js("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
@@ -200,8 +201,8 @@ class CourseStructureScraper:
                                 const text = (a.textContent || '').trim().toLowerCase();
                                 if (text === 'continue' || text === 'start') return false;
                                 
-                                if (href.includes('/videos/')) return true;
-                                if (href.includes('/library/view/') && href.includes('video')) return true;
+                                if (!isAudiobook && href.includes('/videos/')) return true;
+                                if (!isAudiobook && href.includes('/library/view/') && href.includes('video')) return true;
                                 
                                 if (isAudiobook) {
                                     const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
@@ -244,11 +245,110 @@ class CourseStructureScraper:
                 Logger.success(f"Successfully scraped {len(structure)} chapters using modern scraper.")
                 return structure
             elif structure and "error" in structure:
-                Logger.error(f"Modern scraper returned error: {structure['error']}. Falling back to legacy scraper.")
+                Logger.error(f"Modern scraper returned error: {structure['error']}. Falling back to player TOC/legacy.")
         except Exception as e:
-            Logger.warning(f"Modern scraper failed: {e}. Falling back to legacy scraper.")
+            Logger.warning(f"Modern scraper failed: {e}. Falling back to player TOC/legacy.")
 
-        # 2. Fallback to legacy scraper (expects static list)
+        # 2. Check for player / Table of Contents sidebar (common for audiobooks and player-layout courses)
+        try:
+            player_nav_script = r"""
+            const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+            const bookId = bookIdMatch ? bookIdMatch[0] : "";
+            const startLink = Array.from(document.querySelectorAll('a')).find(a => {
+                const href = a.getAttribute('href') || '';
+                const text = (a.textContent || '').trim().toLowerCase();
+                if (text === 'start' || text.includes('start learning') || text.includes('start listening')) return true;
+                if (bookId && href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`))) return true;
+                return false;
+            });
+            return startLink ? startLink.href : null;
+            """
+            start_url = self.driver.actions.execute_js(player_nav_script)
+            current_nav_url = getattr(getattr(self.driver, "navigation", None), "url", "") or ""
+            if start_url and start_url != current_nav_url:
+                Logger.info("Detected media player landing page. Navigating to player page to access TOC sidebar...")
+                self.driver.navigation.to(start_url)
+                time.sleep(3)
+
+            toc_script = r"""
+            const callback = arguments[arguments.length - 1];
+            (async () => {
+                try {
+                    const bookIdMatch = window.location.pathname.match(/\b\d{10,13}\b/);
+                    const bookId = bookIdMatch ? bookIdMatch[0] : "";
+
+                    function getLinks() {
+                        return Array.from(document.querySelectorAll('a')).filter(a => {
+                            const href = a.getAttribute('href') || '';
+                            if (!href.includes('/videos/') && !href.includes('/library/view/')) return false;
+                            if (bookId && href.match(new RegExp(`${bookId}-[a-zA-Z0-9_-]+`))) {
+                                if (href.endsWith(`/${bookId}/`) || href.includes('/continue/') || href.includes('/start/')) return false;
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+
+                    // Check if TOC button is already expanded
+                    const tocBtn = document.querySelector("button[data-testid='table-of-contents-button'], button[aria-label*='table of contents' i], button[data-testid*='toc' i]");
+                    const isAlreadyOpen = tocBtn && (
+                        tocBtn.getAttribute('aria-expanded') === 'true' ||
+                        tocBtn.classList.contains('_buttonActive_15j69_28') ||
+                        tocBtn.className.includes('Active')
+                    );
+
+                    // If NOT open and links count is <= 1, click to open drawer
+                    let links = getLinks();
+                    if (!isAlreadyOpen && links.length <= 1 && tocBtn) {
+                        tocBtn.click();
+                        await new Promise(r => setTimeout(r, 800));
+                        links = getLinks();
+                    }
+
+                    if (links.length === 0) {
+                        callback(null);
+                        return;
+                    }
+
+                    const seen = new Set();
+                    const uniqueChapters = [];
+                    for (const a of links) {
+                        if (!seen.has(a.href)) {
+                            seen.add(a.href);
+                            let title = (a.textContent || '').trim()
+                                .replace(/Complete$/i, '')
+                                .replace(/\d+[smh](\s+\d+[sm])?(\s*remaining)?\s*$/i, '')
+                                .trim();
+                            if (!title) title = `Chapter ${uniqueChapters.length + 1}`;
+                            uniqueChapters.push({ title: title, url: a.href });
+                        }
+                    }
+
+                    if (uniqueChapters.length > 0) {
+                        const structure = {
+                            "Table of Contents": {
+                                "Videos": uniqueChapters
+                            }
+                        };
+                        callback(structure);
+                    } else {
+                        callback(null);
+                    }
+                } catch (err) {
+                    callback({ error: err.message });
+                }
+            })();
+            """
+            self.driver.actions.set_script_timeout(30)
+            toc_structure = self.driver.actions.execute_async_js(toc_script)
+            if toc_structure and "error" not in toc_structure:
+                total_chapters = len(toc_structure.get("Table of Contents", {}).get("Videos", []))
+                Logger.success(f"Successfully scraped {total_chapters} chapters from player Table of Contents.")
+                return toc_structure
+        except Exception as te:
+            Logger.debug(f"Player TOC fallback check failed: {te}")
+
+        # 3. Fallback to legacy scraper (expects static list)
         Logger.info("Scanning course structure using legacy fallback...")
         legacy_script = r"""
         const isAudiobook = arguments[0] === true;
@@ -272,8 +372,8 @@ class CourseStructureScraper:
                 if (text === 'continue' || text === 'start') return false;
                 
                 // Match standard videos
-                if (link.href.includes('/videos/')) return true;
-                if (link.href.includes('/library/view/') && link.href.includes('video')) return true;
+                if (!isAudiobook && link.href.includes('/videos/')) return true;
+                if (!isAudiobook && link.href.includes('/library/view/') && link.href.includes('video')) return true;
                 
                 // Match bookId-specific patterns
                 if (isAudiobook && bookId) {
