@@ -61,6 +61,7 @@ class DownloaderConfig:
     browser_binary: Optional[str] = None
     batch_file: Optional[str] = None
     cooling_period: int = 5
+    debug: bool = False
 
     @property
     def browser_config(self) -> BrowserConfig:

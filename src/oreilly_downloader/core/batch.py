@@ -20,13 +20,72 @@ from .utils import PathManager, SanityUtils, sync_browser_cookies
 from .strategies import ExecutionContext, StrategyDispatcher
 
 
+def resolve_batch_file_path(file_path: str) -> str:
+    """Resolves batch file path, handling OS path separators, bash-escaped variants
+    (e.g. '.download-me.txt' produced by bash unescaping '.\\download-me.txt'),
+    and searching parent directories when running from a subfolder.
+    """
+    if not file_path or not isinstance(file_path, str):
+        return file_path
+
+    # Direct check
+    if os.path.isfile(file_path):
+        return os.path.abspath(file_path)
+
+    candidates = [
+        file_path,
+        os.path.normpath(file_path),
+        file_path.replace("\\", "/"),
+    ]
+
+    # Handle common bash escape artifact on Linux/macOS:
+    # If the user ran `.\download-me.txt` in bash, bash converts `\d` to `d`, resulting in `.download-me.txt`
+    basename = os.path.basename(file_path)
+    if basename.startswith(".") and not basename.startswith("..") and len(basename) > 1:
+        candidates.append(basename[1:])
+        dirname = os.path.dirname(file_path)
+        if dirname:
+            candidates.append(os.path.join(dirname, basename[1:]))
+
+    if basename not in candidates:
+        candidates.append(basename)
+
+    # Check candidates directly in current working directory
+    for cand in candidates:
+        if cand and os.path.isfile(cand):
+            return os.path.abspath(cand)
+
+    # Search in parent directories (up to 4 levels) if running from a subfolder
+    search_dirs = []
+    curr = os.getcwd()
+    for _ in range(4):
+        parent = os.path.dirname(curr)
+        if parent and parent != curr:
+            search_dirs.append(parent)
+            curr = parent
+        else:
+            break
+
+    for sdir in search_dirs:
+        for cand in candidates:
+            if not cand:
+                continue
+            full_p = os.path.normpath(os.path.join(sdir, cand))
+            if os.path.isfile(full_p):
+                Logger.info(f"Resolved batch file from parent directory: {full_p}")
+                return full_p
+
+    return file_path
+
+
 def parse_batch_file(file_path: str) -> List[str]:
     """Reads a text file of URLs, stripping comments (# and //) and blank lines."""
-    if not os.path.isfile(file_path):
+    resolved_path = resolve_batch_file_path(file_path)
+    if not os.path.isfile(resolved_path):
         raise FileNotFoundError(f"Batch file not found: {file_path}")
 
     urls: List[str] = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(resolved_path, "r", encoding="utf-8") as f:
         for line in f:
             cleaned = line.strip()
             if not cleaned or cleaned.startswith("#") or cleaned.startswith("//"):
@@ -92,7 +151,7 @@ class BatchProcessor:
         try:
             auth = AuthService(driver)
             if not authenticate_session(auth, self.config):
-                raise RuntimeError("Authentication failed during batch processing.")
+                return []
 
             # Prepare HTTP requests session with browser cookies
             session = requests.Session()

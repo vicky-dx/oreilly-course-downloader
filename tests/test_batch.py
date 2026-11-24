@@ -359,3 +359,60 @@ def test_cli_headless_flag_enables_headless(tmp_path):
         assert config.headless is True
 
 
+def test_resolve_batch_file_path_from_subdirectory(tmp_path, monkeypatch):
+    # Setup: root has download-me.txt, subfolder is cwd
+    root_file = tmp_path / "download-me.txt"
+    root_file.write_text("https://learning.oreilly.com/course/test/\n", encoding="utf-8")
+    sub_dir = tmp_path / "downloads" / "books"
+    sub_dir.mkdir(parents=True)
+
+    monkeypatch.chdir(sub_dir)
+
+    from oreilly_downloader.core.batch import resolve_batch_file_path, parse_batch_file
+    # Test resolving from subfolder using relative name
+    resolved = resolve_batch_file_path("download-me.txt")
+    assert os.path.isfile(resolved)
+    assert os.path.samefile(resolved, str(root_file))
+
+    # Test resolving bash unescape artifact: .download-me.txt -> download-me.txt
+    resolved_bash = resolve_batch_file_path(".download-me.txt")
+    assert os.path.isfile(resolved_bash)
+    assert os.path.samefile(resolved_bash, str(root_file))
+
+    # parse_batch_file should seamlessly parse it
+    urls = parse_batch_file(".download-me.txt")
+    assert len(urls) == 1
+
+
+def test_cli_user_friendly_error_when_batch_file_not_found(monkeypatch):
+    from oreilly_downloader.cli import main
+    test_args = ["oreilly-dl", "-f", "non_existent_batch_file_xyz.txt"]
+
+    with patch("sys.argv", test_args), \
+         patch("oreilly_downloader.core.browsers.logger.Logger.error") as mock_log_error, \
+         pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 1
+    mock_log_error.assert_called_once()
+    assert "Batch file not found" in mock_log_error.call_args[0][0]
+
+
+def test_cli_user_friendly_error_when_batch_file_empty(tmp_path):
+    empty_file = tmp_path / "empty.txt"
+    empty_file.write_text("# only comment\n", encoding="utf-8")
+
+    from oreilly_downloader.cli import main
+    test_args = ["oreilly-dl", "-f", str(empty_file)]
+
+    with patch("sys.argv", test_args), \
+         patch("oreilly_downloader.core.browsers.logger.Logger.error") as mock_log_error, \
+         pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 1
+    mock_log_error.assert_called_once()
+    assert "No valid URLs found" in mock_log_error.call_args[0][0]
+
+
+

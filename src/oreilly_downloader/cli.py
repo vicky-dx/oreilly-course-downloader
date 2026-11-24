@@ -92,9 +92,12 @@ def _validate_arguments(args, parser):
             parser.error("--base-email must be a Gmail address (e.g. 'username@gmail.com') as auto-signup works for Gmail only")
 
     # 3. Main URL or Batch file presence check
-    if args.url and os.path.isfile(args.url) and not getattr(args, "batch", None):
-        args.batch = args.url
-        args.url = None
+    if args.url and not getattr(args, "batch", None):
+        from .core.batch import resolve_batch_file_path
+        resolved = resolve_batch_file_path(args.url)
+        if os.path.isfile(resolved) or args.url.endswith((".txt", ".urls", ".list")):
+            args.batch = resolved if os.path.isfile(resolved) else args.url
+            args.url = None
 
     if not args.manual_login and not args.auto_signup and not args.on24_vtt and not args.url and not getattr(args, "batch", None):
         parser.error(
@@ -340,17 +343,41 @@ def main():
         browser_binary=args.browser_binary,
         batch_file=getattr(args, "batch", None),
         cooling_period=getattr(args, "cooling_period", DownloaderConfig.cooling_period),
+        debug=args.debug,
     )
 
     if config.batch_file:
         from .core.batch import BatchProcessor
-        processor = BatchProcessor(config)
-        processor.run()
+        try:
+            processor = BatchProcessor(config)
+            processor.run()
+        except FileNotFoundError as fnf:
+            Logger.error(f"{fnf}")
+            Logger.info(f"👉 Current directory: {os.getcwd()}")
+            Logger.info("👉 Please verify the file path and make sure the file exists.")
+            sys.exit(1)
+        except ValueError as ve:
+            Logger.error(f"{ve}")
+            Logger.info("👉 Ensure the batch file contains valid O'Reilly URLs (lines starting with # or // are ignored).")
+            sys.exit(1)
+        except Exception as e:
+            Logger.error(f"Batch processing error: {e}")
+            if config.debug:
+                traceback.print_exc()
+            sys.exit(1)
         return
 
     if config.url:
         Logger.config_summary(config)
-    process_course(config)
+    try:
+        success = process_course(config)
+        if not success:
+            sys.exit(1)
+    except Exception as e:
+        Logger.error(f"Download execution failed: {e}")
+        if config.debug:
+            traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
