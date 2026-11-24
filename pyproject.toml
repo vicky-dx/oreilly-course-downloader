@@ -1,6 +1,6 @@
 [project]
 name = "oreilly-downloader"
-version = "0.1.0"
+version = "2.0.1"
 description = "A powerful CLI tool for downloading O'Reilly courses, audiobooks, and books for offline study."
 readme = "README.md"
 authors = [
