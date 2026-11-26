@@ -27,7 +27,8 @@ def test_headless_to_headed_retry_on_login_failure():
     # 3. Patch dependencies
     with patch("oreilly_downloader.cli.BrowserFactory.create", mock_create), \
          patch("oreilly_downloader.cli.AuthService") as mock_auth_cls, \
-         patch("oreilly_downloader.cli._handle_authentication") as mock_handle_auth:
+         patch("oreilly_downloader.cli._handle_authentication") as mock_handle_auth, \
+         patch("oreilly_downloader.core.orchestrator.SanityUtils.has_display", return_value=True):
         
         # Make _handle_authentication raise HeadlessAutoLoginFailed on the first call (headless),
         # and return False on the second call (headed) to exit process_course cleanly.

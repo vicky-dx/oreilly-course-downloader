@@ -10,7 +10,7 @@ from .course_scraper import CourseStructureScraper
 from .media_resolver import MediaUrlResolver
 from .downloader import DownloaderService
 from .epub import BookDownloaderService
-from .utils import SanityUtils, sync_browser_cookies
+from .utils import SanityUtils, sync_browser_cookies, ensure_headless_if_no_display
 from .strategies import ExecutionContext, StrategyDispatcher
 
 
@@ -71,6 +71,9 @@ class CourseOrchestrator:
 
         if not self.config.url and not self.config.manual_login and not self.config.auto_signup:
             Logger.error(" Error: Course URL is required.")
+            return False
+
+        if not ensure_headless_if_no_display(self.config):
             return False
 
         while True:
@@ -175,10 +178,12 @@ class CourseOrchestrator:
                 return True
 
             except HeadlessAutoLoginFailed:
-                if self.config.headless:
+                if self.config.headless and SanityUtils.has_display():
                     Logger.warning("Headless auto-login failed. Retrying in headed (non-headless) mode...")
                     self.config.headless = False
                     continue
+                if not SanityUtils.has_display():
+                    Logger.error("Headless authentication failed and no graphical display ($DISPLAY / $WAYLAND_DISPLAY) is available for visible fallback.")
                 return False
 
             finally:
