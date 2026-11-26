@@ -175,6 +175,18 @@ class SanityUtils:
 
         return None
 
+    @staticmethod
+    def has_display() -> bool:
+        """Returns True if a graphical display server is available for visible browser windows."""
+        if os.name == "nt":
+            return True
+        is_mac = os.uname().sysname == "Darwin" if hasattr(os, "uname") else False
+        if is_mac:
+            return True
+        display = (os.environ.get("DISPLAY") or "").strip()
+        wayland = (os.environ.get("WAYLAND_DISPLAY") or "").strip()
+        return bool(display or wayland)
+
 class PathManager:
     @staticmethod
     def get_course_dir(base_dir: str, course_title: str) -> str:
@@ -230,3 +242,19 @@ def resolve_browser_driver(browser_or_driver):
     if hasattr(browser_or_driver, "driver") and browser_or_driver.driver is not None:
         return browser_or_driver.driver
     return browser_or_driver
+
+
+def ensure_headless_if_no_display(config) -> bool:
+    """Switches config.headless to True when no GUI display exists; returns False if manual login cannot proceed."""
+    if getattr(config, "headless", False) or SanityUtils.has_display():
+        return True
+
+    from .browsers import Logger
+    if getattr(config, "manual_login", False):
+        Logger.error("Cannot run '--manual-login' without a graphical display ($DISPLAY or $WAYLAND_DISPLAY).")
+        Logger.info("👉 Run inside an X11/Wayland session, or authenticate via '--email' and '--password' with '--headless'.")
+        return False
+
+    Logger.warning("No graphical display detected ($DISPLAY / $WAYLAND_DISPLAY unset). Automatically switching to headless mode...")
+    config.headless = True
+    return True
